@@ -1,16 +1,20 @@
 import { App, Editor, MarkdownView, Plugin } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
 
-export class ClipboardPasteHandler {
+export class ImagePasteAndDropHandler {
 	private app: App;
 	private settings: CrystalPluginSettings;
 	private boundPasteHandler: (event: ClipboardEvent) => Promise<void>;
+	private boundDragOverHandler: (event: DragEvent) => void;
+	private boundDropHandler: (event: DragEvent) => Promise<void>;
 	private isEnabled: boolean = false;
 
 	constructor(app: App, settings: CrystalPluginSettings) {
 		this.app = app;
 		this.settings = settings;
 		this.boundPasteHandler = this.handlePaste.bind(this);
+		this.boundDragOverHandler = this.handleDragOver.bind(this);
+		this.boundDropHandler = this.handleDrop.bind(this);
 	}
 
 	updateSettings(settings: CrystalPluginSettings) {
@@ -23,6 +27,9 @@ export class ClipboardPasteHandler {
 		}
 		// Add paste event listener to the document
 		document.addEventListener('paste', this.boundPasteHandler, true);
+		// Add drag and drop event listeners
+		document.addEventListener('dragover', this.boundDragOverHandler, true);
+		document.addEventListener('drop', this.boundDropHandler, true);
 		this.isEnabled = true;
 	}
 
@@ -32,7 +39,85 @@ export class ClipboardPasteHandler {
 		}
 		// Remove paste event listener
 		document.removeEventListener('paste', this.boundPasteHandler, true);
+		// Remove drag and drop event listeners
+		document.removeEventListener('dragover', this.boundDragOverHandler, true);
+		document.removeEventListener('drop', this.boundDropHandler, true);
 		this.isEnabled = false;
+	}
+
+	private handleDragOver(event: DragEvent): void {
+		// Check if auto WebP paste is enabled
+		if (!this.settings.autoWebpPaste) {
+			return;
+		}
+
+		// Only handle drag over in markdown views
+		const activeLeaf = this.app.workspace.activeLeaf;
+		if (!activeLeaf || !activeLeaf.view || !(activeLeaf.view instanceof MarkdownView)) {
+			return;
+		}
+
+		// Check if drag contains image files
+		const dataTransfer = event.dataTransfer;
+		if (!dataTransfer) {
+			return;
+		}
+
+		const hasImageFiles = Array.from(dataTransfer.items).some(item => 
+			item.kind === 'file' && item.type.startsWith('image/')
+		);
+
+		if (hasImageFiles) {
+			// Prevent default to allow drop
+			event.preventDefault();
+			event.stopPropagation();
+		}
+	}
+
+	private async handleDrop(event: DragEvent): Promise<void> {
+		// Check if auto WebP paste is enabled
+		if (!this.settings.autoWebpPaste) {
+			return;
+		}
+
+		// Only handle drop in markdown views
+		const activeLeaf = this.app.workspace.activeLeaf;
+		if (!activeLeaf || !activeLeaf.view || !(activeLeaf.view instanceof MarkdownView)) {
+			return;
+		}
+
+		const markdownView = activeLeaf.view as MarkdownView;
+		const editor = markdownView.editor;
+
+		// Check if drop contains image data
+		const dataTransfer = event.dataTransfer;
+		if (!dataTransfer) {
+			return;
+		}
+
+		let imageFile: File | null = null;
+		for (let i = 0; i < dataTransfer.files.length; i++) {
+			const file = dataTransfer.files[i];
+			if (file.type.startsWith('image/')) {
+				imageFile = file;
+				break;
+			}
+		}
+
+		if (!imageFile) {
+			return; // No image found, let default drop behavior handle it
+		}
+
+		// Prevent default drop behavior for images
+		event.preventDefault();
+		event.stopPropagation();
+
+		try {
+			await this.processImagePaste(imageFile, editor);
+		} catch (error) {
+			console.error('Failed to process image drop:', error);
+			console.log(`画像の処理に失敗した: ${error.message}`);
+		}
 	}
 
 	private async handlePaste(event: ClipboardEvent): Promise<void> {
@@ -97,10 +182,10 @@ export class ClipboardPasteHandler {
 
 	private async processImagePaste(imageFile: File, editor: Editor): Promise<void> {
 		try {
-			// Convert to WebP if it's not already WebP
+			// Convert to WebP if it's not already WebP or GIF
 			let processedBlob: Blob = imageFile;
 			
-			if (imageFile.type !== 'image/webp') {
+			if (imageFile.type !== 'image/webp' && imageFile.type !== 'image/gif') {
 				try {
 					processedBlob = await this.convertToWebP(imageFile);
 					console.log(`画像をWebPに変換した (品質: ${Math.round(this.settings.webpQuality * 100)}%)`);
@@ -108,6 +193,8 @@ export class ClipboardPasteHandler {
 					console.warn('WebP conversion failed, using original format:', conversionError);
 					console.log('WebP変換に失敗、元の形式でペーストする');
 				}
+			} else if (imageFile.type === 'image/gif') {
+				console.log('GIFファイルのためアニメーション保持のため変換をスキップ');
 			}
 
 			// Generate filename for the vault

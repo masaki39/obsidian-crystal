@@ -163,8 +163,8 @@ export class PCloudService {
 				throw new Error('No image found in clipboard');
 			}
 
-			// Convert to WebP if it's not already WebP
-			if (imageBlob.type !== 'image/webp') {
+			// Convert to WebP if it's not already WebP or GIF
+			if (imageBlob.type !== 'image/webp' && imageBlob.type !== 'image/gif') {
 				try {
 					imageBlob = await this.convertToWebP(imageBlob);
 					new Notice(`Image converted to WebP (quality: ${Math.round(this.webpQuality * 100)}%)`);
@@ -172,6 +172,8 @@ export class PCloudService {
 					console.warn('WebP conversion failed, using original format:', conversionError);
 					new Notice('WebP conversion failed, uploading original format');
 				}
+			} else if (imageBlob.type === 'image/gif') {
+				new Notice('GIF file detected - uploading without conversion to preserve animation');
 			}
 
 			// Generate filename with timestamp

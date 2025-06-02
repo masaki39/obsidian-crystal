@@ -3,7 +3,7 @@ import { CrystalPluginSettings, DEFAULT_SETTINGS, CrystalSettingTab } from './sr
 import { GeminiService } from './src/gemini-service';
 import { DailyNotesManager } from './src/daily-notes';
 import { PCloudService } from './src/pcloud-service';
-import { ClipboardPasteHandler } from './src/clipboard-paste-handler';
+import { ImagePasteAndDropHandler } from './src/clipboard-paste-handler';
 import { EditorCommands } from './src/editor-commands';
 import { QuickAddCommands } from './src/quick-add-commands';
 
@@ -14,7 +14,7 @@ export default class CrystalPlugin extends Plugin {
 	private geminiService: GeminiService;
 	private dailyNotesManager: DailyNotesManager;
 	private pcloudService: PCloudService;
-	private clipboardPasteHandler: ClipboardPasteHandler;
+	private imagePasteAndDropHandler: ImagePasteAndDropHandler;
 	private editorCommands: EditorCommands;
 	private quickAddCommands: QuickAddCommands;
 
@@ -25,13 +25,13 @@ export default class CrystalPlugin extends Plugin {
 		this.geminiService = new GeminiService(this.app, this.settings.GeminiAPIKey);
 		this.dailyNotesManager = new DailyNotesManager(this.app, this.settings);
 		this.pcloudService = new PCloudService(this.app, this.settings.pcloudUsername, this.settings.pcloudPassword, this.settings.pcloudPublicFolderId, this.settings.webpQuality);
-		this.clipboardPasteHandler = new ClipboardPasteHandler(this.app, this.settings);
+		this.imagePasteAndDropHandler = new ImagePasteAndDropHandler(this.app, this.settings);
 		this.editorCommands = new EditorCommands(this.app, this.settings);
 		this.quickAddCommands = new QuickAddCommands(this.app, this.settings);
 
-		// Enable clipboard paste handler if auto paste is enabled
+		// Enable image paste and drop handler if auto paste is enabled
 		if (this.settings.autoWebpPaste) {
-			this.clipboardPasteHandler.enable();
+			this.imagePasteAndDropHandler.enable();
 		}
 
 		// AI Description Generation Command
@@ -159,9 +159,9 @@ export default class CrystalPlugin extends Plugin {
 	}
 
 	onunload() {
-		// Disable clipboard paste handler
-		if (this.clipboardPasteHandler) {
-			this.clipboardPasteHandler.disable();
+		// Disable image paste and drop handler
+		if (this.imagePasteAndDropHandler) {
+			this.imagePasteAndDropHandler.disable();
 		}
 	}
 
@@ -174,15 +174,15 @@ export default class CrystalPlugin extends Plugin {
 		this.geminiService.updateSettings(this.settings);
 		this.dailyNotesManager.updateSettings(this.settings);
 		this.pcloudService.updateCredentials(this.settings.pcloudUsername, this.settings.pcloudPassword, this.settings.pcloudPublicFolderId, this.settings.webpQuality);
-		this.clipboardPasteHandler.updateSettings(this.settings);
+		this.imagePasteAndDropHandler.updateSettings(this.settings);
 		this.editorCommands.updateSettings(this.settings);
 		this.quickAddCommands.updateSettings(this.settings);
 		
-		// Toggle clipboard paste handler based on settings
+		// Toggle image paste and drop handler based on settings
 		if (this.settings.autoWebpPaste) {
-			this.clipboardPasteHandler.enable();
+			this.imagePasteAndDropHandler.enable();
 		} else {
-			this.clipboardPasteHandler.disable();
+			this.imagePasteAndDropHandler.disable();
 		}
 	}
 }
