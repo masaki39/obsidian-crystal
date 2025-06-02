@@ -33,7 +33,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		containerEl.createEl('h2', { text: 'Crystal Plugin Settings' });
+		containerEl.createEl('h1', { text: 'Crystal Plugin Settings' });
 
 		// Gemini settings
 		containerEl.createEl('h3', { text: 'Gemini Description Generator' });
@@ -41,13 +41,16 @@ export class CrystalSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('Gemini API Key')
 			.setDesc('Enter your Gemini API Key')
-			.addText(text => text
-				.setPlaceholder('Enter your Gemini API Key')
-				.setValue(this.plugin.settings.GeminiAPIKey)
-				.onChange(async (value) => {
-					this.plugin.settings.GeminiAPIKey = value;
-					await this.plugin.saveSettings();
-				}));
+			.addText(text => {
+				text.setPlaceholder('Enter your Gemini API Key')
+					.setValue(this.plugin.settings.GeminiAPIKey)
+					.onChange(async (value) => {
+						this.plugin.settings.GeminiAPIKey = value;
+						await this.plugin.saveSettings();
+					});
+				text.inputEl.type = 'password';
+				return text;
+			});
 
 		// Daily notes settings
 		containerEl.createEl('h3', { text: 'Daily Notes' });
@@ -105,13 +108,16 @@ export class CrystalSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('pCloud Public Folder ID')
 			.setDesc('Your pCloud Public Folder unique ID (found in Public Folder links)')
-			.addText(text => text
-				.setPlaceholder('e.g., lF97wFVWosQpHEoDAbvva0h')
-				.setValue(this.plugin.settings.pcloudPublicFolderId)
-				.onChange(async (value) => {
-					this.plugin.settings.pcloudPublicFolderId = value;
-					await this.plugin.saveSettings();
-				}));
+			.addText(text => {
+				text.setPlaceholder('e.g., lF97wFVWosQpHEoDAbvva0h')
+					.setValue(this.plugin.settings.pcloudPublicFolderId)
+					.onChange(async (value) => {
+						this.plugin.settings.pcloudPublicFolderId = value;
+						await this.plugin.saveSettings();
+					});
+				text.inputEl.type = 'password';
+				return text;
+			});
 
 		new Setting(containerEl)
 			.setName('WebP Compression Quality')
