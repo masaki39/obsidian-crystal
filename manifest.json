@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "obsidian-crystal",
+	"name": "Crystal",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
-	"isDesktopOnly": false
+	"description": "Extensible plugin for adding custom features to Obsidian. Includes AI-powered description generator.",
+	"author": "masaki39",
+	"authorUrl": "",
+	"fundingUrl": "",
+	"isDesktopOnly": true
 }

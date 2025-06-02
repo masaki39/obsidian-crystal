@@ -1,94 +1,61 @@
-# Obsidian Sample Plugin
+# Crystal - Obsidian Plugin
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+CrystalはObsidian用の汎用機能拡張プラグインである。自分の欲しい機能を自由に追加・カスタマイズできるベースとして設計されている。
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## 現在実装されている機能
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+- **AI駆動型Description生成**: Google Gemini APIを使用してノートの内容から適切なdescriptionを自動生成
+- **プラグインテンプレート**: 新しい機能を簡単に追加できる拡張可能な構造
 
-## First time developing plugins?
+## セットアップ
 
-Quick starting guide for new plugin devs:
+1. Obsidianの設定でCrystalプラグインを有効化する
+2. 必要に応じて各機能の設定を行う（例：Gemini API Key等）
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+## Description生成機能の使用方法
 
-## Releasing new releases
+1. Google AI StudioでGemini API Keyを取得する
+2. プラグイン設定でGemini API Keyを入力する
+3. Obsidianでノートを開く
+4. コマンドパレット（Ctrl/Cmd + P）を開く
+5. "Generate Description for Current File"コマンドを実行する
+6. AIがノートの内容を分析してdescriptionを生成する
+7. 生成されたdescriptionがフロントマターに自動的に追加される
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+## 機能の追加・カスタマイズ
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+このプラグインは拡張性を重視して設計されており、新しい機能を簡単に追加できる：
 
-## Adding your plugin to the community plugin list
+- `main.ts`でコマンドやUI要素を追加
+- `src/`ディレクトリに新しいサービスクラスを作成
+- 設定項目は`src/settings.ts`で管理
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+## 技術仕様
 
-## How to use
+このプロジェクトはTypeScriptを使用しており、型チェックとドキュメンテーションを提供している。
+最新のObsidian Plugin API（obsidian.d.ts）のTypeScript定義形式に依存している。
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+## 開発者向け情報
 
-## Manually installing the plugin
+### 初回セットアップ
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+- Node.js（v16以上）をインストールする
+- `npm i`を実行して依存関係をインストールする
+- `npm run dev`を実行して開発モードでコンパイルを開始する
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
+### 手動インストール
 
-## Funding URL
+- `main.js`、`styles.css`、`manifest.json`をVaultの`.obsidian/plugins/obsidian-crystal/`フォルダにコピーする
 
-You can include funding URLs where people who use your plugin can financially support it.
+### コード品質の向上
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+ESLintを使用してコードの問題を素早く発見できる：
 
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
-```
-
-If you have multiple URLs, you can also do:
-
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
+```bash
+npm install -g eslint
+eslint main.ts
 ```
 
 ## API Documentation
 
-See https://github.com/obsidianmd/obsidian-api
+詳細については https://github.com/obsidianmd/obsidian-api を参照のこと。
