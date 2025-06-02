@@ -18,7 +18,7 @@ export default class CrystalPlugin extends Plugin {
 		// Initialize services
 		this.geminiService = new GeminiService(this.app, this.settings.GeminiAPIKey);
 		this.dailyNotesManager = new DailyNotesManager(this.app, this.settings);
-		this.pcloudService = new PCloudService(this.app, this.settings.pcloudUsername, this.settings.pcloudPassword, this.settings.pcloudPublicFolderId);
+		this.pcloudService = new PCloudService(this.app, this.settings.pcloudUsername, this.settings.pcloudPassword, this.settings.pcloudPublicFolderId, this.settings.webpQuality);
 
 		// AI Description Generation Command
 		this.addCommand({
@@ -82,6 +82,6 @@ export default class CrystalPlugin extends Plugin {
 		await this.saveData(this.settings);
 		this.geminiService.updateSettings(this.settings);
 		this.dailyNotesManager.updateSettings(this.settings);
-		this.pcloudService.updateCredentials(this.settings.pcloudUsername, this.settings.pcloudPassword, this.settings.pcloudPublicFolderId);
+		this.pcloudService.updateCredentials(this.settings.pcloudUsername, this.settings.pcloudPassword, this.settings.pcloudPublicFolderId, this.settings.webpQuality);
 	}
 }

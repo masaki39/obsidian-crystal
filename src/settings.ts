@@ -7,6 +7,7 @@ export interface CrystalPluginSettings {
 	pcloudUsername: string;
 	pcloudPassword: string;
 	pcloudPublicFolderId: string;
+	webpQuality: number;
 }
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
@@ -15,7 +16,8 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	dailyNoteDateFormat: 'YYYY-MM-DD',
 	pcloudUsername: '',
 	pcloudPassword: '',
-	pcloudPublicFolderId: ''
+	pcloudPublicFolderId: '',
+	webpQuality: 0.8
 }
 
 export class CrystalSettingTab extends PluginSettingTab {
@@ -108,6 +110,18 @@ export class CrystalSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.pcloudPublicFolderId)
 				.onChange(async (value) => {
 					this.plugin.settings.pcloudPublicFolderId = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('WebP Compression Quality')
+			.setDesc('Quality for WebP compression (0.1 = lowest quality/smallest file, 1.0 = highest quality/largest file)')
+			.addSlider(slider => slider
+				.setLimits(0.1, 1.0, 0.1)
+				.setValue(this.plugin.settings.webpQuality)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					this.plugin.settings.webpQuality = value;
 					await this.plugin.saveSettings();
 				}));
 	}

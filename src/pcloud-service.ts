@@ -5,19 +5,22 @@ export class PCloudService {
 	private username: string;
 	private password: string;
 	private publicFolderId: string;
+	private webpQuality: number;
 	private authToken: string | null = null;
 
-	constructor(app: App, username: string, password: string, publicFolderId: string) {
+	constructor(app: App, username: string, password: string, publicFolderId: string, webpQuality: number = 0.8) {
 		this.app = app;
 		this.username = username;
 		this.password = password;
 		this.publicFolderId = publicFolderId;
+		this.webpQuality = webpQuality;
 	}
 
-	updateCredentials(username: string, password: string, publicFolderId: string) {
+	updateCredentials(username: string, password: string, publicFolderId: string, webpQuality: number = 0.8) {
 		this.username = username;
 		this.password = password;
 		this.publicFolderId = publicFolderId;
+		this.webpQuality = webpQuality;
 		this.authToken = null; // Reset auth token when credentials change
 	}
 
@@ -94,6 +97,45 @@ export class PCloudService {
 		}
 	}
 
+	private async convertToWebP(imageBlob: Blob): Promise<Blob> {
+		return new Promise((resolve, reject) => {
+			const img = new Image();
+			img.onload = () => {
+				// Create canvas
+				const canvas = document.createElement('canvas');
+				const ctx = canvas.getContext('2d');
+				
+				if (!ctx) {
+					reject(new Error('Failed to get canvas context'));
+					return;
+				}
+
+				// Set canvas size to image size
+				canvas.width = img.width;
+				canvas.height = img.height;
+
+				// Draw image to canvas
+				ctx.drawImage(img, 0, 0);
+
+				// Convert to WebP blob
+				canvas.toBlob((webpBlob) => {
+					if (webpBlob) {
+						resolve(webpBlob);
+					} else {
+						reject(new Error('Failed to convert image to WebP'));
+					}
+				}, 'image/webp', this.webpQuality);
+			};
+
+			img.onerror = () => {
+				reject(new Error('Failed to load image for conversion'));
+			};
+
+			// Create object URL for the image
+			img.src = URL.createObjectURL(imageBlob);
+		});
+	}
+
 	async uploadClipboardImage(editor?: Editor): Promise<string> {
 		try {
 			// Check if Public Folder ID is configured
@@ -121,9 +163,20 @@ export class PCloudService {
 				throw new Error('No image found in clipboard');
 			}
 
+			// Convert to WebP if it's not already WebP
+			if (imageBlob.type !== 'image/webp') {
+				try {
+					imageBlob = await this.convertToWebP(imageBlob);
+					new Notice(`Image converted to WebP (quality: ${Math.round(this.webpQuality * 100)}%)`);
+				} catch (conversionError) {
+					console.warn('WebP conversion failed, using original format:', conversionError);
+					new Notice('WebP conversion failed, uploading original format');
+				}
+			}
+
 			// Generate filename with timestamp
 			const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-			const extension = imageBlob.type.split('/')[1] || 'png';
+			const extension = imageBlob.type === 'image/webp' ? 'webp' : (imageBlob.type.split('/')[1] || 'png');
 			const filename = `clipboard-image-${timestamp}.${extension}`;
 
 			// Get Public Folder ID

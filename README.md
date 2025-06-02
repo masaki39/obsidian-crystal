@@ -18,8 +18,10 @@ CrystalはObsidian用の汎用機能拡張プラグインである。自分の�
 
 ### ☁️ pCloud画像アップロード
 - **クリップボード画像アップロード**: クリップボードの画像をpCloudの「Public Folder」に自動アップロード
+- **WebP自動変換・圧縮**: 画像を自動的にWebPフォーマットに変換して圧縮（ファイルサイズ削減）
+- **圧縮品質調整**: WebP圧縮品質を0.1～1.0の範囲で調整可能（デフォルト: 0.8）
 - **マークダウン形式挿入**: アップロード完了時に`![](URL)`形式でカーソル位置に自動挿入
-- **タイムスタンプファイル名**: アップロードファイルは`clipboard-image-YYYY-MM-DDTHH-mm-ss.extension`形式で命名
+- **タイムスタンプファイル名**: アップロードファイルは`clipboard-image-YYYY-MM-DDTHH-mm-ss.webp`形式で命名
 - **認証管理**: pCloudのユーザー名とパスワードを設定画面で管理
 
 ## セットアップ
@@ -80,11 +82,18 @@ CrystalはObsidian用の汎用機能拡張プラグインである。自分の�
 - **pCloud Username**: pCloudのユーザー名（メールアドレス）
 - **pCloud Password**: pCloudのパスワード
 - **pCloud Public Folder ID**: Public Folderの固有ID（例: `lF97wFVWosQpHEoDAbvva0h`）
+- **WebP Compression Quality**: WebP圧縮品質（0.1 = 最低品質/最小ファイルサイズ、1.0 = 最高品質/最大ファイルサイズ）
 
 **Public Folder IDの取得方法**:
 1. pCloudのPublic Folderに既存のファイルがある場合、そのファイルのリンクを取得
 2. URLの形式: `https://filedn.com/{PublicFolderID}/{filename}`
 3. `{PublicFolderID}`の部分をコピーして設定に入力
+
+**WebP圧縮について**:
+- PNG、JPEG、GIF等の画像を自動的にWebPに変換
+- WebPは同等の画質でファイルサイズを25-35%削減可能
+- 圧縮品質0.8（デフォルト）は品質とファイルサイズのバランスが良い
+- 変換に失敗した場合は元のフォーマットでアップロード
 
 **注意**: パスワードとPublic Folder IDは機密性の高い情報であることを認識して利用すること。
 
