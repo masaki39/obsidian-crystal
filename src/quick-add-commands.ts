@@ -1,4 +1,4 @@
-import { App, Notice, TFile } from 'obsidian';
+import { App, Notice, TFile, Modal } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
 
 export class QuickAddCommands {
@@ -88,125 +88,80 @@ export class QuickAddCommands {
 	 */
 	private async promptForTask(): Promise<string | null> {
 		return new Promise((resolve) => {
-			let isComposing = false; // 日本語変換中かどうかを追跡
+			class TaskInputModal extends Modal {
+				private result: string | null = null;
+				private resolve: (value: string | null) => void;
 
-			const modal = document.createElement('div');
-			modal.className = 'modal-container';
-			modal.style.position = 'fixed';
-			modal.style.top = '0';
-			modal.style.left = '0';
-			modal.style.width = '100%';
-			modal.style.height = '100%';
-			modal.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-			modal.style.zIndex = '1000';
-			modal.style.display = 'flex';
-			modal.style.alignItems = 'center';
-			modal.style.justifyContent = 'center';
-
-			const dialog = document.createElement('div');
-			dialog.style.backgroundColor = 'var(--background-primary)';
-			dialog.style.padding = '20px';
-			dialog.style.borderRadius = '8px';
-			dialog.style.width = '400px';
-			dialog.style.maxWidth = '90%';
-
-			const title = document.createElement('h3');
-			title.textContent = 'タスクを入力してください';
-			title.style.marginBottom = '16px';
-			title.style.color = 'var(--text-normal)';
-
-			const input = document.createElement('input');
-			input.type = 'text';
-			input.placeholder = 'タスクの内容...';
-			input.style.width = '100%';
-			input.style.padding = '8px';
-			input.style.marginBottom = '16px';
-			input.style.border = '1px solid var(--background-modifier-border)';
-			input.style.borderRadius = '4px';
-			input.style.backgroundColor = 'var(--background-primary)';
-			input.style.color = 'var(--text-normal)';
-
-			const buttonContainer = document.createElement('div');
-			buttonContainer.style.display = 'flex';
-			buttonContainer.style.gap = '8px';
-			buttonContainer.style.justifyContent = 'flex-end';
-
-			const cancelButton = document.createElement('button');
-			cancelButton.textContent = 'キャンセル';
-			cancelButton.style.padding = '8px 16px';
-			cancelButton.style.border = '1px solid var(--background-modifier-border)';
-			cancelButton.style.borderRadius = '4px';
-			cancelButton.style.backgroundColor = 'var(--background-primary)';
-			cancelButton.style.color = 'var(--text-normal)';
-			cancelButton.style.cursor = 'pointer';
-
-			const addButton = document.createElement('button');
-			addButton.textContent = '追加';
-			addButton.style.padding = '8px 16px';
-			addButton.style.border = 'none';
-			addButton.style.borderRadius = '4px';
-			addButton.style.backgroundColor = 'var(--interactive-accent)';
-			addButton.style.color = 'var(--text-on-accent)';
-			addButton.style.cursor = 'pointer';
-
-			// イベントリスナー
-			const cleanup = () => {
-				document.body.removeChild(modal);
-			};
-
-			const submitTask = () => {
-				const task = input.value.trim();
-				cleanup();
-				resolve(task);
-			};
-
-			cancelButton.addEventListener('click', () => {
-				cleanup();
-				resolve(null);
-			});
-
-			addButton.addEventListener('click', submitTask);
-
-			// 日本語変換状態を追跡
-			input.addEventListener('compositionstart', () => {
-				isComposing = true;
-			});
-
-			input.addEventListener('compositionend', () => {
-				isComposing = false;
-			});
-
-			input.addEventListener('keydown', (e) => {
-				if (e.key === 'Enter') {
-					// 日本語変換中でない場合のみ送信
-					if (!isComposing) {
-						e.preventDefault();
-						submitTask();
-					}
-				} else if (e.key === 'Escape') {
-					cleanup();
-					resolve(null);
+				constructor(app: App, resolve: (value: string | null) => void) {
+					super(app);
+					this.resolve = resolve;
 				}
-			});
 
-			modal.addEventListener('click', (e) => {
-				if (e.target === modal) {
-					cleanup();
-					resolve(null);
+				onOpen() {
+					const { contentEl } = this;
+					
+					contentEl.createEl('h3', { text: 'タスクを入力してください' });
+					
+					const input = contentEl.createEl('input', {
+						type: 'text',
+						placeholder: 'タスクの内容...'
+					});
+					input.style.width = '100%';
+					input.style.marginBottom = '16px';
+
+					const buttonContainer = contentEl.createDiv();
+					buttonContainer.style.display = 'flex';
+					buttonContainer.style.gap = '8px';
+					buttonContainer.style.justifyContent = 'flex-end';
+
+					const cancelButton = buttonContainer.createEl('button', { text: 'キャンセル' });
+					const addButton = buttonContainer.createEl('button', { text: '追加' });
+					addButton.addClass('mod-cta');
+
+					let isComposing = false;
+
+					const submitTask = () => {
+						this.result = input.value.trim();
+						this.close();
+					};
+
+					cancelButton.addEventListener('click', () => {
+						this.result = null;
+						this.close();
+					});
+
+					addButton.addEventListener('click', submitTask);
+
+					input.addEventListener('compositionstart', () => {
+						isComposing = true;
+					});
+
+					input.addEventListener('compositionend', () => {
+						isComposing = false;
+					});
+
+					input.addEventListener('keydown', (e) => {
+						if (e.key === 'Enter') {
+							if (!isComposing) {
+								e.preventDefault();
+								submitTask();
+							}
+						} else if (e.key === 'Escape') {
+							this.result = null;
+							this.close();
+						}
+					});
+
+					input.focus();
 				}
-			});
 
-			// DOM に追加
-			buttonContainer.appendChild(cancelButton);
-			buttonContainer.appendChild(addButton);
-			dialog.appendChild(title);
-			dialog.appendChild(input);
-			dialog.appendChild(buttonContainer);
-			modal.appendChild(dialog);
-			document.body.appendChild(modal);
+				onClose() {
+					this.resolve(this.result);
+				}
+			}
 
-			// フォーカスを設定
-			input.focus();
+			const modal = new TaskInputModal(this.app, resolve);
+			modal.open();
 		});
 	}
 
