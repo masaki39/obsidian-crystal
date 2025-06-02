@@ -2,10 +2,14 @@ import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 export interface CrystalPluginSettings {
 	GeminiAPIKey: string;
+	dailyNotesFolder: string;
+	dailyNoteDateFormat: string;
 }
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
-	GeminiAPIKey: ''
+	GeminiAPIKey: '',
+	dailyNotesFolder: 'DailyNotes',
+	dailyNoteDateFormat: 'YYYY-MM-DD'
 }
 
 export class CrystalSettingTab extends PluginSettingTab {
@@ -21,7 +25,10 @@ export class CrystalSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		containerEl.createEl('h2', { text: 'Crystal - Gemini Description Generator Settings' });
+		containerEl.createEl('h2', { text: 'Crystal Plugin Settings' });
+
+		// Gemini settings
+		containerEl.createEl('h3', { text: 'Gemini Description Generator' });
 
 		new Setting(containerEl)
 			.setName('Gemini API Key')
@@ -31,6 +38,31 @@ export class CrystalSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.GeminiAPIKey)
 				.onChange(async (value) => {
 					this.plugin.settings.GeminiAPIKey = value;
+					await this.plugin.saveSettings();
+				}));
+
+		// Daily notes settings
+		containerEl.createEl('h3', { text: 'Daily Notes' });
+
+		new Setting(containerEl)
+			.setName('Daily Notes Folder')
+			.setDesc('Folder where daily notes are stored')
+			.addText(text => text
+				.setPlaceholder('DailyNotes')
+				.setValue(this.plugin.settings.dailyNotesFolder)
+				.onChange(async (value) => {
+					this.plugin.settings.dailyNotesFolder = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Date Format')
+			.setDesc('Date format for daily note file names (e.g., YYYY-MM-DD)')
+			.addText(text => text
+				.setPlaceholder('YYYY-MM-DD')
+				.setValue(this.plugin.settings.dailyNoteDateFormat)
+				.onChange(async (value) => {
+					this.plugin.settings.dailyNoteDateFormat = value;
 					await this.plugin.saveSettings();
 				}));
 	}

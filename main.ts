@@ -2,6 +2,7 @@ import { Editor, MarkdownView, Plugin } from 'obsidian';
 import { CrystalPluginSettings, DEFAULT_SETTINGS, CrystalSettingTab } from './src/settings';
 import { ServiceManager } from './src/service-manager';
 import { FileProcessor } from './src/file-processor';
+import { DailyNotesManager } from './src/daily-notes';
 
 // Crystal Plugin for Obsidian
 
@@ -9,6 +10,7 @@ export default class CrystalPlugin extends Plugin {
 	settings: CrystalPluginSettings;
 	private serviceManager: ServiceManager;
 	private fileProcessor: FileProcessor;
+	private dailyNotesManager: DailyNotesManager;
 
 	async onload() {
 		await this.loadSettings();
@@ -16,11 +18,12 @@ export default class CrystalPlugin extends Plugin {
 		// Initialize managers
 		this.serviceManager = new ServiceManager();
 		this.fileProcessor = new FileProcessor(this.app);
+		this.dailyNotesManager = new DailyNotesManager(this.app, this.settings);
 		
 		// Initialize Gemini service
 		this.serviceManager.updateGeminiService(this.settings);
 
-		// this adds a command that can generate a description for the current file
+		// AI Description Generation Command
 		this.addCommand({
 			id: 'crystal-generate-description',
 			name: 'Generate Description for Current File',
@@ -30,6 +33,31 @@ export default class CrystalPlugin extends Plugin {
 					view, 
 					this.serviceManager.getGeminiService()
 				);
+			}
+		});
+
+		// Daily Notes Commands
+		this.addCommand({
+			id: 'crystal-open-today',
+			name: 'Open Today\'s Daily Note',
+			callback: () => {
+				this.dailyNotesManager.openToday();
+			}
+		});
+
+		this.addCommand({
+			id: 'crystal-open-yesterday',
+			name: 'Open Yesterday\'s Daily Note',
+			callback: () => {
+				this.dailyNotesManager.openYesterday();
+			}
+		});
+
+		this.addCommand({
+			id: 'crystal-open-tomorrow',
+			name: 'Open Tomorrow\'s Daily Note',
+			callback: () => {
+				this.dailyNotesManager.openTomorrow();
 			}
 		});
 
@@ -47,5 +75,6 @@ export default class CrystalPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 		this.serviceManager.updateGeminiService(this.settings);
+		this.dailyNotesManager.updateSettings(this.settings);
 	}
 }
