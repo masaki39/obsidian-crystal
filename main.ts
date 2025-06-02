@@ -4,6 +4,7 @@ import { GeminiService } from './src/gemini-service';
 import { DailyNotesManager } from './src/daily-notes';
 import { PCloudService } from './src/pcloud-service';
 import { ClipboardPasteHandler } from './src/clipboard-paste-handler';
+import { EditorCommands } from './src/editor-commands';
 
 // Crystal Plugin for Obsidian
 
@@ -13,6 +14,7 @@ export default class CrystalPlugin extends Plugin {
 	private dailyNotesManager: DailyNotesManager;
 	private pcloudService: PCloudService;
 	private clipboardPasteHandler: ClipboardPasteHandler;
+	private editorCommands: EditorCommands;
 
 	async onload() {
 		await this.loadSettings();
@@ -22,6 +24,7 @@ export default class CrystalPlugin extends Plugin {
 		this.dailyNotesManager = new DailyNotesManager(this.app, this.settings);
 		this.pcloudService = new PCloudService(this.app, this.settings.pcloudUsername, this.settings.pcloudPassword, this.settings.pcloudPublicFolderId, this.settings.webpQuality);
 		this.clipboardPasteHandler = new ClipboardPasteHandler(this.app, this.settings);
+		this.editorCommands = new EditorCommands(this.app, this.settings);
 
 		// Enable clipboard paste handler if auto paste is enabled
 		if (this.settings.autoWebpPaste) {
@@ -75,6 +78,55 @@ export default class CrystalPlugin extends Plugin {
 			}
 		});
 
+		// Editor Commands
+		this.addCommand({
+			id: 'crystal-create-timestamp-file',
+			name: 'Create New File with Timestamp',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.editorCommands.createTimestampFile(editor, view);
+			}
+		});
+
+		this.addCommand({
+			id: 'crystal-create-linked-timestamp-file',
+			name: 'Create New File with Link at Cursor',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.editorCommands.createLinkedTimestampFile(editor, view);
+			}
+		});
+
+		this.addCommand({
+			id: 'crystal-copy-file-link',
+			name: 'Copy File Link to Clipboard',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.editorCommands.copyFileLink(editor, view);
+			}
+		});
+
+		this.addCommand({
+			id: 'crystal-copy-file-link-with-alias',
+			name: 'Copy File Link with Alias to Clipboard',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.editorCommands.copyFileLinkWithAlias(editor, view);
+			}
+		});
+
+		this.addCommand({
+			id: 'crystal-wrap-subscript',
+			name: 'Wrap Selection with Subscript',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.editorCommands.wrapWithSubscript(editor, view);
+			}
+		});
+
+		this.addCommand({
+			id: 'crystal-wrap-superscript',
+			name: 'Wrap Selection with Superscript',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.editorCommands.wrapWithSuperscript(editor, view);
+			}
+		});
+
 		this.addSettingTab(new CrystalSettingTab(this.app, this));
 	}
 
@@ -95,6 +147,7 @@ export default class CrystalPlugin extends Plugin {
 		this.dailyNotesManager.updateSettings(this.settings);
 		this.pcloudService.updateCredentials(this.settings.pcloudUsername, this.settings.pcloudPassword, this.settings.pcloudPublicFolderId, this.settings.webpQuality);
 		this.clipboardPasteHandler.updateSettings(this.settings);
+		this.editorCommands.updateSettings(this.settings);
 		
 		// Toggle clipboard paste handler based on settings
 		if (this.settings.autoWebpPaste) {
