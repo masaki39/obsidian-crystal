@@ -132,7 +132,7 @@ export default class CrystalPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'crystal-organize-file-with-tags',
-			name: 'Organize File with Tags (Templater equivalent)',
+			name: 'Organize File with Prefix and Tags',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.editorCommands.organizeFileWithTags(editor, view);
 			}
