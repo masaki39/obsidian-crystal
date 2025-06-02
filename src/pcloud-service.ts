@@ -1,26 +1,27 @@
 import { App, Notice, Editor } from 'obsidian';
+import { ImageProcessor } from './image-processor';
 
 export class PCloudService {
 	private app: App;
 	private username: string;
 	private password: string;
 	private publicFolderId: string;
-	private webpQuality: number;
 	private authToken: string | null = null;
+	private imageProcessor: ImageProcessor;
 
 	constructor(app: App, username: string, password: string, publicFolderId: string, webpQuality: number = 0.8) {
 		this.app = app;
 		this.username = username;
 		this.password = password;
 		this.publicFolderId = publicFolderId;
-		this.webpQuality = webpQuality;
+		this.imageProcessor = new ImageProcessor(webpQuality);
 	}
 
 	updateCredentials(username: string, password: string, publicFolderId: string, webpQuality: number = 0.8) {
 		this.username = username;
 		this.password = password;
 		this.publicFolderId = publicFolderId;
-		this.webpQuality = webpQuality;
+		this.imageProcessor.updateQuality(webpQuality);
 		this.authToken = null; // Reset auth token when credentials change
 	}
 
@@ -97,43 +98,72 @@ export class PCloudService {
 		}
 	}
 
-	private async convertToWebP(imageBlob: Blob): Promise<Blob> {
-		return new Promise((resolve, reject) => {
-			const img = new Image();
-			img.onload = () => {
-				// Create canvas
-				const canvas = document.createElement('canvas');
-				const ctx = canvas.getContext('2d');
-				
-				if (!ctx) {
-					reject(new Error('Failed to get canvas context'));
-					return;
-				}
+	private async uploadProcessedImage(imageBlob: Blob, originalType: string, editor?: Editor): Promise<string> {
+		// Generate filename with timestamp
+		const filename = this.imageProcessor.generateTimestampFilename('clipboard-image', imageBlob, originalType);
 
-				// Set canvas size to image size
-				canvas.width = img.width;
-				canvas.height = img.height;
+		// Get Public Folder ID
+		const pcloudFolderId = await this.getPublicFolderId();
 
-				// Draw image to canvas
-				ctx.drawImage(img, 0, 0);
+		// Upload file
+		const formData = new FormData();
+		formData.append('username', this.username);
+		formData.append('password', this.password);
+		formData.append('folderid', pcloudFolderId.toString());
+		formData.append('filename', filename);
+		formData.append('file', imageBlob, filename);
 
-				// Convert to WebP blob
-				canvas.toBlob((webpBlob) => {
-					if (webpBlob) {
-						resolve(webpBlob);
-					} else {
-						reject(new Error('Failed to convert image to WebP'));
-					}
-				}, 'image/webp', this.webpQuality);
-			};
-
-			img.onerror = () => {
-				reject(new Error('Failed to load image for conversion'));
-			};
-
-			// Create object URL for the image
-			img.src = URL.createObjectURL(imageBlob);
+		const response = await fetch('https://api.pcloud.com/uploadfile', {
+			method: 'POST',
+			body: formData,
 		});
+
+		const data = await response.json();
+
+		if (data.result !== 0) {
+			throw new Error(`Upload failed: ${data.error || 'Unknown error'}`);
+		}
+
+		// Construct public URL using the configured Public Folder ID
+		const publicUrl = `https://filedn.com/${this.publicFolderId}/${filename}`;
+		
+		// Insert markdown image syntax at cursor position
+		if (editor) {
+			const markdownImage = `![](${publicUrl})`;
+			editor.replaceSelection(markdownImage);
+			new Notice(`Image uploaded and inserted at cursor position.`);
+		} else {
+			// Fallback: copy URL to clipboard if no editor is available
+			await navigator.clipboard.writeText(publicUrl);
+			new Notice(`Image uploaded successfully! URL copied to clipboard (no active editor found).`);
+		}
+		
+		return publicUrl;
+	}
+
+	async uploadFile(file: File, editor?: Editor): Promise<string> {
+		try {
+			// Check if Public Folder ID is configured
+			if (!this.publicFolderId) {
+				throw new Error('pCloud Public Folder ID is not configured. Please set it in plugin settings.');
+			}
+
+			// Check if it's an image file
+			if (!file.type.startsWith('image/')) {
+				throw new Error('Only image files are supported');
+			}
+
+			// Process image using shared processor
+			const processed = await this.imageProcessor.processImage(file);
+
+			// Upload processed image
+			return await this.uploadProcessedImage(processed.blob, processed.originalType, editor);
+
+		} catch (error) {
+			console.error('Upload error:', error);
+			new Notice(`Upload failed: ${error.message}`);
+			throw error;
+		}
 	}
 
 	async uploadClipboardImage(editor?: Editor): Promise<string> {
@@ -163,66 +193,45 @@ export class PCloudService {
 				throw new Error('No image found in clipboard');
 			}
 
-			// Convert to WebP if it's not already WebP or GIF
-			if (imageBlob.type !== 'image/webp' && imageBlob.type !== 'image/gif') {
-				try {
-					imageBlob = await this.convertToWebP(imageBlob);
-					new Notice(`Image converted to WebP (quality: ${Math.round(this.webpQuality * 100)}%)`);
-				} catch (conversionError) {
-					console.warn('WebP conversion failed, using original format:', conversionError);
-					new Notice('WebP conversion failed, uploading original format');
-				}
-			} else if (imageBlob.type === 'image/gif') {
-				new Notice('GIF file detected - uploading without conversion to preserve animation');
-			}
+			// Process image using shared processor
+			const processed = await this.imageProcessor.processImage(imageBlob);
 
-			// Generate filename with timestamp
-			const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-			const extension = imageBlob.type === 'image/webp' ? 'webp' : (imageBlob.type.split('/')[1] || 'png');
-			const filename = `clipboard-image-${timestamp}.${extension}`;
-
-			// Get Public Folder ID
-			const pcloudFolderId = await this.getPublicFolderId();
-
-			// Upload file
-			const formData = new FormData();
-			formData.append('username', this.username);
-			formData.append('password', this.password);
-			formData.append('folderid', pcloudFolderId.toString());
-			formData.append('filename', filename);
-			formData.append('file', imageBlob, filename);
-
-			const response = await fetch('https://api.pcloud.com/uploadfile', {
-				method: 'POST',
-				body: formData,
-			});
-
-			const data = await response.json();
-
-			if (data.result !== 0) {
-				throw new Error(`Upload failed: ${data.error || 'Unknown error'}`);
-			}
-
-			// Construct public URL using the configured Public Folder ID
-			const publicUrl = `https://filedn.com/${this.publicFolderId}/${filename}`;
-			
-			// Insert markdown image syntax at cursor position
-			if (editor) {
-				const markdownImage = `![](${publicUrl})`;
-				editor.replaceSelection(markdownImage);
-				new Notice(`Image uploaded and inserted at cursor position.`);
-			} else {
-				// Fallback: copy URL to clipboard if no editor is available
-				await navigator.clipboard.writeText(publicUrl);
-				new Notice(`Image uploaded successfully! URL copied to clipboard (no active editor found).`);
-			}
-			
-			return publicUrl;
+			// Upload processed image
+			return await this.uploadProcessedImage(processed.blob, processed.originalType, editor);
 
 		} catch (error) {
 			console.error('Upload error:', error);
 			new Notice(`Upload failed: ${error.message}`);
 			throw error;
 		}
+	}
+
+	async promptFileUpload(editor?: Editor): Promise<string | null> {
+		return new Promise((resolve) => {
+			const input = document.createElement('input');
+			input.type = 'file';
+			input.accept = 'image/*';
+			input.multiple = false;
+
+			input.addEventListener('change', async (event) => {
+				const target = event.target as HTMLInputElement;
+				const file = target.files?.[0];
+				
+				if (file) {
+					try {
+						const url = await this.uploadFile(file, editor);
+						resolve(url);
+					} catch (error) {
+						console.error('File upload failed:', error);
+						resolve(null);
+					}
+				} else {
+					resolve(null);
+				}
+			});
+
+			// Trigger file selection dialog
+			input.click();
+		});
 	}
 } 

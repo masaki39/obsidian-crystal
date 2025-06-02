@@ -81,6 +81,19 @@ export default class CrystalPlugin extends Plugin {
 			}
 		});
 
+		// pCloud File Upload Command
+		this.addCommand({
+			id: 'crystal-upload-file-image',
+			name: 'Upload Image File to pCloud Public Folder',
+			editorCallback: async (editor: Editor, view: MarkdownView) => {
+				try {
+					await this.pcloudService.promptFileUpload(editor);
+				} catch (error) {
+					console.error('Failed to upload image file:', error);
+				}
+			}
+		});
+
 		// Editor Commands
 		this.addCommand({
 			id: 'crystal-create-timestamp-file',

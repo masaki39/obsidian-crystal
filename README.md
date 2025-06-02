@@ -52,19 +52,36 @@ CrystalはObsidian用の汎用機能拡張プラグインである。自分の�
 6. AIがノートの内容を分析してdescriptionを生成する
 7. 生成されたdescriptionがフロントマターに自動的に追加される
 
-## pCloud画像アップロード機能の使用方法
+## pCloud画像アップロード機能
 
-1. pCloudアカウントを作成する
-2. pCloudで「Public Folder」機能を有効化する（Premium機能）
-3. Public Folderから任意のファイルのリンクを取得し、URLからPublic Folder IDを抽出する
-   - 例: `https://filedn.com/lF97wFVWosQpHEoDAbvva0h/example.png`
-   - この場合、Public Folder IDは`lF97wFVWosQpHEoDAbvva0h`
-4. プラグイン設定でpCloudのユーザー名（メールアドレス）、パスワード、Public Folder IDを入力する
-5. Obsidianでマークダウンファイルを開き、画像を挿入したい位置にカーソルを置く
-6. 画像をクリップボードにコピーする（スクリーンショット、他アプリからのコピー等）
-7. コマンドパレット（Ctrl/Cmd + P）を開く
-8. "Upload Clipboard Image to pCloud Public Folder"コマンドを実行する
-9. アップロード完了後、カーソル位置に`![](URL)`形式で画像が自動挿入される
+このプラグインはクリップボードの画像をpCloudのPublic Folderにアップロードし、Obsidianノートに自動的に挿入する機能を提供する。
+
+### クリップボード画像のアップロード
+
+**使用方法:**
+1. プラグイン設定でpCloudの認証情報を設定する
+2. 画像をクリップボードにコピーする（スクリーンショット、他アプリからのコピー等）
+3. コマンドパレット（Ctrl/Cmd + P）を開く
+4. "Upload Clipboard Image to pCloud Public Folder"コマンドを実行する
+5. アップロード完了後、カーソル位置に`![](URL)`形式で画像が自動挿入される
+
+### ファイル選択によるアップロード
+
+**使用方法:**
+1. コマンドパレット（Ctrl/Cmd + P）を開く
+2. "Upload Image File to pCloud Public Folder"コマンドを実行する
+3. ファイル選択ダイアログで画像ファイル（GIF含む）を選択する
+4. アップロード完了後、カーソル位置に`![](URL)`形式で画像が自動挿入される
+
+### GIFファイルのアップロード
+
+**重要:** GIFファイルをアップロードする場合は以下の点に注意：
+
+- **ブラウザ制限**: ウェブページのGIF画像を右クリック「画像をコピー」すると、アニメーションの1フレームのみがクリップボードにコピーされる
+- **推奨方法**: GIFアニメーションを保持するには以下の方法を使用する：
+  1. **ファイル選択**: "Upload Image File to pCloud Public Folder"コマンドでローカルのGIFファイルを選択
+  2. **ドラッグ&ドロップ**: GIFファイルを直接エディターにドラッグ&ドロップ（Auto WebP Paste機能が有効な場合）
+  3. **ファイル保存**: ウェブ上のGIFを「名前を付けて画像を保存」でローカルに保存してから上記方法を使用
 
 **注意**: エディターが開いていない場合は、従来通りURLがクリップボードにコピーされる。
 
@@ -120,31 +137,4 @@ CrystalはObsidian用の汎用機能拡張プラグインである。自分の�
 
 ### 手動インストール
 
-- `main.js`、`styles.css`、`manifest.json`をVaultの`.obsidian/plugins/obsidian-crystal/`フォルダにコピーする
-
-### コード品質の向上
-
-ESLintを使用してコードの問題を素早く発見できる：
-
-```bash
-npm install -g eslint
-eslint main.ts
-```
-
-## API Documentation
-
-詳細については https://github.com/obsidianmd/obsidian-api を参照のこと。
-
-## スマートナビゲーション機能
-
-デイリーノート間の移動は、現在アクティブなファイルの日付を基準に行われる：
-
-### 動作例
-- `2024-01-15.md`を開いている状態で「Yesterday」コマンド → `2024-01-14.md`を開く
-- `2024-01-16.md`を開いている状態で「Tomorrow」コマンド → `2024-01-17.md`を開く
-- 日付ファイル以外を開いている場合は、今日の日付を基準にする
-
-### 対応する日付フォーマット
-- 設定で指定した日付フォーマットに従ってファイル名から日付を抽出
-- デフォルト: `YYYY-MM-DD` (例: `2024-01-15`)
-- カスタムフォーマット例: `YYYY年MM月DD日`, `DD-MM-YYYY` など
+- `main.js`、`styles.css`、`manifest.json`をVaultの`.obsidian/plugins/obsidian-crystal/`
