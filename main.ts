@@ -5,6 +5,7 @@ import { DailyNotesManager } from './src/daily-notes';
 import { PCloudService } from './src/pcloud-service';
 import { ClipboardPasteHandler } from './src/clipboard-paste-handler';
 import { EditorCommands } from './src/editor-commands';
+import { QuickAddCommands } from './src/quick-add-commands';
 
 // Crystal Plugin for Obsidian
 
@@ -15,6 +16,7 @@ export default class CrystalPlugin extends Plugin {
 	private pcloudService: PCloudService;
 	private clipboardPasteHandler: ClipboardPasteHandler;
 	private editorCommands: EditorCommands;
+	private quickAddCommands: QuickAddCommands;
 
 	async onload() {
 		await this.loadSettings();
@@ -25,6 +27,7 @@ export default class CrystalPlugin extends Plugin {
 		this.pcloudService = new PCloudService(this.app, this.settings.pcloudUsername, this.settings.pcloudPassword, this.settings.pcloudPublicFolderId, this.settings.webpQuality);
 		this.clipboardPasteHandler = new ClipboardPasteHandler(this.app, this.settings);
 		this.editorCommands = new EditorCommands(this.app, this.settings);
+		this.quickAddCommands = new QuickAddCommands(this.app, this.settings);
 
 		// Enable clipboard paste handler if auto paste is enabled
 		if (this.settings.autoWebpPaste) {
@@ -127,6 +130,31 @@ export default class CrystalPlugin extends Plugin {
 			}
 		});
 
+		this.addCommand({
+			id: 'crystal-organize-file-with-tags',
+			name: 'Organize File with Tags (Templater equivalent)',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.editorCommands.organizeFileWithTags(editor, view);
+			}
+		});
+
+		// Quick Add Commands
+		this.addCommand({
+			id: 'crystal-add-task-to-daily-note',
+			name: 'Add Task to Daily Note',
+			callback: () => {
+				this.quickAddCommands.addTaskToDailyNote();
+			}
+		});
+
+		this.addCommand({
+			id: 'crystal-add-task-to-todo',
+			name: 'Add Task to ToDo List',
+			callback: () => {
+				this.quickAddCommands.addTaskToTodo();
+			}
+		});
+
 		this.addSettingTab(new CrystalSettingTab(this.app, this));
 	}
 
@@ -148,6 +176,7 @@ export default class CrystalPlugin extends Plugin {
 		this.pcloudService.updateCredentials(this.settings.pcloudUsername, this.settings.pcloudPassword, this.settings.pcloudPublicFolderId, this.settings.webpQuality);
 		this.clipboardPasteHandler.updateSettings(this.settings);
 		this.editorCommands.updateSettings(this.settings);
+		this.quickAddCommands.updateSettings(this.settings);
 		
 		// Toggle clipboard paste handler based on settings
 		if (this.settings.autoWebpPaste) {
