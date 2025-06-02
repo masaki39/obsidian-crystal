@@ -1,8 +1,9 @@
-import { Editor, MarkdownView, Plugin } from 'obsidian';
+import { Editor, MarkdownView, Plugin, Notice } from 'obsidian';
 import { CrystalPluginSettings, DEFAULT_SETTINGS, CrystalSettingTab } from './src/settings';
 import { GeminiService } from './src/gemini-service';
 import { DailyNotesManager } from './src/daily-notes';
 import { PCloudService } from './src/pcloud-service';
+import { ClipboardPasteHandler } from './src/clipboard-paste-handler';
 
 // Crystal Plugin for Obsidian
 
@@ -11,6 +12,7 @@ export default class CrystalPlugin extends Plugin {
 	private geminiService: GeminiService;
 	private dailyNotesManager: DailyNotesManager;
 	private pcloudService: PCloudService;
+	private clipboardPasteHandler: ClipboardPasteHandler;
 
 	async onload() {
 		await this.loadSettings();
@@ -19,6 +21,12 @@ export default class CrystalPlugin extends Plugin {
 		this.geminiService = new GeminiService(this.app, this.settings.GeminiAPIKey);
 		this.dailyNotesManager = new DailyNotesManager(this.app, this.settings);
 		this.pcloudService = new PCloudService(this.app, this.settings.pcloudUsername, this.settings.pcloudPassword, this.settings.pcloudPublicFolderId, this.settings.webpQuality);
+		this.clipboardPasteHandler = new ClipboardPasteHandler(this.app, this.settings);
+
+		// Enable clipboard paste handler if auto paste is enabled
+		if (this.settings.autoWebpPaste) {
+			this.clipboardPasteHandler.enable();
+		}
 
 		// AI Description Generation Command
 		this.addCommand({
@@ -71,7 +79,10 @@ export default class CrystalPlugin extends Plugin {
 	}
 
 	onunload() {
-
+		// Disable clipboard paste handler
+		if (this.clipboardPasteHandler) {
+			this.clipboardPasteHandler.disable();
+		}
 	}
 
 	async loadSettings() {
@@ -83,5 +94,13 @@ export default class CrystalPlugin extends Plugin {
 		this.geminiService.updateSettings(this.settings);
 		this.dailyNotesManager.updateSettings(this.settings);
 		this.pcloudService.updateCredentials(this.settings.pcloudUsername, this.settings.pcloudPassword, this.settings.pcloudPublicFolderId, this.settings.webpQuality);
+		this.clipboardPasteHandler.updateSettings(this.settings);
+		
+		// Toggle clipboard paste handler based on settings
+		if (this.settings.autoWebpPaste) {
+			this.clipboardPasteHandler.enable();
+		} else {
+			this.clipboardPasteHandler.disable();
+		}
 	}
 }

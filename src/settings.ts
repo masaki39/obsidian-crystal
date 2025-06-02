@@ -8,6 +8,7 @@ export interface CrystalPluginSettings {
 	pcloudPassword: string;
 	pcloudPublicFolderId: string;
 	webpQuality: number;
+	autoWebpPaste: boolean;
 }
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
@@ -17,7 +18,8 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	pcloudUsername: '',
 	pcloudPassword: '',
 	pcloudPublicFolderId: '',
-	webpQuality: 0.8
+	webpQuality: 0.8,
+	autoWebpPaste: true
 }
 
 export class CrystalSettingTab extends PluginSettingTab {
@@ -78,7 +80,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 				}));
 
 		// pCloud settings
-		containerEl.createEl('h3', { text: 'pCloud Upload' });
+		containerEl.createEl('h3', { text: 'pCloud Uploader' });
 
 		new Setting(containerEl)
 			.setName('pCloud Username')
@@ -128,6 +130,19 @@ export class CrystalSettingTab extends PluginSettingTab {
 				.setDynamicTooltip()
 				.onChange(async (value) => {
 					this.plugin.settings.webpQuality = value;
+					await this.plugin.saveSettings();
+				}));
+
+		// Auto WebP Paste settings
+		containerEl.createEl('h3', { text: 'Auto WebP Paste' });
+
+		new Setting(containerEl)
+			.setName('Auto Convert Images to WebP on Paste')
+			.setDesc('Automatically convert pasted images to WebP format and save to vault')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.autoWebpPaste)
+				.onChange(async (value) => {
+					this.plugin.settings.autoWebpPaste = value;
 					await this.plugin.saveSettings();
 				}));
 	}
