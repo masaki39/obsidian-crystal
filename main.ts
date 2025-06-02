@@ -1,38 +1,28 @@
 import { Editor, MarkdownView, Plugin } from 'obsidian';
 import { CrystalPluginSettings, DEFAULT_SETTINGS, CrystalSettingTab } from './src/settings';
-import { ServiceManager } from './src/service-manager';
-import { FileProcessor } from './src/file-processor';
+import { GeminiService } from './src/gemini-service';
 import { DailyNotesManager } from './src/daily-notes';
 
 // Crystal Plugin for Obsidian
 
 export default class CrystalPlugin extends Plugin {
 	settings: CrystalPluginSettings;
-	private serviceManager: ServiceManager;
-	private fileProcessor: FileProcessor;
+	private geminiService: GeminiService;
 	private dailyNotesManager: DailyNotesManager;
 
 	async onload() {
 		await this.loadSettings();
 
-		// Initialize managers
-		this.serviceManager = new ServiceManager();
-		this.fileProcessor = new FileProcessor(this.app);
+		// Initialize services
+		this.geminiService = new GeminiService(this.app, this.settings.GeminiAPIKey);
 		this.dailyNotesManager = new DailyNotesManager(this.app, this.settings);
-		
-		// Initialize Gemini service
-		this.serviceManager.updateGeminiService(this.settings);
 
 		// AI Description Generation Command
 		this.addCommand({
 			id: 'crystal-generate-description',
 			name: 'Generate Description for Current File',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.fileProcessor.generateDescription(
-					editor, 
-					view, 
-					this.serviceManager.getGeminiService()
-				);
+				this.geminiService.generateDescriptionForCurrentFile(editor, view);
 			}
 		});
 
@@ -74,7 +64,7 @@ export default class CrystalPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-		this.serviceManager.updateGeminiService(this.settings);
+		this.geminiService.updateSettings(this.settings);
 		this.dailyNotesManager.updateSettings(this.settings);
 	}
 }
