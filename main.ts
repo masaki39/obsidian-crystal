@@ -2,6 +2,7 @@ import { Editor, MarkdownView, Plugin } from 'obsidian';
 import { CrystalPluginSettings, DEFAULT_SETTINGS, CrystalSettingTab } from './src/settings';
 import { GeminiService } from './src/gemini-service';
 import { DailyNotesManager } from './src/daily-notes';
+import { PCloudService } from './src/pcloud-service';
 
 // Crystal Plugin for Obsidian
 
@@ -9,6 +10,7 @@ export default class CrystalPlugin extends Plugin {
 	settings: CrystalPluginSettings;
 	private geminiService: GeminiService;
 	private dailyNotesManager: DailyNotesManager;
+	private pcloudService: PCloudService;
 
 	async onload() {
 		await this.loadSettings();
@@ -16,6 +18,7 @@ export default class CrystalPlugin extends Plugin {
 		// Initialize services
 		this.geminiService = new GeminiService(this.app, this.settings.GeminiAPIKey);
 		this.dailyNotesManager = new DailyNotesManager(this.app, this.settings);
+		this.pcloudService = new PCloudService(this.app, this.settings.pcloudUsername, this.settings.pcloudPassword, this.settings.pcloudPublicFolderId);
 
 		// AI Description Generation Command
 		this.addCommand({
@@ -51,6 +54,19 @@ export default class CrystalPlugin extends Plugin {
 			}
 		});
 
+		// pCloud Upload Command
+		this.addCommand({
+			id: 'crystal-upload-clipboard-image',
+			name: 'Upload Clipboard Image to pCloud Public Folder',
+			editorCallback: async (editor: Editor, view: MarkdownView) => {
+				try {
+					await this.pcloudService.uploadClipboardImage(editor);
+				} catch (error) {
+					console.error('Failed to upload clipboard image:', error);
+				}
+			}
+		});
+
 		this.addSettingTab(new CrystalSettingTab(this.app, this));
 	}
 
@@ -66,5 +82,6 @@ export default class CrystalPlugin extends Plugin {
 		await this.saveData(this.settings);
 		this.geminiService.updateSettings(this.settings);
 		this.dailyNotesManager.updateSettings(this.settings);
+		this.pcloudService.updateCredentials(this.settings.pcloudUsername, this.settings.pcloudPassword, this.settings.pcloudPublicFolderId);
 	}
 }

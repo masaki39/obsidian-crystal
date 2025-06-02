@@ -4,12 +4,18 @@ export interface CrystalPluginSettings {
 	GeminiAPIKey: string;
 	dailyNotesFolder: string;
 	dailyNoteDateFormat: string;
+	pcloudUsername: string;
+	pcloudPassword: string;
+	pcloudPublicFolderId: string;
 }
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	GeminiAPIKey: '',
 	dailyNotesFolder: 'DailyNotes',
-	dailyNoteDateFormat: 'YYYY-MM-DD'
+	dailyNoteDateFormat: 'YYYY-MM-DD',
+	pcloudUsername: '',
+	pcloudPassword: '',
+	pcloudPublicFolderId: ''
 }
 
 export class CrystalSettingTab extends PluginSettingTab {
@@ -63,6 +69,45 @@ export class CrystalSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.dailyNoteDateFormat)
 				.onChange(async (value) => {
 					this.plugin.settings.dailyNoteDateFormat = value;
+					await this.plugin.saveSettings();
+				}));
+
+		// pCloud settings
+		containerEl.createEl('h3', { text: 'pCloud Upload' });
+
+		new Setting(containerEl)
+			.setName('pCloud Username')
+			.setDesc('Your pCloud username (email)')
+			.addText(text => text
+				.setPlaceholder('Enter your pCloud username')
+				.setValue(this.plugin.settings.pcloudUsername)
+				.onChange(async (value) => {
+					this.plugin.settings.pcloudUsername = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('pCloud Password')
+			.setDesc('Your pCloud password')
+			.addText(text => {
+				text.setPlaceholder('Enter your pCloud password')
+					.setValue(this.plugin.settings.pcloudPassword)
+					.onChange(async (value) => {
+						this.plugin.settings.pcloudPassword = value;
+						await this.plugin.saveSettings();
+					});
+				text.inputEl.type = 'password';
+				return text;
+			});
+
+		new Setting(containerEl)
+			.setName('pCloud Public Folder ID')
+			.setDesc('Your pCloud Public Folder unique ID (found in Public Folder links)')
+			.addText(text => text
+				.setPlaceholder('e.g., lF97wFVWosQpHEoDAbvva0h')
+				.setValue(this.plugin.settings.pcloudPublicFolderId)
+				.onChange(async (value) => {
+					this.plugin.settings.pcloudPublicFolderId = value;
 					await this.plugin.saveSettings();
 				}));
 	}

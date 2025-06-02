@@ -16,10 +16,16 @@ CrystalはObsidian用の汎用機能拡張プラグインである。自分の�
 - **カスタマイズ可能**: フォルダ名、日付フォーマットを設定で変更可能
 - **シンプルな設計**: 空のファイルを作成し、コンテンツは自由に追加
 
+### ☁️ pCloud画像アップロード
+- **クリップボード画像アップロード**: クリップボードの画像をpCloudの「Public Folder」に自動アップロード
+- **マークダウン形式挿入**: アップロード完了時に`![](URL)`形式でカーソル位置に自動挿入
+- **タイムスタンプファイル名**: アップロードファイルは`clipboard-image-YYYY-MM-DDTHH-mm-ss.extension`形式で命名
+- **認証管理**: pCloudのユーザー名とパスワードを設定画面で管理
+
 ## セットアップ
 
 1. Obsidianの設定でCrystalプラグインを有効化する
-2. 必要に応じて各機能の設定を行う（例：Gemini API Key、デイリーノート設定等）
+2. 必要に応じて各機能の設定を行う（例：Gemini API Key、デイリーノート設定、pCloud認証情報等）
 
 ## 利用可能なコマンド
 
@@ -31,6 +37,9 @@ CrystalはObsidian用の汎用機能拡張プラグインである。自分の�
 - `Open Yesterday's Daily Note`: 現在のファイルの前日のデイリーノートを開く/作成
 - `Open Tomorrow's Daily Note`: 現在のファイルの翌日のデイリーノートを開く/作成
 
+### pCloud画像アップロード
+- `Upload Clipboard Image to pCloud Public Folder`: クリップボードの画像をpCloudの「Public Folder」にアップロード
+
 ## Description生成機能の使用方法
 
 1. Google AI StudioでGemini API Keyを取得する
@@ -41,12 +50,43 @@ CrystalはObsidian用の汎用機能拡張プラグインである。自分の�
 6. AIがノートの内容を分析してdescriptionを生成する
 7. 生成されたdescriptionがフロントマターに自動的に追加される
 
+## pCloud画像アップロード機能の使用方法
+
+1. pCloudアカウントを作成する
+2. pCloudで「Public Folder」機能を有効化する（Premium機能）
+3. Public Folderから任意のファイルのリンクを取得し、URLからPublic Folder IDを抽出する
+   - 例: `https://filedn.com/lF97wFVWosQpHEoDAbvva0h/example.png`
+   - この場合、Public Folder IDは`lF97wFVWosQpHEoDAbvva0h`
+4. プラグイン設定でpCloudのユーザー名（メールアドレス）、パスワード、Public Folder IDを入力する
+5. Obsidianでマークダウンファイルを開き、画像を挿入したい位置にカーソルを置く
+6. 画像をクリップボードにコピーする（スクリーンショット、他アプリからのコピー等）
+7. コマンドパレット（Ctrl/Cmd + P）を開く
+8. "Upload Clipboard Image to pCloud Public Folder"コマンドを実行する
+9. アップロード完了後、カーソル位置に`![](URL)`形式で画像が自動挿入される
+
+**注意**: エディターが開いていない場合は、従来通りURLがクリップボードにコピーされる。
+
 ## デイリーノート機能の設定
 
 プラグイン設定で以下をカスタマイズできる：
 
 - **Daily Notes Folder**: デイリーノートを保存するフォルダ（デフォルト: `DailyNotes`）
 - **Date Format**: ファイル名の日付フォーマット（デフォルト: `YYYY-MM-DD`）
+
+## pCloud機能の設定
+
+プラグイン設定で以下を設定する：
+
+- **pCloud Username**: pCloudのユーザー名（メールアドレス）
+- **pCloud Password**: pCloudのパスワード
+- **pCloud Public Folder ID**: Public Folderの固有ID（例: `lF97wFVWosQpHEoDAbvva0h`）
+
+**Public Folder IDの取得方法**:
+1. pCloudのPublic Folderに既存のファイルがある場合、そのファイルのリンクを取得
+2. URLの形式: `https://filedn.com/{PublicFolderID}/{filename}`
+3. `{PublicFolderID}`の部分をコピーして設定に入力
+
+**注意**: パスワードとPublic Folder IDは機密性の高い情報であることを認識して利用すること。
 
 ## 機能の追加・カスタマイズ
 
