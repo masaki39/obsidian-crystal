@@ -53,6 +53,7 @@ export class EditorCommands {
 		try {
 			const newFile = await this.app.vault.create(basefilename + '.md', '');
 			await this.app.workspace.getLeaf().openFile(newFile);
+			await (this.app as any).commands.executeCommandById("workspace:edit-file-title");
 		} catch (error) {
 			new Notice('Failed to create new file: ' + error.message);
 		}
@@ -70,6 +71,7 @@ export class EditorCommands {
 			// Create new file
 			const newFile = await this.app.vault.create(basefilename + '.md', '');
 			await this.app.workspace.getLeaf().openFile(newFile);
+			await (this.app as any).commands.executeCommandById("workspace:edit-file-title");
 		} catch (error) {
 			new Notice('Failed to create linked file: ' + error.message);
 		}
