@@ -59,7 +59,7 @@ export class GeminiService {
 	/**
 	 * Gemini APIを使用してdescriptionを生成する
 	 */
-	async generateDescription(content: string): Promise<string> {
+	async generateDescription(title: string, content: string): Promise<string> {
 		if (!this.genAI) {
 			throw new Error('Gemini API Key is not configured');
 		}
@@ -68,7 +68,8 @@ export class GeminiService {
 			const model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 			
 			const prompt = `以下のMarkdownファイルの内容を読んで、一文で簡潔な説明（description）を日本語で生成してください。検索用のキーワードを意識した説明にしてください。説明のみを出力し、余計な文言は含めないでください。
-
+ファイル名:
+${title}
 ファイル内容:
 ${content}`;
 
@@ -104,6 +105,7 @@ ${content}`;
 			new Notice('Descriptionを生成中...');
 
 			// フロントマターを除去したコンテンツを取得
+			const titleForAnalysis = view.file.basename;
 			const contentForAnalysis = await this.getContentWithoutFrontmatter(view.file);
 			
 			if (!contentForAnalysis.trim()) {
@@ -112,7 +114,7 @@ ${content}`;
 			}
 
 			// Geminiを使用してdescriptionを生成
-			const description = await this.generateDescription(contentForAnalysis);
+			const description = await this.generateDescription(titleForAnalysis, contentForAnalysis);
 
 			// フロントマターを更新
 			await this.updateFrontmatterDescription(view.file, description);
