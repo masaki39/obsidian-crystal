@@ -14,7 +14,7 @@ export class MarpCommands {
 	/**
 	 * リンクを相対パスに変換し、Marpコマンドをクリップボードにコピーする
 	 */
-	async prepareMarpSlide(editor: Editor, view: MarkdownView) {
+	async previewMarpSlide(editor: Editor, view: MarkdownView) {
 		if (!view.file) {
 			new Notice('ファイルが開かれていません');
 			return;
@@ -25,7 +25,7 @@ export class MarpCommands {
 			await this.editorCommands.convertLinksToRelativePaths(editor, view);
 
 			// 2. Marpコマンドをクリップボードにコピー
-			await this.copyMarpCommand(view);
+			await this.copyMarpPreviewCommand(view);
 
 			// 成功通知
 			new Notice('リンクパス変換完了・Marpコマンドをコピーしました');
@@ -39,7 +39,7 @@ export class MarpCommands {
 	/**
 	 * Marpコマンドをクリップボードにコピーする
 	 */
-	private async copyMarpCommand(view: MarkdownView) {
+	private async copyMarpPreviewCommand(view: MarkdownView) {
 		const file = view.file;
 		if (!file) return;
 

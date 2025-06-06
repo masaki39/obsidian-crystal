@@ -185,7 +185,7 @@ export default class CrystalPlugin extends Plugin {
 			id: 'crystal-prepare-marp-slide',
 			name: 'Prepare Marp Slide',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.marpCommands.prepareMarpSlide(editor, view);
+				this.marpCommands.previewMarpSlide(editor, view);
 			}
 		});
 
