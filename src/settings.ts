@@ -1,7 +1,6 @@
 import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 export interface CrystalPluginSettings {
-	exportFolder: string;
 	GeminiAPIKey: string;
 	dailyNotesFolder: string;
 	dailyNoteDateFormat: string;
@@ -13,7 +12,6 @@ export interface CrystalPluginSettings {
 }
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
-	exportFolder: '',
 	GeminiAPIKey: '',
 	dailyNotesFolder: 'DailyNotes',
 	dailyNoteDateFormat: 'YYYY-MM-DD',
@@ -38,21 +36,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		containerEl.createEl('h1', { text: 'Crystal Plugin Settings' });
-
-		// Export folder settings
-		containerEl.createEl('h3', { text: 'General Settings' });
-
-		new Setting(containerEl)
-			.setName('Export Folder') 
-			.setDesc('Folder where exported files are stored')
-			.addText(text => text
-				.setPlaceholder('ExportFolder')
-				.setValue(this.plugin.settings.exportFolder)
-				.onChange(async (value) => {
-					this.plugin.settings.exportFolder = value;
-					await this.plugin.saveSettings();
-				}));
-
+		
 		// Gemini settings
 		containerEl.createEl('h3', { text: 'Gemini Description Generator' });
 
