@@ -30,7 +30,7 @@ export default class CrystalPlugin extends Plugin {
 		this.imagePasteAndDropHandler = new ImagePasteAndDropHandler(this.app, this.settings);
 		this.editorCommands = new EditorCommands(this.app, this.settings);
 		this.quickAddCommands = new QuickAddCommands(this.app, this.settings);
-		this.marpCommands = new MarpCommands(this.app, this.settings);
+		this.marpCommands = new MarpCommands(this.app, this.editorCommands);
 
 		// Enable image paste and drop handler if auto paste is enabled
 		if (this.settings.autoWebpPaste) {
@@ -211,7 +211,6 @@ export default class CrystalPlugin extends Plugin {
 		this.imagePasteAndDropHandler.updateSettings(this.settings);
 		this.editorCommands.updateSettings(this.settings);
 		this.quickAddCommands.updateSettings(this.settings);
-		this.marpCommands.updateSettings(this.settings);
 		
 		// Toggle image paste and drop handler based on settings
 		if (this.settings.autoWebpPaste) {

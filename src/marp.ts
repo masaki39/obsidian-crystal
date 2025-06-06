@@ -1,22 +1,14 @@
 import { App, Editor, MarkdownView, Notice } from 'obsidian';
-import { CrystalPluginSettings } from './settings';
 import { EditorCommands } from './editor-commands';
 import * as path from 'path';
 
 export class MarpCommands {
 	private app: App;
-	private settings: CrystalPluginSettings;
 	private editorCommands: EditorCommands;
 
-	constructor(app: App, settings: CrystalPluginSettings) {
+	constructor(app: App, editorCommands: EditorCommands) {
 		this.app = app;
-		this.settings = settings;
-		this.editorCommands = new EditorCommands(app, settings);
-	}
-
-	updateSettings(settings: CrystalPluginSettings) {
-		this.settings = settings;
-		this.editorCommands.updateSettings(settings);
+		this.editorCommands = editorCommands;
 	}
 
 	/**
@@ -120,12 +112,10 @@ export class MarpCommands {
 			const vaultPath = (this.app.vault.adapter as any).basePath || '';
 			const activeFilePath = path.join(vaultPath, file.path);
 			
-			// ダウンロードフォルダの絶対パス（設定から取得）
-			const downloadsPath = this.settings.marpDownloadsPath || '/Users/masaki/Downloads';
-			
-			// 出力ファイル名（.htmlを追加）
-			const outputFileName = `${file.basename}.html`;
-			const outputPath = path.join(downloadsPath, outputFileName);
+			// 出力ファイル名（固定）- アクティブファイルと同じディレクトリに出力
+			const outputFileName = 'marp-preview.html';
+			const fileDirectory = file.parent ? path.join(vaultPath, file.parent.path) : vaultPath;
+			const outputPath = path.join(fileDirectory, outputFileName);
 
 			// Marpコマンドを生成
 			const marpCommand = `marp -p "${activeFilePath}" -o "${outputPath}"`;

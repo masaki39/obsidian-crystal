@@ -9,7 +9,6 @@ export interface CrystalPluginSettings {
 	pcloudPublicFolderId: string;
 	webpQuality: number;
 	autoWebpPaste: boolean;
-	marpDownloadsPath: string;
 }
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
@@ -20,8 +19,7 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	pcloudPassword: '',
 	pcloudPublicFolderId: '',
 	webpQuality: 0.8,
-	autoWebpPaste: true,
-	marpDownloadsPath: '/Users/masaki/Downloads'
+	autoWebpPaste: true
 }
 
 export class CrystalSettingTab extends PluginSettingTab {
@@ -148,18 +146,6 @@ export class CrystalSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
-		// Marp settings
-		containerEl.createEl('h3', { text: 'Marp Slide Export' });
 
-		new Setting(containerEl)
-			.setName('Downloads Folder Path')
-			.setDesc('Absolute path to the downloads folder for Marp slide output')
-			.addText(text => text
-				.setPlaceholder('/Users/masaki/Downloads')
-				.setValue(this.plugin.settings.marpDownloadsPath)
-				.onChange(async (value) => {
-					this.plugin.settings.marpDownloadsPath = value;
-					await this.plugin.saveSettings();
-				}));
 	}
 } 
