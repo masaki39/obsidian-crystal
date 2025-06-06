@@ -9,8 +9,8 @@ class TagSuggestModal extends SuggestModal<string> {
 
 	constructor(app: App, onChoose: (tag: string) => void) {
 		super(app);
-		this.targetTags = ["note/term", "note/topic", "note/knowledge", "note/idea", "note/log", "note/report", "note/publish"];
-		this.displayNames = ["1: 📖Term note", "2: 📒Topic note", "3: 📝Knowledge note", "4: 🧠Idea note", "5: 📜Log note", "6: 📰Report note", "7: 📘Publish note"];
+		this.targetTags = ["note/term", "note/topic", "note/knowledge", "note/idea", "note/log", "note/report", "note/publish", "slide"];
+		this.displayNames = ["1: 📖Term note", "2: 📒Topic note", "3: 📝Knowledge note", "4: 🧠Idea note", "5: 📜Log note", "6: 📰Report note", "7: 📘Publish note", "8: ▶️Slide"];
 		this.onChoose = onChoose;
 	}
 
@@ -170,7 +170,7 @@ export class EditorCommands {
 			return;
 		}
 
-		const targetTags = ["note/term", "note/topic", "note/knowledge", "note/idea", "note/log", "note/report", "note/publish"];
+		const targetTags = ["note/term", "note/topic", "note/knowledge", "note/idea", "note/log", "note/report", "note/publish", "slide"];
 
 		// タグ選択モーダルを表示
 		const tagModal = new TagSuggestModal(this.app, async (selectedTag: string) => {
@@ -218,10 +218,10 @@ export class EditorCommands {
 		let basefilename = file.basename;
 
 		// 絵文字プレフィックスを削除
-		const emojiPrefixes = ["📒", "🧠", "📜", "📰", "📘"];
+		const emojiPrefixes = ["📒", "🧠", "📜", "📰", "📘", "▶️"];
 		for (const emoji of emojiPrefixes) {
 			if (basefilename.startsWith(emoji)) {
-				basefilename = basefilename.slice(2).trim();
+				basefilename = basefilename.slice(emoji.length).trim();
 				break;
 			}
 		}
@@ -253,6 +253,9 @@ export class EditorCommands {
 				break;
 			case "note/publish":
 				newfilename = `📘${basefilename}`;
+				break;
+			case "slide":
+				newfilename = `▶️${date} ${basefilename}`;
 				break;
 			default:
 				newfilename = basefilename;
