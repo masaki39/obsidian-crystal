@@ -302,4 +302,118 @@ export class EditorCommands {
 - 
 `;
 	}
+
+	/**
+	 * Convert Obsidian Wiki links and Markdown links to relative path Markdown links
+	 */
+	async convertLinksToRelativePaths(editor: Editor, view: MarkdownView) {
+		if (!view.file) {
+			new Notice('ファイルが開かれていません');
+			return;
+		}
+
+		const content = editor.getValue();
+		let convertedContent = content;
+		let changeCount = 0;
+
+		// Get current file's folder path for relative path calculation
+		const currentFile = view.file;
+		const currentFolder = currentFile.parent?.path || '';
+
+		// Convert Wiki links: [[filename]] or [[filename|display]]
+		const wikiLinkRegex = /\[\[([^\]|]+)(\|[^\]]+)?\]\]/g;
+		convertedContent = convertedContent.replace(wikiLinkRegex, (match, filename, alias) => {
+			// Find the target file in the vault
+			const targetFile = this.app.vault.getAbstractFileByPath(filename + '.md') ||
+							   this.app.metadataCache.getFirstLinkpathDest(filename, currentFile.path);
+			
+			if (targetFile && targetFile.path) {
+				// Calculate relative path
+				const relativePath = this.getRelativePath(currentFolder, targetFile.path);
+				const displayText = alias ? alias.slice(1) : filename; // Remove | from alias
+				changeCount++;
+				return `[${displayText}](${relativePath})`;
+			}
+			
+			// If file not found, keep original
+			return match;
+		});
+
+		// Convert absolute Markdown links to relative if they point to vault files
+		const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+		convertedContent = convertedContent.replace(markdownLinkRegex, (match, text, url) => {
+			// Skip external URLs
+			if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:')) {
+				return match;
+			}
+
+			// Skip already relative paths
+			if (url.startsWith('./') || url.startsWith('../')) {
+				return match;
+			}
+
+			// Check if it's a vault file path
+			const targetFile = this.app.vault.getAbstractFileByPath(url);
+			if (targetFile && targetFile.path) {
+				// Calculate relative path
+				const relativePath = this.getRelativePath(currentFolder, targetFile.path);
+				changeCount++;
+				return `[${text}](${relativePath})`;
+			}
+
+			return match;
+		});
+
+		if (changeCount > 0) {
+			editor.setValue(convertedContent);
+			new Notice(`${changeCount}個のリンクを相対パスに変換しました`);
+		} else {
+			new Notice('変換対象のリンクが見つかりませんでした');
+		}
+	}
+
+	/**
+	 * Calculate relative path from current folder to target file
+	 */
+	private getRelativePath(currentFolder: string, targetPath: string): string {
+		// Normalize paths - remove leading/trailing slashes and split
+		const normalizePath = (path: string) => path.replace(/^\/+|\/+$/g, '').split('/').filter(p => p.length > 0);
+		
+		const currentParts = currentFolder ? normalizePath(currentFolder) : [];
+		const targetParts = normalizePath(targetPath);
+		
+		// If target is in root and current is also in root
+		if (currentParts.length === 0 && targetParts.length === 1) {
+			return targetParts[0];
+		}
+		
+		// If current is in root, return target path as is
+		if (currentParts.length === 0) {
+			return targetParts.join('/');
+		}
+
+		// Find common prefix length
+		let commonLength = 0;
+		while (commonLength < currentParts.length && 
+			   commonLength < targetParts.length - 1 && // -1 because target includes filename
+			   currentParts[commonLength] === targetParts[commonLength]) {
+			commonLength++;
+		}
+
+		// Calculate how many levels to go up
+		const upLevels = currentParts.length - commonLength;
+		
+		// Get remaining path after common prefix
+		const downPath = targetParts.slice(commonLength).join('/');
+
+		// Build relative path
+		if (upLevels === 0) {
+			// Same folder - just return filename
+			return targetParts[targetParts.length - 1];
+		} else {
+			// Different folder - need to go up
+			const upPath = '../'.repeat(upLevels);
+			return upPath + downPath;
+		}
+	}
 } 

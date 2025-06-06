@@ -6,6 +6,7 @@ import { PCloudService } from './src/pcloud-service';
 import { ImagePasteAndDropHandler } from './src/clipboard-paste-handler';
 import { EditorCommands } from './src/editor-commands';
 import { QuickAddCommands } from './src/quick-add-commands';
+import { MarpCommands } from './src/marp';
 
 // Crystal Plugin for Obsidian
 
@@ -17,6 +18,7 @@ export default class CrystalPlugin extends Plugin {
 	private imagePasteAndDropHandler: ImagePasteAndDropHandler;
 	private editorCommands: EditorCommands;
 	private quickAddCommands: QuickAddCommands;
+	private marpCommands: MarpCommands;
 
 	async onload() {
 		await this.loadSettings();
@@ -28,6 +30,7 @@ export default class CrystalPlugin extends Plugin {
 		this.imagePasteAndDropHandler = new ImagePasteAndDropHandler(this.app, this.settings);
 		this.editorCommands = new EditorCommands(this.app, this.settings);
 		this.quickAddCommands = new QuickAddCommands(this.app, this.settings);
+		this.marpCommands = new MarpCommands(this.app, this.settings);
 
 		// Enable image paste and drop handler if auto paste is enabled
 		if (this.settings.autoWebpPaste) {
@@ -151,6 +154,15 @@ export default class CrystalPlugin extends Plugin {
 			}
 		});
 
+		// Convert Links Command
+		this.addCommand({
+			id: 'crystal-convert-links-to-relative-paths',
+			name: 'Convert Links to Relative Paths',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.editorCommands.convertLinksToRelativePaths(editor, view);
+			}
+		});
+
 		// Quick Add Commands
 		this.addCommand({
 			id: 'crystal-add-task-to-daily-note',
@@ -165,6 +177,15 @@ export default class CrystalPlugin extends Plugin {
 			name: 'Add Task to ToDo List',
 			callback: () => {
 				this.quickAddCommands.addTaskToTodo();
+			}
+		});
+
+		// Marp Commands
+		this.addCommand({
+			id: 'crystal-prepare-marp-slide',
+			name: 'Prepare Marp Slide',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.marpCommands.prepareMarpSlide(editor, view);
 			}
 		});
 
@@ -190,6 +211,7 @@ export default class CrystalPlugin extends Plugin {
 		this.imagePasteAndDropHandler.updateSettings(this.settings);
 		this.editorCommands.updateSettings(this.settings);
 		this.quickAddCommands.updateSettings(this.settings);
+		this.marpCommands.updateSettings(this.settings);
 		
 		// Toggle image paste and drop handler based on settings
 		if (this.settings.autoWebpPaste) {
