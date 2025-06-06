@@ -227,7 +227,7 @@ export class EditorCommands {
 		}
 
 		// 最初の日付を削除 (YYYY-MM-DD format)
-		const dateMatch = basefilename.match(/^\d{4}-\d{2}-\d{2} /);
+		const dateMatch = basefilename.match(/^\d{4}-\d{2}-\d{2} /) || basefilename.match(/^\d{4}-\d{2}-\d{2}_/);
 		if (dateMatch) {
 			basefilename = basefilename.slice(dateMatch[0].length).trim();
 		}
@@ -243,19 +243,19 @@ export class EditorCommands {
 				newfilename = `📒${basefilename}`;
 				break;
 			case "note/idea":
-				newfilename = `🧠${date} ${basefilename}`;
+				newfilename = `🧠${date}_${basefilename}`;
 				break;
 			case "note/log":
-				newfilename = `📜${date} ${basefilename}`;
+				newfilename = `📜${date}_${basefilename}`;
 				break;
 			case "note/report":
-				newfilename = `📰${date} ${basefilename}`;
+				newfilename = `📰${date}_${basefilename}`;
 				break;
 			case "note/publish":
 				newfilename = `📘${basefilename}`;
 				break;
 			case "slide":
-				newfilename = `▶️${date} ${basefilename}`;
+				newfilename = `▶️${date}_${basefilename}`;
 				break;
 			default:
 				newfilename = basefilename;
