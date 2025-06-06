@@ -341,8 +341,8 @@ export class EditorCommands {
 			return match;
 		});
 
-		// Convert absolute Markdown links to relative if they point to vault files
-		const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+		// Convert Markdown links to relative if they point to vault files
+		const markdownLinkRegex = /\[([^\]]*)\]\(([^)]+)\)/g;
 		convertedContent = convertedContent.replace(markdownLinkRegex, (match, text, url) => {
 			// Skip external URLs
 			if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:')) {
@@ -354,8 +354,22 @@ export class EditorCommands {
 				return match;
 			}
 
-			// Check if it's a vault file path
-			const targetFile = this.app.vault.getAbstractFileByPath(url);
+			// Try to find the file in vault - first try as absolute path, then as filename
+			let targetFile = this.app.vault.getAbstractFileByPath(url);
+			
+			// If not found as absolute path, try to find by filename
+			if (!targetFile) {
+				const filename = url.split('/').pop(); // Get filename from path
+				if (filename) {
+					// Search for file with this name in the vault
+					const allFiles = this.app.vault.getFiles();
+					const foundFile = allFiles.find(file => file.name === filename);
+					if (foundFile) {
+						targetFile = foundFile;
+					}
+				}
+			}
+
 			if (targetFile && targetFile.path) {
 				// Calculate relative path
 				const relativePath = this.getRelativePath(currentFolder, targetFile.path);
