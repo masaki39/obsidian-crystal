@@ -326,9 +326,8 @@ export class EditorCommands {
 		// Convert Wiki links: [[filename]] or [[filename|display]]
 		const wikiLinkRegex = /\[\[([^\]|]+)(\|[^\]]+)?\]\]/g;
 		convertedContent = convertedContent.replace(wikiLinkRegex, (match, filename, alias) => {
-			// Find the target file in the vault
-			const targetFile = this.app.vault.getAbstractFileByPath(filename + '.md') ||
-							   this.app.metadataCache.getFirstLinkpathDest(filename, currentFile.path);
+			// Use Obsidian's built-in link resolution logic
+			const targetFile = this.app.metadataCache.getFirstLinkpathDest(filename, currentFile.path);
 			
 			if (targetFile && targetFile.path) {
 				// Calculate relative path
