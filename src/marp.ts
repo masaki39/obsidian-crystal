@@ -20,6 +20,9 @@ export class MarpCommands {
 			return;
 		}
 
+		// ファイルのカーソル位置を記憶
+		const cursorPosition = editor.getCursor();
+
 		try {
 			// 1. crystal-convert-links-to-relative-pathsを実行
 			await this.editorCommands.convertLinksToRelativePaths(editor, view);
@@ -34,6 +37,8 @@ export class MarpCommands {
 			console.error('Marp slide preparation failed:', error);
 			new Notice('Marpスライド準備に失敗しました: ' + error.message);
 		}
+		// カーソル位置を復元
+		editor.setCursor(cursorPosition);
 	}
 
 	/**
