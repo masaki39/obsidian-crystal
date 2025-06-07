@@ -229,12 +229,12 @@ export class EditorCommands {
 		// 最初の日付を削除 (YYYY-MM-DD format)
 		const dateMatch = basefilename.match(/^\d{4}-\d{2}-\d{2} /) || basefilename.match(/^\d{4}-\d{2}-\d{2}_/);
 		if (dateMatch) {
-			basefilename = basefilename.slice(dateMatch[0].length).trim();
+			basefilename = basefilename.slice(dateMatch[0].length).trim(); 
 		}
 
 		// 現在の日付を取得
-		const now = new Date();
-		const date = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+		const createdAt = new Date(file.stat.ctime);
+		const date = `${createdAt.getFullYear()}-${(createdAt.getMonth() + 1).toString().padStart(2, '0')}-${createdAt.getDate().toString().padStart(2, '0')}`;
 
 		// タグに基づいてファイル名を変更
 		let newfilename: string;
