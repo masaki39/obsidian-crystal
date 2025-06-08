@@ -207,8 +207,14 @@ ${previousLinePureText}`;
 			const response = await result.response;
 			const translatedText = response.text().trim();
 			
-			// カーソル位置に翻訳結果を挿入
-			editor.replaceRange(translatedText, cursor);
+
+			if (editor.getSelection()) {
+				// 選択範囲を翻訳結果で置換
+				editor.replaceSelection(translatedText);
+			} else {
+				// カーソル位置に翻訳結果を挿入
+				editor.replaceRange(translatedText, cursor);
+			}
 			
 			new Notice(`翻訳完了: ${translatedText}`);
 			
