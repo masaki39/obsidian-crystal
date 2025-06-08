@@ -180,8 +180,11 @@ ${selectedText}`;
 		
 		// 上の行のテキストを取得
 		const previousLineText = editor.getLine(currentLine - 1);
-		// リストの- とかは除去
-		const previousLinePureText = previousLineText.replace(/^- /g, '').trim();
+		
+		// インデント部分を抽出（先頭の空白、タブ、リストマーカーなど）
+		const indentMatch = previousLineText.match(/^(\s*(?:[-*+]\s+|\d+\.\s+|>\s*)*)/);
+		const indent = indentMatch ? indentMatch[1] : '';
+		const previousLinePureText = previousLineText.slice(indent.length).trim();
 
 		if (!previousLinePureText) {
 			new Notice('上の行が空行のため、翻訳できません。');
