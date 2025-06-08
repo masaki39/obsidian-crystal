@@ -41,7 +41,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 		containerEl.createEl('h1', { text: 'Crystal Plugin Settings' });
 		
 		// Gemini settings
-		containerEl.createEl('h3', { text: 'Gemini Description Generator' });
+		containerEl.createEl('h3', { text: 'Gemini Editor Commands' });
 
 		new Setting(containerEl)
 			.setName('Gemini API Key')
