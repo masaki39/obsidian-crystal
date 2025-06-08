@@ -56,6 +56,13 @@ export class GeminiService {
 		});
 	}
 
+	private async getPureTextFromLine(lineText: string): Promise<string> {
+		// インデント部分を抽出（先頭の空白、タブ、リストマーカーなど）
+		const indentMatch = lineText.match(/^(\s*(?:[-*+]\s+|\d+\.\s+|>\s*)*)/);
+		const indent = indentMatch ? indentMatch[1] : '';
+		return lineText.slice(indent.length).trim();
+	}
+
 	/**
 	 * Gemini APIを使用してdescriptionを生成する
 	 */
@@ -180,11 +187,7 @@ ${selectedText}`;
 		
 		// 上の行のテキストを取得
 		const previousLineText = editor.getLine(currentLine - 1);
-		
-		// インデント部分を抽出（先頭の空白、タブ、リストマーカーなど）
-		const indentMatch = previousLineText.match(/^(\s*(?:[-*+]\s+|\d+\.\s+|>\s*)*)/);
-		const indent = indentMatch ? indentMatch[1] : '';
-		const previousLinePureText = previousLineText.slice(indent.length).trim();
+		const previousLinePureText = await this.getPureTextFromLine(previousLineText);
 
 		if (!previousLinePureText) {
 			new Notice('上の行が空行のため、翻訳できません。');
@@ -233,9 +236,9 @@ ${previousLinePureText}`;
 		// インデント部分を抽出（先頭の空白、タブ、リストマーカーなど）
 		const indentMatch = currentLineText.match(/^(\s*(?:[-*+]\s+|\d+\.\s+|>\s*)*)/);
 		const indent = indentMatch ? indentMatch[1] : '';
-		const contentText = currentLineText.slice(indent.length);
+		const pureText = await this.getPureTextFromLine(currentLineText);
 
-		if (!contentText.trim()) {
+		if (!pureText.trim()) {
 			new Notice('校正対象のテキストが空のため、文法チェックできません。');
 			return;
 		}
@@ -247,7 +250,7 @@ ${previousLinePureText}`;
 
 			const prompt = `以下のテキストの文法をチェックして、より自然で正しい文に校正してください。言語は変更せず、日本語の場合は日本語のまま、英語の場合は英語のまま校正してください。校正結果のみを出力し、余計な説明は含めないでください。
 
-${contentText}`;
+${pureText}`;
 
 			const result = await model.generateContent(prompt);
 			const response = await result.response;
