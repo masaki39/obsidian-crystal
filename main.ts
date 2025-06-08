@@ -46,6 +46,33 @@ export default class CrystalPlugin extends Plugin {
 			}
 		});
 
+		// AI Translate Selected Text Command
+		this.addCommand({
+			id: 'crystal-translate-selected-text',
+			name: 'Translate Selected Text',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.geminiService.translateSelectedText(editor, view);
+			}
+		});
+
+		// AI Translate Above Cursor Text Command
+		this.addCommand({
+			id: 'crystal-translate-above-cursor-text',
+			name: 'Translate Above Cursor Text',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.geminiService.translateAboveCursorText(editor, view);
+			}
+		});
+
+		// AI Grammar Check Command
+		this.addCommand({
+			id: 'crystal-grammar-check-current-line',
+			name: 'Grammar Check Current Line',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.geminiService.grammarCheckCurrentLine(editor, view);
+			}
+		});
+
 		// Daily Notes Commands
 		this.addCommand({
 			id: 'crystal-open-today',

@@ -126,4 +126,141 @@ ${content}`;
 			new Notice(`Description生成エラー: ${error.message}`);
 		}
 	}
+
+	async translateSelectedText(editor: Editor, view: MarkdownView): Promise<void> {
+		if (!this.isAvailable()) {
+			new Notice('Gemini API Keyが設定されていません。設定からAPIキーを入力してください。');
+			return;
+		}
+
+		const selectedText = editor.getSelection();
+		
+		if (!selectedText.trim()) {
+			new Notice('選択されたテキストが空のため、翻訳できません。');
+			return;
+		}
+		
+		try {
+			new Notice('翻訳中...');
+			
+			const model = this.genAI!.getGenerativeModel({ model: "gemini-2.0-flash" });
+			
+			const prompt = `以下の日本語テキストを自然な英語に翻訳してください。翻訳結果のみを出力し、余計な説明は含めないでください。
+
+${selectedText}`;
+
+			const result = await model.generateContent(prompt);
+			const response = await result.response;
+			const translatedText = response.text().trim();
+			
+			// 選択範囲を翻訳結果で置換
+			editor.replaceSelection(translatedText);
+			new Notice(`翻訳完了: ${translatedText}`);
+			
+		} catch (error) {
+			console.error('Error translating text:', error);
+			new Notice(`翻訳エラー: ${error.message}`);
+		}
+	}
+
+	async translateAboveCursorText(editor: Editor, view: MarkdownView): Promise<void> {
+		if (!this.isAvailable()) {
+			new Notice('Gemini API Keyが設定されていません。設定からAPIキーを入力してください。');
+			return;
+		}
+		
+		const cursor = editor.getCursor();
+		const currentLine = cursor.line;
+		
+		// カーソルが最初の行にある場合は処理できない
+		if (currentLine === 0) {
+			new Notice('カーソルが最初の行にあるため、上の行が存在しません。');
+			return;
+		}
+		
+		// 上の行のテキストを取得
+		const previousLineText = editor.getLine(currentLine - 1);
+		// リストの- とかは除去
+		const previousLinePureText = previousLineText.replace(/^- /g, '').trim();
+
+		if (!previousLinePureText) {
+			new Notice('上の行が空行のため、翻訳できません。');
+			return;
+		}
+		
+		try {
+			new Notice('翻訳中...');
+			
+			const model = this.genAI!.getGenerativeModel({ model: "gemini-2.0-flash" });
+			
+			const prompt = `以下の日本語テキストを自然な英語に翻訳してください。翻訳結果のみを出力し、余計な説明は含めないでください。
+
+${previousLinePureText}`;
+
+			const result = await model.generateContent(prompt);
+			const response = await result.response;
+			const translatedText = response.text().trim();
+			
+			// カーソル位置に翻訳結果を挿入
+			editor.replaceRange(translatedText, cursor);
+			
+			new Notice(`翻訳完了: ${translatedText}`);
+			
+		} catch (error) {
+			console.error('Error translating text:', error);
+			new Notice(`翻訳エラー: ${error.message}`);
+		}
+	}
+
+	async grammarCheckCurrentLine(editor: Editor, view: MarkdownView): Promise<void> {
+		if (!this.isAvailable()) {
+			new Notice('Gemini API Keyが設定されていません。設定からAPIキーを入力してください。');
+			return;
+		}
+
+		const cursor = editor.getCursor();
+		const currentLine = cursor.line;
+		const currentLineText = editor.getLine(currentLine);
+
+		if (!currentLineText.trim()) {
+			new Notice('現在の行が空のため、文法チェックできません。');
+			return;
+		}
+
+		// インデント部分を抽出（先頭の空白、タブ、リストマーカーなど）
+		const indentMatch = currentLineText.match(/^(\s*(?:[-*+]\s+|\d+\.\s+|>\s*)*)/);
+		const indent = indentMatch ? indentMatch[1] : '';
+		const contentText = currentLineText.slice(indent.length);
+
+		if (!contentText.trim()) {
+			new Notice('校正対象のテキストが空のため、文法チェックできません。');
+			return;
+		}
+
+		try {
+			new Notice('文法チェック中...');
+
+			const model = this.genAI!.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+			const prompt = `以下のテキストの文法をチェックして、より自然で正しい文に校正してください。言語は変更せず、日本語の場合は日本語のまま、英語の場合は英語のまま校正してください。校正結果のみを出力し、余計な説明は含めないでください。
+
+${contentText}`;
+
+			const result = await model.generateContent(prompt);
+			const response = await result.response;
+			const correctedText = response.text().trim();
+
+			// インデントを保持して校正結果を適用
+			const finalText = indent + correctedText;
+			const lineStart = { line: currentLine, ch: 0 };
+			const lineEnd = { line: currentLine, ch: currentLineText.length };
+			editor.replaceRange(finalText, lineStart, lineEnd);
+
+			new Notice(`文法チェック完了: ${correctedText}`);
+
+		} catch (error) {
+			console.error('Error checking grammar:', error);
+			new Notice(`文法チェックエラー: ${error.message}`);
+		}
+	}
 } 
