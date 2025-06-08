@@ -30,7 +30,7 @@ export default class CrystalPlugin extends Plugin {
 		this.imagePasteAndDropHandler = new ImagePasteAndDropHandler(this.app, this.settings);
 		this.editorCommands = new EditorCommands(this.app, this.settings);
 		this.quickAddCommands = new QuickAddCommands(this.app, this.settings);
-		this.marpCommands = new MarpCommands(this.app, this.editorCommands);
+		this.marpCommands = new MarpCommands(this.app, this.editorCommands, this.settings);
 
 		// Enable image paste and drop handler if auto paste is enabled
 		if (this.settings.autoWebpPaste) {
@@ -186,6 +186,14 @@ export default class CrystalPlugin extends Plugin {
 			name: 'Preview Marp Slide',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.marpCommands.previewMarpSlide(editor, view);
+			}
+		});
+
+		this.addCommand({
+			id: 'crystal-export-marp-slide',
+			name: 'Export Marp Slide',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.marpCommands.exportMarpSlide(editor, view);
 			}
 		});
 

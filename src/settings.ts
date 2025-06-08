@@ -9,6 +9,8 @@ export interface CrystalPluginSettings {
 	pcloudPublicFolderId: string;
 	webpQuality: number;
 	autoWebpPaste: boolean;
+	exportFolderPath: string;
+
 }
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
@@ -19,7 +21,8 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	pcloudPassword: '',
 	pcloudPublicFolderId: '',
 	webpQuality: 0.8,
-	autoWebpPaste: true
+	autoWebpPaste: true,
+	exportFolderPath: ''
 }
 
 export class CrystalSettingTab extends PluginSettingTab {
@@ -146,6 +149,19 @@ export class CrystalSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
+		// Marp settings
+		containerEl.createEl('h3', { text: 'Export Folder' });
+
+		new Setting(containerEl)
+			.setName('Export Folder Path')
+			.setDesc('Folder where this plugin exports files')
+			.addText(text => text
+				.setPlaceholder('insert folder path here')
+				.setValue(this.plugin.settings.exportFolderPath)
+				.onChange(async (value) => {
+					this.plugin.settings.exportFolderPath = value;
+					await this.plugin.saveSettings();
+				}));
 
 	}
 } 
