@@ -51,7 +51,7 @@ export class EditorCommands {
 	async createTimestampFile(editor: Editor, view: MarkdownView) {
 		const basefilename = this.generateTimestampFilename();
 		try {
-			const newFile = await this.app.vault.create(basefilename + '.md', '');
+			const newFile = await this.app.vault.create(basefilename + '.md', '\n');
 			await this.app.workspace.getLeaf().openFile(newFile);
 			await (this.app as any).commands.executeCommandById("workspace:edit-file-title");
 		} catch (error) {
@@ -69,7 +69,7 @@ export class EditorCommands {
 			editor.replaceSelection(`[[${basefilename}]] `);
 			
 			// Create new file
-			const newFile = await this.app.vault.create(basefilename + '.md', '');
+			const newFile = await this.app.vault.create(basefilename + '.md', '\n');
 			await this.app.workspace.getLeaf().openFile(newFile);
 			await (this.app as any).commands.executeCommandById("workspace:edit-file-title");
 		} catch (error) {
