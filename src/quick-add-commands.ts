@@ -42,7 +42,7 @@ export class QuickAddCommands {
 			} else {
 				// ファイルが存在する場合は一番上にタスクを追加
 				const content = await this.app.vault.read(dailyFile);
-				const newContent = `- [ ] ${task}\n${content}`;
+				const newContent = this.orderTaskList(`- [ ] ${task}\n${content}`);
 				await this.app.vault.modify(dailyFile, newContent);
 				new Notice('デイリーノートにタスクを追加しました');
 			}
@@ -211,5 +211,17 @@ export class QuickAddCommands {
 		const files = this.app.vault.getMarkdownFiles();
 		const targetPath = folderName ? `${folderName}/${fileName}.md` : `${fileName}.md`;
 		return files.find(file => file.path === targetPath) || null;
+	}
+
+	private orderTaskList(taskList: string): string {
+		const lines = taskList.split('\n');
+		const orderedLines = lines.sort((a, b) => {
+			const aIsDone = a.trim().startsWith('- [x]');
+			const bIsDone = b.trim().startsWith('- [x]');
+			if (aIsDone && !bIsDone) return -1;
+			if (!aIsDone && bIsDone) return 1;
+			return 0;
+		});
+		return orderedLines.join('\n');
 	}
 } 
