@@ -1,5 +1,6 @@
 import { App, Notice, TFile, Modal } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
+import { promptForText } from './utils';
 
 export class QuickAddCommands {
 	private app: App;
@@ -87,82 +88,7 @@ export class QuickAddCommands {
 	 * Prompt user for task input
 	 */
 	private async promptForTask(): Promise<string | null> {
-		return new Promise((resolve) => {
-			class TaskInputModal extends Modal {
-				private result: string | null = null;
-				private resolve: (value: string | null) => void;
-
-				constructor(app: App, resolve: (value: string | null) => void) {
-					super(app);
-					this.resolve = resolve;
-				}
-
-				onOpen() {
-					const { contentEl } = this;
-					
-					contentEl.createEl('h3', { text: 'タスクを入力してください' });
-					
-					const input = contentEl.createEl('input', {
-						type: 'text',
-						placeholder: 'タスクの内容...'
-					});
-					input.style.width = '100%';
-					input.style.marginBottom = '16px';
-
-					const buttonContainer = contentEl.createDiv();
-					buttonContainer.style.display = 'flex';
-					buttonContainer.style.gap = '8px';
-					buttonContainer.style.justifyContent = 'flex-end';
-
-					const cancelButton = buttonContainer.createEl('button', { text: 'キャンセル' });
-					const addButton = buttonContainer.createEl('button', { text: '追加' });
-					addButton.addClass('mod-cta');
-
-					let isComposing = false;
-
-					const submitTask = () => {
-						this.result = input.value.trim();
-						this.close();
-					};
-
-					cancelButton.addEventListener('click', () => {
-						this.result = null;
-						this.close();
-					});
-
-					addButton.addEventListener('click', submitTask);
-
-					input.addEventListener('compositionstart', () => {
-						isComposing = true;
-					});
-
-					input.addEventListener('compositionend', () => {
-						isComposing = false;
-					});
-
-					input.addEventListener('keydown', (e) => {
-						if (e.key === 'Enter') {
-							if (!isComposing) {
-								e.preventDefault();
-								submitTask();
-							}
-						} else if (e.key === 'Escape') {
-							this.result = null;
-							this.close();
-						}
-					});
-
-					input.focus();
-				}
-
-				onClose() {
-					this.resolve(this.result);
-				}
-			}
-
-			const modal = new TaskInputModal(this.app, resolve);
-			modal.open();
-		});
+		return promptForText(this.app, 'タスクを入力してください', 'タスクの内容...', '追加');
 	}
 
 	/**

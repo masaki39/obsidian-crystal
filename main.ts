@@ -7,6 +7,7 @@ import { ImagePasteAndDropHandler } from './src/clipboard-paste-handler';
 import { EditorCommands } from './src/editor-commands';
 import { QuickAddCommands } from './src/quick-add-commands';
 import { MarpCommands } from './src/marp';
+import { AnkiService } from './src/anki-service';
 
 // Crystal Plugin for Obsidian
 
@@ -19,6 +20,7 @@ export default class CrystalPlugin extends Plugin {
 	private editorCommands: EditorCommands;
 	private quickAddCommands: QuickAddCommands;
 	private marpCommands: MarpCommands;
+	private ankiService: AnkiService;
 
 	async onload() {
 		await this.loadSettings();
@@ -31,6 +33,7 @@ export default class CrystalPlugin extends Plugin {
 		this.editorCommands = new EditorCommands(this.app, this.settings);
 		this.quickAddCommands = new QuickAddCommands(this.app, this.settings);
 		this.marpCommands = new MarpCommands(this.app, this.editorCommands, this.settings);
+		this.ankiService = new AnkiService(this.app);
 
 		// Enable image paste and drop handler if auto paste is enabled
 		if (this.settings.autoWebpPaste) {
@@ -221,6 +224,15 @@ export default class CrystalPlugin extends Plugin {
 			name: 'Export Marp Slide',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.marpCommands.exportMarpSlide(editor, view);
+			}
+		});
+
+		// Anki Commands
+		this.addCommand({
+			id: 'crystal-add-note-to-anki',
+			name: 'Add Note to Anki',
+			callback: () => {
+				this.ankiService.addNoteFromPrompt();
 			}
 		});
 
