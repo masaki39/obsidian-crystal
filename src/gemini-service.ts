@@ -302,7 +302,8 @@ ${front}`;
         if (!back) {
 			return;
         }
-		await AnkiService.addNote(front, back);
+		const ankiService = new AnkiService(this.app);
+		await ankiService.addNote(front, back);
         new Notice('Note added to Anki');
 
 	}

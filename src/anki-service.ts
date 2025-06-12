@@ -2,9 +2,6 @@ import { App, Notice } from "obsidian";
 import { promptForText } from "./utils";
 
 export class AnkiService {
-	static addNote(front: string, back: string) {
-		throw new Error('Method not implemented.');
-	}
     constructor(private readonly app: App) {
         this.app = app;
     }    
