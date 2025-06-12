@@ -2,11 +2,14 @@ import { App, Notice } from "obsidian";
 import { promptForText } from "./utils";
 
 export class AnkiService {
+	static addNote(front: string, back: string) {
+		throw new Error('Method not implemented.');
+	}
     constructor(private readonly app: App) {
         this.app = app;
     }    
 
-    private async invoke(action: string, version: number, params: any = {}) {
+    async invoke(action: string, version: number, params: any = {}) {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.addEventListener('error', () => reject('failed to issue request'));
@@ -36,7 +39,7 @@ export class AnkiService {
         });
     }
 
-    private async addNote(front: string, back: string) {
+    async addNote(front: string, back: string) {
         return this.invoke("addNote", 6, {
             "note": {
                 "deckName": "Default",

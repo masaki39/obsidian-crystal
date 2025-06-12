@@ -1,6 +1,8 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { App, Editor, MarkdownView, Notice, TFile } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
+import { promptForText } from './utils';
+import { AnkiService } from './anki-service';
 
 export class GeminiService {
 	private genAI: GoogleGenerativeAI | null = null;
@@ -275,4 +277,34 @@ ${pureText}`;
 			new Notice(`文法チェックエラー: ${error.message}`);
 		}
 	}
+
+	async addNoteToAnki() {
+		if (!this.isAvailable()) {
+			new Notice('Gemini API Keyが設定されていません。設定からAPIキーを入力してください。');
+			return;
+		}
+		const front = await promptForText(this.app, '表面', '英単語を入力してください', '追加');
+        if (!front) {
+			return;
+        }
+		const model = this.genAI!.getGenerativeModel({ model: "gemini-2.0-flash" });
+		const prompt = `以下のテキストの日本語訳を出力してください。日本語訳のみを出力し、余計な説明は含めないでください。不明の場合は何も返さないでください('')。
+		
+${front}`;
+        const result = await model.generateContent(prompt);
+		if (!result){
+			new Notice(`不明な英単語`);
+			return;
+		}
+        const response = await result.response;
+        const translatedText = response.text().trim();
+        const back = await promptForText(this.app, '裏面', '日本語を入力してください', '追加', translatedText);
+        if (!back) {
+			return;
+        }
+		await AnkiService.addNote(front, back);
+        new Notice('Note added to Anki');
+
+	}
+
 } 

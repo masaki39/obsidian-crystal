@@ -236,6 +236,15 @@ export default class CrystalPlugin extends Plugin {
 			}
 		});
 
+		// Anki Commands assisted by Gemini
+		this.addCommand({
+			id: 'crystal-add-note-to-anki-gemini-assist',
+			name: 'Add Note to Anki Assisted by Gemini',
+			callback: () => {
+				this.geminiService.addNoteToAnki();
+			}
+		});
+
 		this.addSettingTab(new CrystalSettingTab(this.app, this));
 	}
 

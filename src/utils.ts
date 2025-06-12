@@ -1,6 +1,6 @@
 import { App, Modal } from 'obsidian';
 
-export function promptForText(app: App, title = 'テキストを入力してください', placeholder = '', buttonText = '追加'): Promise<string | null> {
+export function promptForText(app: App, title = 'テキストを入力してください', placeholder = '', buttonText = '追加', defaultValue = ''): Promise<string | null> {
 	return new Promise((resolve) => {
 		class GenericInputModal extends Modal {
 			private result: string | null = null;
@@ -18,6 +18,7 @@ export function promptForText(app: App, title = 'テキストを入力してく�
 					type: 'text',
 					placeholder
 				});
+                input.value = defaultValue;
 				input.style.width = '100%';
 				input.style.marginBottom = '16px';
 				const buttonContainer = contentEl.createDiv();
