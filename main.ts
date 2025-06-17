@@ -210,6 +210,14 @@ export default class CrystalPlugin extends Plugin {
 			}
 		});
 
+		this.addCommand({
+			id: 'crystal-insert-moc',
+			name: 'Insert MOC',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.quickAddCommands.insertMOC(editor, view);
+			}
+		});
+
 		// Marp Commands
 		this.addCommand({
 			id: 'crystal-preview-marp-slide',

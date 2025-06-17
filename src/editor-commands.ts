@@ -191,13 +191,6 @@ export class EditorCommands {
 					fm.tags.push(selectedTag);
 				});
 
-				// MOCノート用テンプレート挿入
-				if (selectedTag === "note/term" || selectedTag === "note/topic") {
-					const templateContent = this.getMOCTemplate();
-					editor.setCursor(editor.lastLine(), editor.getLine(editor.lastLine()).length);
-					editor.replaceSelection('\n' + templateContent);
-				}
-
 				// ファイル名処理
 				await this.processFileName(view.file!, selectedTag);
 
@@ -285,25 +278,6 @@ export class EditorCommands {
 			console.error('Move error:', error);
 			new Notice('ファイル移動に失敗しました: ' + error.message);
 		}
-	}
-
-	/**
-	 * Get MOC template content
-	 */
-	private getMOCTemplate(): string {
-		return `
-# 📒関連
-
-- 
-
-# 📝ダッシュボード
-
-- 
-
-# 📜アーカイブ
-
-- 
-`;
 	}
 
 	/**

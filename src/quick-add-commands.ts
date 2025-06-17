@@ -1,4 +1,4 @@
-import { App, Notice, TFile, Modal } from 'obsidian';
+import { App, Notice, TFile, Editor, MarkdownView } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
 import { promptForText } from './utils';
 
@@ -149,5 +149,23 @@ export class QuickAddCommands {
 			return 0;
 		});
 		return orderedLines.join('\n');
+	}
+
+	async insertMOC(editor: Editor, view: MarkdownView){
+		const mocTemplate = `
+# 📒関連
+
+- 
+
+# 📝ダッシュボード
+
+- 
+
+# 📜アーカイブ
+
+- 
+`;
+		editor.replaceRange(mocTemplate, editor.getCursor());
+		new Notice('MOCを挿入しました');
 	}
 } 
