@@ -1,9 +1,9 @@
 {
 	"id": "obsidian-crystal",
 	"name": "Crystal",
-	"version": "1.0.0",
+	"version": "0.0.1",
 	"minAppVersion": "0.15.0",
-	"description": "Extensible plugin for Obsidian with AI-powered description generator and advanced daily notes management features.",
+	"description": "various features for personal use",
 	"author": "masaki39",
 	"authorUrl": "",
 	"fundingUrl": "",
