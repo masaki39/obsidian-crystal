@@ -199,6 +199,8 @@ export class EditorCommands {
 				new Notice('ファイル整理中にエラーが発生しました: ' + error.message);
 				console.error('File organization error:', error);
 			}
+
+			editor.setCursor(editor.getValue().length);
 		});
 
 		tagModal.open();
