@@ -4,11 +4,13 @@ export interface CrystalPluginSettings {
 	GeminiAPIKey: string;
 	dailyNotesFolder: string;
 	dailyNoteDateFormat: string;
+	webpQuality: number;
+	imageResizeScale: number;
+	imageMaxSize: number;
+	autoWebpPaste: boolean;
 	pcloudUsername: string;
 	pcloudPassword: string;
 	pcloudPublicFolderId: string;
-	webpQuality: number;
-	autoWebpPaste: boolean;
 	exportFolderPath: string;
 
 }
@@ -17,11 +19,13 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	GeminiAPIKey: '',
 	dailyNotesFolder: 'DailyNotes',
 	dailyNoteDateFormat: 'YYYY-MM-DD',
+	webpQuality: 0.8,
+	imageResizeScale: 0.8,
+	imageMaxSize: 1024,
+	autoWebpPaste: true,
 	pcloudUsername: '',
 	pcloudPassword: '',
 	pcloudPublicFolderId: '',
-	webpQuality: 0.8,
-	autoWebpPaste: true,
 	exportFolderPath: ''
 }
 
@@ -82,8 +86,56 @@ export class CrystalSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
+		// Image settings
+		containerEl.createEl('h3', { text: 'Image Procesor' });
+
+		new Setting(containerEl)
+			.setName('Auto Convert Images to WebP on Paste')
+			.setDesc('Automatically convert pasted images to WebP format and save to vault')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.autoWebpPaste)
+				.onChange(async (value) => {
+					this.plugin.settings.autoWebpPaste = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('WebP Compression Quality')
+			.setDesc('Quality for WebP compression (0.1 = lowest quality/smallest file, 1.0 = highest quality/largest file)')
+			.addSlider(slider => slider
+				.setLimits(0.1, 1.0, 0.1)
+				.setValue(this.plugin.settings.webpQuality)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					this.plugin.settings.webpQuality = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Image Default Resize Scale')
+			.setDesc('Default scale for resizing images (0.1 = 10%, 1.0 = 100%)')
+			.addSlider(slider => slider
+				.setLimits(0.1, 1.0, 0.1)
+				.setValue(this.plugin.settings.imageResizeScale)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					this.plugin.settings.imageResizeScale = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Image Max Size')
+			.setDesc('Maximum size for images (in pixels)')
+			.addText(text => text
+				.setPlaceholder('1024')
+				.setValue(this.plugin.settings.imageMaxSize.toString())
+				.onChange(async (value) => {
+					this.plugin.settings.imageMaxSize = parseInt(value) || 1024; // Default to 1024 if invalid value 
+					await this.plugin.saveSettings();
+				}));				
+
 		// pCloud settings
-		containerEl.createEl('h3', { text: 'pCloud Uploader' });
+		containerEl.createEl('h4', { text: 'pCloud Uploader' });
 
 		new Setting(containerEl)
 			.setName('pCloud Username')
@@ -123,31 +175,6 @@ export class CrystalSettingTab extends PluginSettingTab {
 				text.inputEl.type = 'password';
 				return text;
 			});
-
-		new Setting(containerEl)
-			.setName('WebP Compression Quality')
-			.setDesc('Quality for WebP compression (0.1 = lowest quality/smallest file, 1.0 = highest quality/largest file)')
-			.addSlider(slider => slider
-				.setLimits(0.1, 1.0, 0.1)
-				.setValue(this.plugin.settings.webpQuality)
-				.setDynamicTooltip()
-				.onChange(async (value) => {
-					this.plugin.settings.webpQuality = value;
-					await this.plugin.saveSettings();
-				}));
-
-		// Auto WebP Paste settings
-		containerEl.createEl('h3', { text: 'Auto WebP Paste' });
-
-		new Setting(containerEl)
-			.setName('Auto Convert Images to WebP on Paste')
-			.setDesc('Automatically convert pasted images to WebP format and save to vault')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.autoWebpPaste)
-				.onChange(async (value) => {
-					this.plugin.settings.autoWebpPaste = value;
-					await this.plugin.saveSettings();
-				}));
 
 		// Marp settings
 		containerEl.createEl('h3', { text: 'Export Folder' });

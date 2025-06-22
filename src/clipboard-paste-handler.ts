@@ -14,7 +14,7 @@ export class ImagePasteAndDropHandler {
 	constructor(app: App, settings: CrystalPluginSettings) {
 		this.app = app;
 		this.settings = settings;
-		this.imageProcessor = new ImageProcessor(settings.webpQuality);
+		this.imageProcessor = new ImageProcessor(settings);
 		this.boundPasteHandler = this.handlePaste.bind(this);
 		this.boundDragOverHandler = this.handleDragOver.bind(this);
 		this.boundDropHandler = this.handleDrop.bind(this);
@@ -22,7 +22,6 @@ export class ImagePasteAndDropHandler {
 
 	updateSettings(settings: CrystalPluginSettings) {
 		this.settings = settings;
-		this.imageProcessor.updateQuality(settings.webpQuality);
 	}
 
 	enable() {
