@@ -1,28 +1,17 @@
 import { App, Notice, Editor } from 'obsidian';
 import { ImageProcessor } from './image-processor';
+import { CrystalPluginSettings } from './settings';
 
 export class PCloudService {
 	private app: App;
-	private username: string;
-	private password: string;
-	private publicFolderId: string;
+	private settings: CrystalPluginSettings;
 	private authToken: string | null = null;
 	private imageProcessor: ImageProcessor;
 
-	constructor(app: App, username: string, password: string, publicFolderId: string, webpQuality: number = 0.8) {
+	constructor(app: App, settings: CrystalPluginSettings) {
 		this.app = app;
-		this.username = username;
-		this.password = password;
-		this.publicFolderId = publicFolderId;
-		this.imageProcessor = new ImageProcessor(webpQuality);
-	}
-
-	updateCredentials(username: string, password: string, publicFolderId: string, webpQuality: number = 0.8) {
-		this.username = username;
-		this.password = password;
-		this.publicFolderId = publicFolderId;
-		this.imageProcessor.updateQuality(webpQuality);
-		this.authToken = null; // Reset auth token when credentials change
+		this.settings = settings;
+		this.imageProcessor = new ImageProcessor(settings);
 	}
 
 	private async authenticate(): Promise<string> {
@@ -30,7 +19,7 @@ export class PCloudService {
 			return this.authToken;
 		}
 
-		if (!this.username || !this.password) {
+		if (!this.settings.pcloudUsername || !this.settings.pcloudPassword) {
 			throw new Error('pCloud username and password are required');
 		}
 
@@ -41,8 +30,8 @@ export class PCloudService {
 					'Content-Type': 'application/x-www-form-urlencoded',
 				},
 				body: new URLSearchParams({
-					username: this.username,
-					password: this.password,
+					username: this.settings.pcloudUsername,
+					password: this.settings.pcloudPassword,
 				}),
 			});
 
@@ -70,8 +59,8 @@ export class PCloudService {
 					'Content-Type': 'application/x-www-form-urlencoded',
 				},
 				body: new URLSearchParams({
-					username: this.username,
-					password: this.password,
+					username: this.settings.pcloudUsername,
+					password: this.settings.pcloudPassword,
 					folderid: '0', // Root folder
 				}),
 			});
@@ -100,15 +89,15 @@ export class PCloudService {
 
 	private async uploadProcessedImage(imageBlob: Blob, originalType: string, editor?: Editor): Promise<string> {
 		// Generate filename with timestamp
-		const filename = this.imageProcessor.generateTimestampFilename('clipboard-image', imageBlob, originalType);
+		const filename = this.imageProcessor.generateTimestampFilename('image', imageBlob, originalType);
 
 		// Get Public Folder ID
 		const pcloudFolderId = await this.getPublicFolderId();
 
 		// Upload file
 		const formData = new FormData();
-		formData.append('username', this.username);
-		formData.append('password', this.password);
+		formData.append('username', this.settings.pcloudUsername);
+		formData.append('password', this.settings.pcloudPassword);
 		formData.append('folderid', pcloudFolderId.toString());
 		formData.append('filename', filename);
 		formData.append('file', imageBlob, filename);
@@ -125,7 +114,7 @@ export class PCloudService {
 		}
 
 		// Construct public URL using the configured Public Folder ID
-		const publicUrl = `https://filedn.com/${this.publicFolderId}/${filename}`;
+		const publicUrl = `https://filedn.com/${this.settings.pcloudPublicFolderId}/${filename}`;
 		
 		// Insert markdown image syntax at cursor position
 		if (editor) {
@@ -144,7 +133,7 @@ export class PCloudService {
 	async uploadFile(file: File, editor?: Editor): Promise<string> {
 		try {
 			// Check if Public Folder ID is configured
-			if (!this.publicFolderId) {
+			if (!this.settings.pcloudPublicFolderId) {
 				throw new Error('pCloud Public Folder ID is not configured. Please set it in plugin settings.');
 			}
 
@@ -169,7 +158,7 @@ export class PCloudService {
 	async uploadClipboardImage(editor?: Editor): Promise<string> {
 		try {
 			// Check if Public Folder ID is configured
-			if (!this.publicFolderId) {
+			if (!this.settings.pcloudPublicFolderId) {
 				throw new Error('pCloud Public Folder ID is not configured. Please set it in plugin settings.');
 			}
 
