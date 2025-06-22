@@ -28,7 +28,7 @@ export default class CrystalPlugin extends Plugin {
 		// Initialize services
 		this.geminiService = new GeminiService(this.app, this.settings.GeminiAPIKey);
 		this.dailyNotesManager = new DailyNotesManager(this.app, this.settings);
-		this.pcloudService = new PCloudService(this.app, this.settings.pcloudUsername, this.settings.pcloudPassword, this.settings.pcloudPublicFolderId, this.settings.webpQuality);
+		this.pcloudService = new PCloudService(this.app, this.settings);
 		this.imagePasteAndDropHandler = new ImagePasteAndDropHandler(this.app, this.settings);
 		this.editorCommands = new EditorCommands(this.app, this.settings);
 		this.quickAddCommands = new QuickAddCommands(this.app, this.settings);
@@ -271,7 +271,6 @@ export default class CrystalPlugin extends Plugin {
 		await this.saveData(this.settings);
 		this.geminiService.updateSettings(this.settings);
 		this.dailyNotesManager.updateSettings(this.settings);
-		this.pcloudService.updateCredentials(this.settings.pcloudUsername, this.settings.pcloudPassword, this.settings.pcloudPublicFolderId, this.settings.webpQuality);
 		this.imagePasteAndDropHandler.updateSettings(this.settings);
 		this.editorCommands.updateSettings(this.settings);
 		this.quickAddCommands.updateSettings(this.settings);
