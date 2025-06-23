@@ -47,6 +47,19 @@ export class CrystalSettingTab extends PluginSettingTab {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
+	
+	private textSetting(containerEl: HTMLElement, name: string, desc: string, key: string, value: string) {
+		return new Setting(containerEl)
+			.setName(name)
+			.setDesc(desc)
+			.addText(text => text
+				.setPlaceholder(value)
+				.setValue((this.plugin.settings as any)[key])
+				.onChange(async (value) => {
+					(this.plugin.settings as any)[key] = value;
+					await this.plugin.saveSettings();
+				}));
+	}
 
 	display(): void {
 		const {containerEl} = this;
@@ -75,52 +88,14 @@ export class CrystalSettingTab extends PluginSettingTab {
 		// Daily notes settings
 		containerEl.createEl('h3', { text: 'Daily Notes' });
 
-		new Setting(containerEl)
-			.setName('Daily Notes Folder')
-			.setDesc('Folder where daily notes are stored')
-			.addText(text => text
-				.setPlaceholder('DailyNotes')
-				.setValue(this.plugin.settings.dailyNotesFolder)
-				.onChange(async (value) => {
-					this.plugin.settings.dailyNotesFolder = value;
-					await this.plugin.saveSettings();
-				}));
-
-		new Setting(containerEl)
-			.setName('Date Format')
-			.setDesc('Date format for daily note file names (e.g., YYYY-MM-DD)')
-			.addText(text => text
-				.setPlaceholder('YYYY-MM-DD')
-				.setValue(this.plugin.settings.dailyNoteDateFormat)
-				.onChange(async (value) => {
-					this.plugin.settings.dailyNoteDateFormat = value;
-					await this.plugin.saveSettings();
-				}));
+		this.textSetting(containerEl, 'Daily Notes Folder', 'Folder where daily notes are stored', 'dailyNotesFolder', 'DailyNotes');
+		this.textSetting(containerEl, 'Date Format', 'Date format for daily note file names (e.g., YYYY-MM-DD)', 'dailyNoteDateFormat', 'YYYY-MM-DD');
 
 		// quick add settings
 		containerEl.createEl('h3', { text: 'Quick Add' });
 
-		new Setting(containerEl)
-			.setName('ToDo File Name')
-			.setDesc('File name for ToDo list (relative path from Obsidian Vault root)')
-			.addText(text => text
-				.setPlaceholder('ToDo')
-				.setValue(this.plugin.settings.todoFileName)
-				.onChange(async (value) => {
-					this.plugin.settings.todoFileName = value;
-					await this.plugin.saveSettings();
-				}));
-
-		new Setting(containerEl)
-			.setName('Inbox Name')
-			.setDesc('Name of the Inbox list')
-			.addText(text => text
-				.setPlaceholder('Inbox')
-				.setValue(this.plugin.settings.inboxName)
-				.onChange(async (value) => {
-					this.plugin.settings.inboxName = value;
-					await this.plugin.saveSettings();
-				}));
+		this.textSetting(containerEl, 'ToDo File Name', 'File name for ToDo list (relative path from Obsidian Vault root)', 'todoFileName', 'ToDo');
+		this.textSetting(containerEl, 'Inbox Name', 'Name of the Inbox list', 'inboxName', 'Inbox');
 
 		// Image settings
 		containerEl.createEl('h3', { text: 'Image Procesor' });
@@ -166,23 +141,14 @@ export class CrystalSettingTab extends PluginSettingTab {
 				.setPlaceholder('1024')
 				.setValue(this.plugin.settings.imageMaxSize.toString())
 				.onChange(async (value) => {
-					this.plugin.settings.imageMaxSize = parseInt(value) || 1024; // Default to 1024 if invalid value 
+					this.plugin.settings.imageMaxSize = parseInt(value) || 1024;
 					await this.plugin.saveSettings();
 				}));				
 
 		// pCloud settings
 		containerEl.createEl('h4', { text: 'pCloud Uploader' });
 
-		new Setting(containerEl)
-			.setName('pCloud Username')
-			.setDesc('Your pCloud username (email)')
-			.addText(text => text
-				.setPlaceholder('Enter your pCloud username')
-				.setValue(this.plugin.settings.pcloudUsername)
-				.onChange(async (value) => {
-					this.plugin.settings.pcloudUsername = value;
-					await this.plugin.saveSettings();
-				}));
+		this.textSetting(containerEl, 'pCloud Username', 'Your pCloud username (email)', 'pcloudUsername', 'Enter your pCloud username');
 
 		new Setting(containerEl)
 			.setName('pCloud Password')
@@ -215,62 +181,14 @@ export class CrystalSettingTab extends PluginSettingTab {
 		// Marp settings
 		containerEl.createEl('h3', { text: 'Export Folder' });
 
-		new Setting(containerEl)
-			.setName('Export Folder Path')
-			.setDesc('Folder where this plugin exports files')
-			.addText(text => text
-				.setPlaceholder('insert folder path here')
-				.setValue(this.plugin.settings.exportFolderPath)
-				.onChange(async (value) => {
-					this.plugin.settings.exportFolderPath = value;
-					await this.plugin.saveSettings();
-				}));
+		this.textSetting(containerEl, 'Export Folder Path', 'Folder where this plugin exports files', 'exportFolderPath', 'insert folder path here');
 
 		// Quartz settings
 		containerEl.createEl('h3', { text: 'Quartz' });
 
-		new Setting(containerEl)
-			.setName('Publish Folder Path')
-			.setDesc('Path to Publish Folder (relative path from Obsidian Vault root)')
-			.addText(text => text
-				.setPlaceholder('insert folder path here')
-				.setValue(this.plugin.settings.publishFolderPath)
-				.onChange(async (value) => {
-					this.plugin.settings.publishFolderPath = value;
-					await this.plugin.saveSettings();
-				}));
-
-		new Setting(containerEl)
-			.setName('Quartz Path')
-			.setDesc('Path to Quartz (absolute path)')
-			.addText(text => text
-				.setPlaceholder('insert folder path here')
-				.setValue(this.plugin.settings.quartzPath)
-				.onChange(async (value) => {
-					this.plugin.settings.quartzPath = value;
-					await this.plugin.saveSettings();
-				}));
-
-		new Setting(containerEl)
-			.setName('Quartz Site Name')
-			.setDesc('Name of the Quartz site')
-			.addText(text => text
-				.setPlaceholder('user-name')
-				.setValue(this.plugin.settings.quartzSiteName)
-				.onChange(async (value) => {
-					this.plugin.settings.quartzSiteName = value;
-					await this.plugin.saveSettings();
-				}));
-
-		new Setting(containerEl)
-			.setName('Github User Name')
-			.setDesc('Github user name')
-			.addText(text => text
-				.setPlaceholder('input github user name here')
-				.setValue(this.plugin.settings.githubUserName)
-				.onChange(async (value) => {
-					this.plugin.settings.githubUserName = value;
-					await this.plugin.saveSettings();
-				}));
+		this.textSetting(containerEl, 'Publish Folder Path', 'Path to Publish Folder (relative path from Obsidian Vault root)', 'publishFolderPath', 'insert folder path here');
+		this.textSetting(containerEl, 'Quartz Path', 'Path to Quartz (absolute path)', 'quartzPath', 'insert folder path here');
+		this.textSetting(containerEl, 'Quartz Site Name', 'Name of the Quartz site', 'quartzSiteName', 'user-name');
+		this.textSetting(containerEl, 'Github User Name', 'Github user name', 'githubUserName', 'input github user name here');
 	}
 } 
