@@ -8,6 +8,8 @@ import { EditorCommands } from './src/editor-commands';
 import { QuickAddCommands } from './src/quick-add-commands';
 import { MarpCommands } from './src/marp';
 import { AnkiService } from './src/anki-service';
+import { TerminalService } from './src/terminal-service';
+import { QuartzService } from './src/quartz-service';
 
 // Crystal Plugin for Obsidian
 
@@ -21,6 +23,8 @@ export default class CrystalPlugin extends Plugin {
 	private quickAddCommands: QuickAddCommands;
 	private marpCommands: MarpCommands;
 	private ankiService: AnkiService;
+	private terminalService: TerminalService;
+	private quartzService: QuartzService;
 
 	async onload() {
 		await this.loadSettings();
@@ -34,6 +38,11 @@ export default class CrystalPlugin extends Plugin {
 		this.quickAddCommands = new QuickAddCommands(this.app, this.settings);
 		this.marpCommands = new MarpCommands(this.app, this.editorCommands, this.settings);
 		this.ankiService = new AnkiService(this.app);
+		this.terminalService = new TerminalService();
+		this.quartzService = new QuartzService(this.app, this, this.settings, this.terminalService);
+
+		// Load Quartz Service
+		this.quartzService.onload();
 
 		// Enable image paste and drop handler if auto paste is enabled
 		if (this.settings.autoWebpPaste) {

@@ -269,7 +269,7 @@ export class EditorCommands {
 		// フォルダ移動
 		try {
 			const targetPath = selectedTag === "note/publish" ? 
-				`Publish/${newfilename}.md` : 
+				`${this.settings.publishFolderPath}/${newfilename}.md` : 
 				`${newfilename}.md`;
 			
 			// 現在のパスと異なる場合のみ移動

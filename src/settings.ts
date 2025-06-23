@@ -12,7 +12,10 @@ export interface CrystalPluginSettings {
 	pcloudPassword: string;
 	pcloudPublicFolderId: string;
 	exportFolderPath: string;
-
+	publishFolderPath: string;
+	quartzPath: string;
+	quartzSiteName: string;
+	githubUserName: string;
 }
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
@@ -26,7 +29,11 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	pcloudUsername: '',
 	pcloudPassword: '',
 	pcloudPublicFolderId: '',
-	exportFolderPath: ''
+	exportFolderPath: '',
+	publishFolderPath: 'Publish',
+	quartzPath: '',
+	quartzSiteName: '',
+	githubUserName: ''
 }
 
 export class CrystalSettingTab extends PluginSettingTab {
@@ -190,5 +197,51 @@ export class CrystalSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
+		// Quartz settings
+		containerEl.createEl('h3', { text: 'Quartz' });
+
+		new Setting(containerEl)
+			.setName('Publish Folder Path')
+			.setDesc('Path to Publish Folder (relative path from Obsidian Vault root)')
+			.addText(text => text
+				.setPlaceholder('insert folder path here')
+				.setValue(this.plugin.settings.publishFolderPath)
+				.onChange(async (value) => {
+					this.plugin.settings.publishFolderPath = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Quartz Path')
+			.setDesc('Path to Quartz (absolute path)')
+			.addText(text => text
+				.setPlaceholder('insert folder path here')
+				.setValue(this.plugin.settings.quartzPath)
+				.onChange(async (value) => {
+					this.plugin.settings.quartzPath = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Quartz Site Name')
+			.setDesc('Name of the Quartz site')
+			.addText(text => text
+				.setPlaceholder('user-name')
+				.setValue(this.plugin.settings.quartzSiteName)
+				.onChange(async (value) => {
+					this.plugin.settings.quartzSiteName = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Github User Name')
+			.setDesc('Github user name')
+			.addText(text => text
+				.setPlaceholder('input github user name here')
+				.setValue(this.plugin.settings.githubUserName)
+				.onChange(async (value) => {
+					this.plugin.settings.githubUserName = value;
+					await this.plugin.saveSettings();
+				}));
 	}
 } 
