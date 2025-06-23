@@ -31,7 +31,7 @@ export default class CrystalPlugin extends Plugin {
 
 		// Initialize services
 		this.geminiService = new GeminiService(this.app, this.settings.GeminiAPIKey);
-		this.dailyNotesManager = new DailyNotesManager(this.app, this.settings);
+		this.dailyNotesManager = new DailyNotesManager(this.app, this.settings, this);
 		this.pcloudService = new PCloudService(this.app, this.settings);
 		this.imagePasteAndDropHandler = new ImagePasteAndDropHandler(this.app, this.settings);
 		this.editorCommands = new EditorCommands(this.app, this.settings);
@@ -43,6 +43,7 @@ export default class CrystalPlugin extends Plugin {
 
 		// Load Quartz Service
 		this.quartzService.onload();
+		this.dailyNotesManager.onLoad();
 
 		// Enable image paste and drop handler if auto paste is enabled
 		if (this.settings.autoWebpPaste) {

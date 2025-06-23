@@ -1,13 +1,16 @@
-import { App, TFile } from 'obsidian';
+import { App, Plugin, TFile } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
+import { parseFrontmatter } from './utils';
 
 export class DailyNotesManager {
     private app: App;
     private settings: CrystalPluginSettings;
+    private plugin: Plugin;
 
-    constructor(app: App, settings: CrystalPluginSettings) {
+    constructor(app: App, settings: CrystalPluginSettings, plugin: Plugin) {
         this.app = app;
         this.settings = settings;
+        this.plugin = plugin;
     }
 
     updateSettings(settings: CrystalPluginSettings) {
@@ -141,5 +144,45 @@ export class DailyNotesManager {
         const tomorrow = new Date(baseDate);
         tomorrow.setDate(tomorrow.getDate() + 1);
         await this.openOrCreateDailyNote(tomorrow);
+    }
+
+    private orderTaskList(taskList: string): string {
+        const lines = taskList.split('\n');
+        const orderedLines = lines.sort((a, b) => {
+            const aIsDone = a.trim().startsWith('- [x]');
+            const aIsNotDone = a.trim().startsWith('- [ ]');
+            const bIsDone = b.trim().startsWith('- [x]');
+            const bIsNotDone = b.trim().startsWith('- [ ]');
+            
+            // 完了済みタスクが最優先
+            if (aIsDone && !bIsDone) return -1;
+            if (!aIsDone && bIsDone) return 1;
+            
+            // 未完了タスクが2番目の優先度
+            if (aIsNotDone && !bIsNotDone) return -1;
+            if (!aIsNotDone && bIsNotDone) return 1;
+            
+            // その他の行が最後（同じカテゴリ内では元の順序を保持）
+            return 0;
+        });
+        return orderedLines.join('\n');
+    }
+
+    async onLoad() {
+        this.plugin.registerEvent(this.app.vault.on('modify', file => {
+            if (!(file instanceof TFile)) {
+                return;
+            }
+            const fileFolder = file.path.split('/').slice(0, -1).join('/');
+            const dailyNotesFolder = this.settings.dailyNotesFolder || 'DailyNotes';
+            if (fileFolder === dailyNotesFolder) {
+                this.app.vault.process(file, (content) => {
+                    const { frontmatter, content: parsedContent } = parseFrontmatter(content);
+                    const orderedContent = this.orderTaskList(parsedContent).trim();
+                    const newContent = `${frontmatter}${orderedContent}`;
+                    return newContent;
+                });
+            }
+        }));
     }
 } 

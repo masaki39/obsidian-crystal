@@ -4,6 +4,7 @@ export interface CrystalPluginSettings {
 	GeminiAPIKey: string;
 	dailyNotesFolder: string;
 	dailyNoteDateFormat: string;
+	dailyNoteAutoSort: boolean;
 	todoFileName: string;
 	inboxName: string;
 	webpQuality: number;
@@ -24,6 +25,7 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	GeminiAPIKey: '',
 	dailyNotesFolder: 'DailyNotes',
 	dailyNoteDateFormat: 'YYYY-MM-DD',
+	dailyNoteAutoSort: true,
 	todoFileName: 'ToDo',
 	inboxName: 'Inbox',
 	webpQuality: 0.8,
@@ -61,6 +63,18 @@ export class CrystalSettingTab extends PluginSettingTab {
 				}));
 	}
 
+	private toggleSetting(containerEl: HTMLElement, name: string, desc: string, key: string) {
+		return new Setting(containerEl)
+		.setName(name)
+		.setDesc(desc)
+		.addToggle(toggle => toggle
+			.setValue((this.plugin.settings as any)[key])
+			.onChange(async (value) => {
+				(this.plugin.settings as any)[key] = value;
+				await this.plugin.saveSettings();
+			}));
+	}
+	
 	display(): void {
 		const {containerEl} = this;
 
@@ -88,14 +102,15 @@ export class CrystalSettingTab extends PluginSettingTab {
 		// Daily notes settings
 		containerEl.createEl('h3', { text: 'Daily Notes' });
 
-		this.textSetting(containerEl, 'Daily Notes Folder', 'Folder where daily notes are stored', 'dailyNotesFolder', 'DailyNotes');
+		this.textSetting(containerEl, 'Daily Notes Folder', 'Folder where daily notes are stored', 'dailyNotesFolder', 'Enter Folder Path');
 		this.textSetting(containerEl, 'Date Format', 'Date format for daily note file names (e.g., YYYY-MM-DD)', 'dailyNoteDateFormat', 'YYYY-MM-DD');
+		this.toggleSetting(containerEl, 'Auto Sort Tasks', 'Sort tasks in daily notes automatically', 'dailyNoteAutoSort');
 
 		// quick add settings
 		containerEl.createEl('h3', { text: 'Quick Add' });
 
-		this.textSetting(containerEl, 'ToDo File Name', 'File name for ToDo list (relative path from Obsidian Vault root)', 'todoFileName', 'ToDo');
-		this.textSetting(containerEl, 'Inbox Name', 'Name of the Inbox list', 'inboxName', 'Inbox');
+		this.textSetting(containerEl, 'ToDo File Name', 'File name for ToDo list (relative path from Obsidian Vault root)', 'todoFileName', 'Enter ToDo File Name');
+		this.textSetting(containerEl, 'Inbox Name', 'Name of the Inbox list', 'inboxName', 'Enter Inbox Name');
 
 		// Image settings
 		containerEl.createEl('h3', { text: 'Image Procesor' });
@@ -148,13 +163,13 @@ export class CrystalSettingTab extends PluginSettingTab {
 		// pCloud settings
 		containerEl.createEl('h4', { text: 'pCloud Uploader' });
 
-		this.textSetting(containerEl, 'pCloud Username', 'Your pCloud username (email)', 'pcloudUsername', 'Enter your pCloud username');
+		this.textSetting(containerEl, 'pCloud Username', 'Your pCloud username (email)', 'pcloudUsername', 'Enter pCloud Username');
 
 		new Setting(containerEl)
 			.setName('pCloud Password')
 			.setDesc('Your pCloud password')
 			.addText(text => {
-				text.setPlaceholder('Enter your pCloud password')
+				text.setPlaceholder('Enter pCloud Password')
 					.setValue(this.plugin.settings.pcloudPassword)
 					.onChange(async (value) => {
 						this.plugin.settings.pcloudPassword = value;
@@ -181,14 +196,14 @@ export class CrystalSettingTab extends PluginSettingTab {
 		// Marp settings
 		containerEl.createEl('h3', { text: 'Export Folder' });
 
-		this.textSetting(containerEl, 'Export Folder Path', 'Folder where this plugin exports files', 'exportFolderPath', 'insert folder path here');
+		this.textSetting(containerEl, 'Export Folder Path', 'Folder where this plugin exports files', 'exportFolderPath', 'Enter Export Folder Path');
 
 		// Quartz settings
 		containerEl.createEl('h3', { text: 'Quartz' });
 
-		this.textSetting(containerEl, 'Publish Folder Path', 'Path to Publish Folder (relative path from Obsidian Vault root)', 'publishFolderPath', 'insert folder path here');
-		this.textSetting(containerEl, 'Quartz Path', 'Path to Quartz (absolute path)', 'quartzPath', 'insert folder path here');
-		this.textSetting(containerEl, 'Quartz Site Name', 'Name of the Quartz site', 'quartzSiteName', 'user-name');
-		this.textSetting(containerEl, 'Github User Name', 'Github user name', 'githubUserName', 'input github user name here');
+		this.textSetting(containerEl, 'Publish Folder Path', 'Path to Publish Folder (relative path from Obsidian Vault root)', 'publishFolderPath', 'Enter Publish Folder Path');
+		this.textSetting(containerEl, 'Quartz Path', 'Path to Quartz (absolute path)', 'quartzPath', 'Enter Quartz Folder Path');
+		this.textSetting(containerEl, 'Quartz Site Name', 'Name of the Quartz site', 'quartzSiteName', 'Enter Quartz Site Name');
+		this.textSetting(containerEl, 'Github User Name', 'Github user name', 'githubUserName', 'Enter Github User Name');
 	}
 } 
