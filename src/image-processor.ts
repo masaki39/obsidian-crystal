@@ -1,6 +1,6 @@
 import { Notice } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
-
+const moment = require('moment');
 
 export interface ProcessedImage {
 	blob: Blob;
@@ -111,17 +111,8 @@ export class ImageProcessor {
 	 * Generate timestamp-based filename
 	 */
 	generateTimestampFilename(prefix: string, blob: Blob, originalType: string): string {
-		const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+		const timestamp = moment().format('YYYYMMDDHHmmss');
 		const extension = blob.type === 'image/webp' ? 'webp' : (originalType.split('/')[1] || 'png');
-		return `${prefix}-${timestamp}.${extension}`;
-	}
-
-	/**
-	 * Generate filename for local vault usage
-	 */
-	generateVaultFilename(blob: Blob, originalType: string): string {
-		const timestamp = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, -5);
-		const extension = blob.type === 'image/webp' ? 'webp' : (originalType.split('/')[1] || 'png');
-		return `pasted-image-${timestamp}.${extension}`;
+		return `${prefix}_${timestamp}.${extension}`;
 	}
 } 

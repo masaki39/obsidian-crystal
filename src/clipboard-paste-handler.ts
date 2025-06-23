@@ -189,7 +189,7 @@ export class ImagePasteAndDropHandler {
 			const processed = await this.imageProcessor.processImage(imageFile, false);
 
 			// Generate filename for the vault
-			const filename = this.imageProcessor.generateVaultFilename(processed.blob, processed.originalType);
+			const filename = this.imageProcessor.generateTimestampFilename('pasted-image', processed.blob, processed.originalType);
 
 			// Get attachments folder or use default
 			const attachmentFolder = (this.app.vault as any).config?.attachmentFolderPath || 'attachments';
