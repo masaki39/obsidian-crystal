@@ -76,7 +76,7 @@ export class QuickAddCommands {
 
 			// ファイルの内容を読み取り、"- Inbox"の行を探して下に追加
 			await this.app.vault.process(todoFile, (data) => {
-				const match = data.match(/\n- ${inboxName}/);
+				const match = data.match(new RegExp(`\\n- ${inboxName}`, 'g'));
 				if (match) { 
 					return data.replace(`- ${inboxName}`, `- ${inboxName}\n\t- ${task}`);
 				} else { 
