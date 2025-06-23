@@ -43,7 +43,7 @@ export class QuickAddCommands {
 			} else {
 				// ファイルが存在する場合は一番上にタスクを追加
 				const content = await this.app.vault.read(dailyFile);
-				const newContent = this.orderTaskList(`- [ ] ${task}\n${content}`);
+				const newContent = this.orderTaskList(`${content}\n- [ ] ${task}`);
 				await this.app.vault.modify(dailyFile, newContent);
 				new Notice('デイリーノートにタスクを追加しました');
 			}
@@ -65,21 +65,28 @@ export class QuickAddCommands {
 
 		try {
 			// ToDoファイルを探す
-			const todoFile = this.findFileByName("ToDo");
+			const todoFile = this.app.vault.getFileByPath(this.settings.todoFileName + '.md');
 			
 			if (!todoFile) {
-				new Notice('ToDoファイルが見つかりません');
+				new Notice('Can\'t find ToDo file');
 				return;
 			}
 
+			const inboxName = this.settings.inboxName;
+
 			// ファイルの内容を読み取り、"- Inbox"の行を探して下に追加
 			await this.app.vault.process(todoFile, (data) => {
-				return data.replace("- Inbox", `- Inbox\n\t- ${task}`);
+				const match = data.match(/\n- ${inboxName}/);
+				if (match) { 
+					return data.replace(`- ${inboxName}`, `- ${inboxName}\n\t- ${task}`);
+				} else { 
+					return data + `\n- ${inboxName}\n\t- ${task}`;
+				}
 			});
 
-			new Notice('ToDoリストにタスクを追加しました');
+			new Notice('Added task to ToDo list');
 		} catch (error) {
-			new Notice('タスクの追加に失敗しました: ' + error.message);
+			new Notice('Failed to add task to ToDo list: ' + error.message);
 			console.error('Add task to todo error:', error);
 		}
 	}

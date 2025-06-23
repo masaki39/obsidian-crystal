@@ -4,6 +4,8 @@ export interface CrystalPluginSettings {
 	GeminiAPIKey: string;
 	dailyNotesFolder: string;
 	dailyNoteDateFormat: string;
+	todoFileName: string;
+	inboxName: string;
 	webpQuality: number;
 	imageResizeScale: number;
 	imageMaxSize: number;
@@ -22,6 +24,8 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	GeminiAPIKey: '',
 	dailyNotesFolder: 'DailyNotes',
 	dailyNoteDateFormat: 'YYYY-MM-DD',
+	todoFileName: 'ToDo',
+	inboxName: 'Inbox',
 	webpQuality: 0.8,
 	imageResizeScale: 0.8,
 	imageMaxSize: 1024,
@@ -90,6 +94,31 @@ export class CrystalSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.dailyNoteDateFormat)
 				.onChange(async (value) => {
 					this.plugin.settings.dailyNoteDateFormat = value;
+					await this.plugin.saveSettings();
+				}));
+
+		// quick add settings
+		containerEl.createEl('h3', { text: 'Quick Add' });
+
+		new Setting(containerEl)
+			.setName('ToDo File Name')
+			.setDesc('File name for ToDo list (relative path from Obsidian Vault root)')
+			.addText(text => text
+				.setPlaceholder('ToDo')
+				.setValue(this.plugin.settings.todoFileName)
+				.onChange(async (value) => {
+					this.plugin.settings.todoFileName = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Inbox Name')
+			.setDesc('Name of the Inbox list')
+			.addText(text => text
+				.setPlaceholder('Inbox')
+				.setValue(this.plugin.settings.inboxName)
+				.onChange(async (value) => {
+					this.plugin.settings.inboxName = value;
 					await this.plugin.saveSettings();
 				}));
 
