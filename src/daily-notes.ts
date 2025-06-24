@@ -1,6 +1,7 @@
 import { App, Plugin, TFile } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
 import { parseFrontmatter } from './utils';
+const moment = require('moment');
 
 export class DailyNotesManager {
     private app: App;
@@ -183,6 +184,44 @@ export class DailyNotesManager {
                     return newContent;
                 });
             }
+        }));
+
+        // When create any note, add link to today's daily note
+        this.plugin.registerEvent(this.app.vault.on('create', file => {
+            if (!(file instanceof TFile) || file.extension !== 'md') {
+                return;
+            }
+            const todayNote = this.app.vault.getAbstractFileByPath(this.getDailyNoteFilePath(new Date()));
+            if (!todayNote) {
+                return;
+            }
+            const timeStamp = moment(new Date()).format('HH:mm');
+            const fileLink = `[[${file.name.replace(/\.md$/, '')}]]`;
+            const line = `- ${timeStamp} ${fileLink}`;
+            this.app.vault.process(todayNote as TFile, (content) => {
+                const newContent = `${content}\n${line}`;
+                return newContent;
+            });
+        }));
+
+        // When delete any note, remove link from today's daily note
+        this.plugin.registerEvent(this.app.vault.on('delete', file => {
+            if (!(file instanceof TFile) || file.extension !== 'md') {
+                return;
+            }
+            const todayNote = this.app.vault.getAbstractFileByPath(this.getDailyNoteFilePath(new Date()));
+            if (!todayNote) {
+                return;
+            }
+            const fileLink = `[[${file.name.replace(/\.md$/, '')}]]`;
+            // 正規表現の特殊文字をエスケープ
+            const escapedFileLink = fileLink.replace(/[[\]]/g, '\\$&');
+            this.app.vault.process(todayNote as TFile, (content) => {
+                // 行全体をマッチして削除（改行も含む）
+                const regex = new RegExp(`^- \\d{2}:\\d{2} ${escapedFileLink}$`, 'gm');
+                const newContent = content.replace(regex, '').replace(/\n\n+/g, '\n');
+                return newContent;
+            });
         }));
     }
 } 
