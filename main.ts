@@ -10,6 +10,7 @@ import { MarpCommands } from './src/marp';
 import { AnkiService } from './src/anki-service';
 import { TerminalService } from './src/terminal-service';
 import { QuartzService } from './src/quartz-service';
+import { ShortcutService } from './src/shorcut-service';
 
 // Crystal Plugin for Obsidian
 
@@ -25,6 +26,7 @@ export default class CrystalPlugin extends Plugin {
 	private ankiService: AnkiService;
 	private terminalService: TerminalService;
 	private quartzService: QuartzService;
+	private shortcutService: ShortcutService;
 
 	async onload() {
 		await this.loadSettings();
@@ -40,10 +42,12 @@ export default class CrystalPlugin extends Plugin {
 		this.ankiService = new AnkiService(this.app);
 		this.terminalService = new TerminalService();
 		this.quartzService = new QuartzService(this.app, this, this.settings, this.terminalService);
+		this.shortcutService = new ShortcutService(this.terminalService, this.settings, this);
 
 		// Load Quartz Service
 		this.quartzService.onload();
 		this.dailyNotesManager.onLoad();
+		this.shortcutService.onLoad();
 
 		// Enable image paste and drop handler if auto paste is enabled
 		if (this.settings.autoWebpPaste) {

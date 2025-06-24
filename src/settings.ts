@@ -19,6 +19,7 @@ export interface CrystalPluginSettings {
 	quartzPath: string;
 	quartzSiteName: string;
 	githubUserName: string;
+	shortcutNames: string;
 }
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
@@ -39,7 +40,8 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	publishFolderPath: 'Publish',
 	quartzPath: '',
 	quartzSiteName: '',
-	githubUserName: ''
+	githubUserName: '',
+	shortcutNames: ''
 }
 
 export class CrystalSettingTab extends PluginSettingTab {
@@ -205,5 +207,19 @@ export class CrystalSettingTab extends PluginSettingTab {
 		this.textSetting(containerEl, 'Quartz Path', 'Path to Quartz (absolute path)', 'quartzPath', 'Enter Quartz Folder Path');
 		this.textSetting(containerEl, 'Quartz Site Name', 'Name of the Quartz site', 'quartzSiteName', 'Enter Quartz Site Name');
 		this.textSetting(containerEl, 'Github User Name', 'Github user name', 'githubUserName', 'Enter Github User Name');
+
+		// Shortcut settings
+		containerEl.createEl('h3', { text: 'Shortcuts' });
+
+		new Setting(containerEl)
+			.setName('Shortcut Names')
+			.setDesc('Names of the shortcuts (one per line). Restart Obsidian to apply changes.')
+			.addTextArea(textarea => textarea
+				.setPlaceholder('Enter Shortcut Names (one per line)')
+				.setValue(this.plugin.settings.shortcutNames)
+				.onChange(async (value) => {
+					this.plugin.settings.shortcutNames = value;
+					await this.plugin.saveSettings();
+				}));
 	}
 } 
