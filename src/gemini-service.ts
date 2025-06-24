@@ -283,7 +283,7 @@ ${pureText}`;
 			new Notice('Gemini API Keyが設定されていません。設定からAPIキーを入力してください。');
 			return;
 		}
-		const front = await promptForText(this.app, '表面', '英単語を入力してください', '追加');
+		const front = await promptForText(this.app, '表面', '英単語を入力してください', '追加', this.app.workspace.getActiveViewOfType(MarkdownView)?.editor?.getSelection() || '');
         if (!front) {
 			return;
         }
