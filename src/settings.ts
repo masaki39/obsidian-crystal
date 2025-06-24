@@ -6,7 +6,6 @@ export interface CrystalPluginSettings {
 	dailyNoteDateFormat: string;
 	dailyNoteAutoSort: boolean;
 	dailyNoteAutoLink: boolean;
-	dailyNoteAutoLinkExclude: string;
 	todoFileName: string;
 	inboxName: string;
 	webpQuality: number;
@@ -30,7 +29,6 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	dailyNoteDateFormat: 'YYYY-MM-DD',
 	dailyNoteAutoSort: true,
 	dailyNoteAutoLink: true,
-	dailyNoteAutoLinkExclude: '',
 	todoFileName: 'ToDo',
 	inboxName: 'Inbox',
 	webpQuality: 0.8,
@@ -112,16 +110,6 @@ export class CrystalSettingTab extends PluginSettingTab {
 		this.textSetting(containerEl, 'Date Format', 'Date format for daily note file names (e.g., YYYY-MM-DD)', 'dailyNoteDateFormat', 'YYYY-MM-DD');
 		this.toggleSetting(containerEl, 'Auto Sort Tasks', 'Sort tasks in daily notes automatically', 'dailyNoteAutoSort');
 		this.toggleSetting(containerEl, 'Auto Link Notes', 'Add link to today\'s daily note when create any note', 'dailyNoteAutoLink');
-		new Setting(containerEl)
-			.setName('Auto Link Exclude')
-			.setDesc('Exclude notes in the following folder paths from auto linking (one per line)')
-			.addTextArea(textarea => textarea
-				.setPlaceholder('Enter Exclude Folder Paths (one per line)')
-				.setValue(this.plugin.settings.dailyNoteAutoLinkExclude)
-				.onChange(async (value) => {
-					this.plugin.settings.dailyNoteAutoLinkExclude = value;
-					await this.plugin.saveSettings();
-				}));
 
 		// quick add settings
 		containerEl.createEl('h3', { text: 'Quick Add' });
