@@ -30,7 +30,7 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	inboxName: 'Inbox',
 	webpQuality: 0.8,
 	imageResizeScale: 0.8,
-	imageMaxSize: 1024,
+	imageMaxSize: 700,
 	autoWebpPaste: true,
 	pcloudUsername: '',
 	pcloudPassword: '',
