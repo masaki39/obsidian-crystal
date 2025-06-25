@@ -145,8 +145,8 @@ export default class CrystalPlugin extends Plugin {
 		this.addCommand({
 			id: 'crystal-create-timestamp-file',
 			name: 'Create New File with Timestamp',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.editorCommands.createTimestampFile(editor, view);
+			callback: () => {
+				this.editorCommands.createTimestampFile();
 			}
 		});
 

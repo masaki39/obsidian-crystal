@@ -48,7 +48,7 @@ export class EditorCommands {
 	/**
 	 * Create a new file with timestamp filename
 	 */
-	async createTimestampFile(editor: Editor, view: MarkdownView) {
+	async createTimestampFile() {
 		const basefilename = this.generateTimestampFilename();
 		try {
 			const newFile = await this.app.vault.create(basefilename + '.md', '\n');
