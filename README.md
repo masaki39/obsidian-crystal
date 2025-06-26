@@ -5,86 +5,130 @@ BRATでインストールできる。
 
 ## 概要
 
-このプラグインは、Obsidianでの作業効率を向上させるための様々な機能を提供する。
-AI（Gemini）を活用したテキスト処理、画像管理、デイリーノート操作、Anki連携など、多岐にわたる機能を統合している。
+このプラグインは、Obsidianでの作業効率を劇的に向上させるための、多岐にわたる機能を統合したオールインワン・プラグインである。
+AI（Gemini）を活用した高度なテキスト処理、pCloudと連携した画像管理、日々のノートテイクを円滑にするデイリーノート機能、プレゼンテーション作成支援、各種サービス連携（Anki, Quartz, macOS Shortcuts）などを提供する。
 
 ## 機能一覧
 
-### AI機能（Gemini連携）
+### 🤖 AI機能（Gemini連携）
+
+Gemini APIを利用して、文章作成や翻訳を強力にサポートする。
 
 | コマンド | 機能 | 説明 |
-|---------|------|------|
-| `Generate Description for Current File` | ファイル説明生成 | 現在のファイルの内容を解析してdescriptionを自動生成する |
-| `Translate Selected Text` | 選択テキスト翻訳 | 選択したテキストを翻訳する |
-| `Translate Above Cursor Text` | カーソル上翻訳 | カーソル位置より上のテキストを翻訳する |
-| `Grammar Check Current Line` | 文法チェック | 現在行の文法をチェックして修正提案を行う |
-| `Add Note to Anki Assisted by Gemini` | AI支援Anki追加 | Geminiの支援を受けてAnkiカードを作成する |
+|---|---|---|
+| `Generate Description for Current File` | ファイル説明生成 | 現在のファイル内容を解析し、検索に適した`description`をフロントマターに自動生成する。 |
+| `Translate Selected Text` | 選択テキスト翻訳 | 選択した日本語テキストを自然な英語に翻訳し、元のテキストと置き換える。 |
+| `Translate Above Cursor Text` | カーソル上翻訳 | カーソルがある行の、一つ上の行のテキストを翻訳し、カーソル位置に挿入する。 |
+| `Grammar Check Current Line` | 文法チェック | 現在のカーソル行の文章（日/英）をチェックし、より自然で正確な表現に校正する。 |
+| `Add Note to Anki Assisted by Gemini` | AI支援Anki追加 | 選択した英単語からGeminiが日本語訳を生成し、Ankiカード作成を支援する。 |
 
-### デイリーノート管理
+### 📅 デイリーノート管理
 
-| コマンド | 機能 | 説明 |
-|---------|------|------|
-| `Open Today's Daily Note` | 今日のノート | 今日のデイリーノートを開く |
-| `Open Yesterday's Daily Note` | 昨日のノート | 昨日のデイリーノートを開く |
-| `Open Tomorrow's Daily Note` | 明日のノート | 明日のデイリーノートを開く |
-
-### 画像管理（pCloud連携）
+日々の記録とタスク管理を効率化する。
 
 | コマンド | 機能 | 説明 |
-|---------|------|------|
-| `Upload Clipboard Image to pCloud Public Folder` | クリップボード画像アップロード | クリップボードの画像をpCloudにアップロードしてリンクを生成 |
-| `Upload Image File to pCloud Public Folder` | 画像ファイルアップロード | 画像ファイルを選択してpCloudにアップロード |
+|---|---|---|
+| `Open Today's Daily Note` | 今日のノート | 今日の日付のデイリーノートを開く。存在しない場合は自動で作成する。 |
+| `Open Yesterday's Daily Note` | 昨日のノート | 現在のノートの日付を基準に、前日のデイリーノートを開く。 |
+| `Open Tomorrow's Daily Note` | 明日のノート | 現在のノートの日付を基準に、翌日のデイリーノートを開く。 |
+| `Add Task to Daily Note` | ﾀｽｸを今日のDNに追加 | 入力したタスクを今日のデイリーノートの末尾に追記する。 |
 
-### エディタ機能
+**自動化機能（設定で有効化が必要）：**
+- **タスク自動ソート:** デイリーノート内のタスクが変更されると、完了済み`[x]`のタスクをリストの上に自動で移動させる。
+- **新規ノートの自動リンク:** 新しいノートを作成すると、その日のデイリーノートに自動でリンクが追記される。
 
-| コマンド | 機能 | 説明 |
-|---------|------|------|
-| `Create New File with Timestamp` | タイムスタンプファイル作成 | タイムスタンプ付きの新しいファイルを作成 |
-| `Create New File with Link at Cursor` | リンク付きファイル作成 | カーソル位置にリンクを挿入して新しいファイルを作成 |
-| `Copy File Link to Clipboard` | ファイルリンクコピー | 現在のファイルのリンクをクリップボードにコピー |
-| `Copy File Link with Alias to Clipboard` | エイリアス付きリンクコピー | エイリアス付きファイルリンクをクリップボードにコピー |
-| `Wrap Selection with Subscript` | 下付き文字 | 選択テキストを下付き文字でラップ |
-| `Wrap Selection with Superscript` | 上付き文字 | 選択テキストを上付き文字でラップ |
-| `Organize File with Prefix and Tags` | ファイル整理 | プレフィックスとタグでファイルを整理 |
-| `Convert Links to Relative Paths` | 相対パス変換 | リンクを相対パスに変換 |
+### 🖼️ 画像管理
 
-### クイック追加機能
+画像の貼り付けやアップロードを効率化する。
 
 | コマンド | 機能 | 説明 |
-|---------|------|------|
-| `Add Task to Daily Note` | デイリーノートタスク追加 | デイリーノートにタスクを追加 |
-| `Add Task to ToDo List` | ToDoリストタスク追加 | ToDoリストにタスクを追加 |
-| `Insert MOC` | MOC挿入 | Map of Contents（MOC）を挿入 |
+|---|---|---|
+| `Upload Clipboard Image to pCloud` | ｸﾘｯﾌﾟﾎﾞｰﾄﾞ画像をpCloudにｱｯﾌﾟﾛｰﾄﾞ | クリップボードにある画像をpCloudの公開フォルダにアップロードし、Markdownリンクをカーソル位置に挿入する。 |
+| `Upload Image File to pCloud` | 画像ファイルをpCloudにｱｯﾌﾟﾛｰﾄﾞ | ファイルを選択ダイアログから選び、pCloudにアップロードしてリンクを挿入する。 |
 
-### プレゼンテーション機能（Marp）
+**自動化機能（設定で有効化が必要）：**
+- **自動WebP変換とローカル保存:** クリップボードからのペーストやドラッグ＆ドロップで画像を貼り付けると、自動でWebP形式に変換し、Vault内の添付ファイルフォルダに保存してリンクを挿入する。GIFアニメはそのまま維持される。
 
-| コマンド | 機能 | 説明 |
-|---------|------|------|
-| `Preview Marp Slide` | Marpプレビュー | Marpスライドをプレビュー |
-| `Export Marp Slide` | Marpエクスポート | Marpスライドを各種形式でエクスポート |
+### ✍️ エディタ拡張
 
-### Anki連携
+日々の編集作業を快適にするコマンド群。
 
 | コマンド | 機能 | 説明 |
-|---------|------|------|
-| `Add Note to Anki` | Ankiノート追加 | Ankiにノートを追加 |
+|---|---|---|
+| `Create New File with Timestamp` | タイムスタンプで新規ファイル作成 | `YYYYMMDDHHmmss`形式のファイル名で新しいノートを作成し、タイトル変更モードで開く。 |
+| `Create New File with Link at Cursor` | カーソル位置にリンク付きで新規ファイル作成 | タイムスタンプ名のファイルを作成し、現在のカーソル位置にそのファイルへのリンクを挿入する。 |
+| `Copy File Link to Clipboard` | ファイルリンクをコピー | 現在開いているファイルのWikiリンク（`[[ファイル名]]`）をコピーする。 |
+| `Copy File Link with Alias to Clipboard` | エイリアス付きファイルリンクをコピー | ファイルのフロントマターに`aliases`があれば、それを使ったリンク（`[[ファイル名|エイリアス]]`）をコピーする。 |
+| `Wrap Selection with Subscript` | 下付き文字 | 選択テキストを`<sub>`タグで囲む。すでにある場合は解除する。 |
+| `Wrap Selection with Superscript` | 上付き文字 | 選択テキストを`<sup>`タグで囲む。すでにある場合は解除する。 |
+| `Organize File with Tags` | タグでファイルを整理 | タグを選択し、ファイル名に絵文字プレフィックスや日付を追加、フロントマターを更新し、指定フォルダへ移動させる。 |
+| `Convert Links to Relative Paths` | リンクを相対パスに変換 | ファイル内のWikiリンクやMarkdownリンクを、すべて相対パス形式のMarkdownリンクに一括変換する。 |
+
+### ✨ クイック追加
+
+定型的なコンテンツやタスクを素早く追加する。
+
+| コマンド | 機能 | 説明 |
+|---|---|---|
+| `Add Task to ToDo List` | ToDoリストにタスク追加 | 設定で指定したToDoリストファイルのInboxセクションにタスクを追加する。 |
+| `Insert MOC` | MOCを挿入 | 関連ノートなどをまとめるためのMOC（Map of Contents）テンプレートを挿入する。 |
+
+### 連携機能
+
+#### プレゼンテーション（Marp）
+
+[Marp](https://marp.app/)を使ったプレゼンテーション作成を支援する。
+
+| コマンド | 機能 | 説明 |
+|---|---|---|
+| `Preview Marp Slide` | Marpプレビュー | 内部リンクを相対パスに変換後、Marpのプレビュー用コマンドをクリップボードにコピーする。 |
+| `Export Marp Slide` | Marpエクスポート | 内部リンクを相対パスに変換後、Marpのエクスポート（PPTX形式）用コマンドをクリップボードにコピーする。 |
+
+#### Anki
+
+| コマンド | 機能 | 説明 |
+|---|---|---|
+| `Add Note to Anki` | Ankiノート追加 | 表面・裏面のテキストを入力して、Ankiに新しいノートを追加する。 |
+
+#### Quartz
+
+[Quartz](https://quartz.jzhao.xyz/)サイトの管理を効率化する。
+
+| コマンド | 機能 | 説明 |
+|---|---|---|
+| `Quartz Sync` | Quartzと同期 | 設定した公開用フォルダの内容を、指定したQuartzリポジトリに同期する。 |
+| `Open Quartz Site` | Quartzサイトを開く | 設定したQuartzサイトのURLをブラウザで開く。 |
+| `Quartz Sync and Open Site` | Quartzと同期してサイトを開く | 同期コマンドを実行後、サイトとGitHub Actionsのページを開く。 |
+
+#### macOS ショートカット
+
+| コマンド | 機能 | 説明 |
+|---|---|---|
+| `Run Shortcut: {設定した名前}` | ショートカット実行 | macOSの「ショートカット」アプリで作成したショートカットをObsidianから直接実行する。 |
 
 ## 設定
 
-プラグインの設定画面では以下の項目を設定できる：
+プラグイン設定画面では、本プラグインのほぼすべての機能に関する詳細な設定が可能。
 
-- Gemini API キー
-- pCloud認証情報
-- デイリーノート設定
-- 画像処理設定
-- 自動WebP変換設定
+- **Gemini:** APIキー
+- **デイリーノート:** フォルダパス、日付フォーマット、タスクの自動ソート、新規ノートの自動リンク
+- **クイック追加:** ToDoファイル名、Inbox名
+- **画像処理:** 自動WebP変換の有効化、圧縮品質、リサイズ設定
+- **pCloud連携:** 認証情報、公開フォルダID
+- **Marp/エクスポート:** エクスポート先のフォルダパス
+- **Quartz連携:** 公開用フォルダパス、Quartzリポジトリのローカルパス、サイト名、GitHubユーザー名
+- **macOSショートカット:** 実行したいショートカット名（1行に1つ）
 
 ## インストール
 
-BRATプラグインを使用してインストールすることができる。
+[BRAT](https://github.com/TfTHacker/obsidian42-brat)プラグインを使用してインストールするのが最も簡単である。
+
+1. BRATをインストールし、有効化する。
+2. BRATの設定で `Add Beta plugin` を選択する。
+3. このリポジトリのURL `https://github.com/your-username/obsidian-crystal` を入力する。
 
 ## 注意事項
 
-- デスクトップ版Obsidianでのみ動作する
-- 一部の機能は外部サービス（Gemini、pCloud、Anki）の設定が必要
-- 個人用途に最適化されているため、環境に応じた調整が必要な場合がある
+- デスクトップ版Obsidianでのみ動作する。
+- 多くの機能は、外部サービス（Gemini, pCloud, Anki, Marp CLI, macOS Shortcuts）の事前設定やインストールが必要である。
+- 個人用途に最適化されているため、利用者の環境に応じた設定調整が必要な場合がある。
