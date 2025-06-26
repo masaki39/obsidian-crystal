@@ -1,4 +1,4 @@
-import { App, Plugin, TFile } from 'obsidian';
+import { App, Plugin, TFile, MarkdownView } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
 import { parseFrontmatter } from './utils';
 const moment = require('moment');
@@ -110,9 +110,16 @@ export class DailyNotesManager {
                 // 空のデイリーノートを作成
                 file = await this.app.vault.create(filePath, '');
             }
-            
-            // ファイルを開く
-            await this.app.workspace.getLeaf().openFile(file as TFile);
+
+            const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+            const pinned = view?.leaf.getViewState().pinned;
+            if (view && pinned) {
+                view.leaf.setPinned(false);
+                await this.app.workspace.getLeaf().openFile(file as TFile);
+                view.leaf.setPinned(true);
+            } else {
+                await this.app.workspace.getLeaf().openFile(file as TFile);
+            }
             
         } catch (error) {
             console.error('Error opening/creating daily note:', error);
