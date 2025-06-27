@@ -116,11 +116,6 @@ ${content}`;
 			// フロントマターを除去したコンテンツを取得
 			const titleForAnalysis = view.file.basename;
 			const contentForAnalysis = await this.getContentWithoutFrontmatter(view.file);
-			
-			if (!contentForAnalysis.trim()) {
-				new Notice('ファイル内容が空のため、descriptionを生成できません。');
-				return;
-			}
 
 			// Geminiを使用してdescriptionを生成
 			const description = await this.generateDescription(titleForAnalysis, contentForAnalysis);
