@@ -200,7 +200,10 @@ export class EditorCommands {
 				console.error('File organization error:', error);
 			}
 
-			editor.setCursor(editor.getValue().length);
+			requestAnimationFrame(() => {
+				editor.setCursor(editor.getValue().length);
+			});
+
 		});
 
 		tagModal.open();
