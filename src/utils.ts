@@ -1,6 +1,6 @@
 import { App, Modal } from 'obsidian';
 
-export function promptForText(app: App, title = 'テキストを入力してください', placeholder = '', buttonText = '追加', defaultValue = ''): Promise<string | null> {
+export function promptForText(app: App, title = 'テキストを入力してください', placeholder = '', buttonText = '追加', defaultValue = '', multiline = false): Promise<string | null> {
 	return new Promise((resolve) => {
 		class GenericInputModal extends Modal {
 			private result: string | null = null;
@@ -14,13 +14,28 @@ export function promptForText(app: App, title = 'テキストを入力してく�
 			onOpen() {
 				const { contentEl } = this;
 				contentEl.createEl('h3', { text: title });
-				const input = contentEl.createEl('input', {
-					type: 'text',
-					placeholder
-				});
-                input.value = defaultValue;
-				input.style.width = '100%';
+				
+				let input: HTMLInputElement | HTMLTextAreaElement;
+				
+				if (multiline) {
+					input = contentEl.createEl('textarea', {
+						placeholder
+					}) as HTMLTextAreaElement;
+					input.style.width = '100%';
+					input.style.height = '120px';
+					input.style.resize = 'vertical';
+					input.style.fontFamily = 'inherit';
+				} else {
+					input = contentEl.createEl('input', {
+						type: 'text',
+						placeholder
+					}) as HTMLInputElement;
+					input.style.width = '100%';
+				}
+				
+				input.value = defaultValue;
 				input.style.marginBottom = '16px';
+				
 				const buttonContainer = contentEl.createDiv();
 				buttonContainer.style.display = 'flex';
 				buttonContainer.style.gap = '8px';
@@ -28,33 +43,51 @@ export function promptForText(app: App, title = 'テキストを入力してく�
 				const cancelButton = buttonContainer.createEl('button', { text: 'キャンセル' });
 				const addButton = buttonContainer.createEl('button', { text: buttonText });
 				addButton.addClass('mod-cta');
+				
 				let isComposing = false;
+				
 				const submit = () => {
 					this.result = input.value.trim();
 					this.close();
 				};
+				
 				cancelButton.addEventListener('click', () => {
 					this.result = null;
 					this.close();
 				});
+				
 				addButton.addEventListener('click', submit);
+				
 				input.addEventListener('compositionstart', () => {
 					isComposing = true;
 				});
+				
 				input.addEventListener('compositionend', () => {
 					isComposing = false;
 				});
-				input.addEventListener('keydown', (e) => {
+				
+				input.addEventListener('keydown', (e: KeyboardEvent) => {
 					if (e.key === 'Enter') {
-						if (!isComposing) {
-							e.preventDefault();
-							submit();
+						if (multiline) {
+							// multilineの場合はCtrl+Enter（macではCmd+Enter）で送信
+							if ((e.ctrlKey || e.metaKey) && !isComposing) {
+								e.preventDefault();
+								submit();
+							}
+							// 通常のEnterは改行として処理
+						} else {
+							// 単行の場合は従来通りEnterで送信
+							if (!isComposing) {
+								e.preventDefault();
+								submit();
+							}
 						}
 					} else if (e.key === 'Escape') {
 						this.result = null;
 						this.close();
 					}
 				});
+				
 				input.focus();
 			}
 

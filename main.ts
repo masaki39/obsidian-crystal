@@ -1,6 +1,7 @@
 import { Editor, MarkdownView, Plugin, Notice } from 'obsidian';
 import { CrystalPluginSettings, DEFAULT_SETTINGS, CrystalSettingTab } from './src/settings';
 import { GeminiService } from './src/gemini-service';
+import { BlueskyService } from './src/bluesky-service';
 import { DailyNotesManager } from './src/daily-notes';
 import { PCloudService } from './src/pcloud-service';
 import { ImagePasteAndDropHandler } from './src/clipboard-paste-handler';
@@ -17,6 +18,7 @@ import { ShortcutService } from './src/shorcut-service';
 export default class CrystalPlugin extends Plugin {
 	settings: CrystalPluginSettings;
 	private geminiService: GeminiService;
+	private blueskyService: BlueskyService;
 	private dailyNotesManager: DailyNotesManager;
 	private pcloudService: PCloudService;
 	private imagePasteAndDropHandler: ImagePasteAndDropHandler;
@@ -33,6 +35,7 @@ export default class CrystalPlugin extends Plugin {
 
 		// Initialize services
 		this.geminiService = new GeminiService(this.app, this.settings.GeminiAPIKey);
+		this.blueskyService = new BlueskyService(this.app, this, this.settings.blueskyIdentifier, this.settings.blueskyPassword);
 		this.dailyNotesManager = new DailyNotesManager(this.app, this.settings, this);
 		this.pcloudService = new PCloudService(this.app, this.settings);
 		this.imagePasteAndDropHandler = new ImagePasteAndDropHandler(this.app, this.settings);
@@ -45,6 +48,7 @@ export default class CrystalPlugin extends Plugin {
 		this.shortcutService = new ShortcutService(this.terminalService, this.settings, this);
 
 		// Load Quartz Service
+		this.blueskyService.onload();
 		this.quartzService.onload();
 		this.dailyNotesManager.onLoad();
 		this.shortcutService.onLoad();
@@ -284,6 +288,7 @@ export default class CrystalPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 		this.geminiService.updateSettings(this.settings);
+		this.blueskyService.updateCredentials(this.settings.blueskyIdentifier, this.settings.blueskyPassword);
 		this.dailyNotesManager.updateSettings(this.settings);
 		this.imagePasteAndDropHandler.updateSettings(this.settings);
 		this.editorCommands.updateSettings(this.settings);

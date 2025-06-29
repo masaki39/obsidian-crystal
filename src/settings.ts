@@ -2,6 +2,8 @@ import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 export interface CrystalPluginSettings {
 	GeminiAPIKey: string;
+	blueskyIdentifier: string;
+	blueskyPassword: string;
 	dailyNotesFolder: string;
 	dailyNoteDateFormat: string;
 	dailyNoteAutoSort: boolean;
@@ -25,6 +27,8 @@ export interface CrystalPluginSettings {
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	GeminiAPIKey: '',
+	blueskyIdentifier: '',
+	blueskyPassword: '',
 	dailyNotesFolder: 'DailyNotes',
 	dailyNoteDateFormat: 'YYYY-MM-DD',
 	dailyNoteAutoSort: true,
@@ -97,6 +101,34 @@ export class CrystalSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.GeminiAPIKey)
 					.onChange(async (value) => {
 						this.plugin.settings.GeminiAPIKey = value;
+						await this.plugin.saveSettings();
+					});
+				text.inputEl.type = 'password';
+				return text;
+			});
+
+		// Bluesky settings
+		containerEl.createEl('h3', { text: 'Bluesky' });
+
+		new Setting(containerEl)
+			.setName('Bluesky Handle/Email')
+			.setDesc('Your Bluesky handle (e.g., user.bsky.social) or email address')
+			.addText(text => text
+				.setPlaceholder('Enter your Bluesky handle or email')
+				.setValue(this.plugin.settings.blueskyIdentifier)
+				.onChange(async (value) => {
+					this.plugin.settings.blueskyIdentifier = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Bluesky App Password')
+			.setDesc('Your Bluesky app password (create one in Bluesky Settings > App Passwords)')
+			.addText(text => {
+				text.setPlaceholder('Enter your Bluesky app password')
+					.setValue(this.plugin.settings.blueskyPassword)
+					.onChange(async (value) => {
+						this.plugin.settings.blueskyPassword = value;
 						await this.plugin.saveSettings();
 					});
 				text.inputEl.type = 'password';
