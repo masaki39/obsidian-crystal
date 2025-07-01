@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Notice } from 'obsidian';
+import { App, Editor, MarkdownView, Notice, Plugin } from 'obsidian';
 import { EditorCommands } from './editor-commands';
 import * as path from 'path';
 import { CrystalPluginSettings } from './settings';
@@ -7,11 +7,13 @@ export class MarpCommands {
 	private app: App;
 	private editorCommands: EditorCommands;
 	private settings: CrystalPluginSettings;
+	private plugin: Plugin;
 
-	constructor(app: App, editorCommands: EditorCommands, settings: CrystalPluginSettings) {
+	constructor(app: App, editorCommands: EditorCommands, settings: CrystalPluginSettings, plugin: Plugin) {
 		this.app = app;
 		this.editorCommands = editorCommands;
 		this.settings = settings;
+		this.plugin = plugin;
 	}
 
 	/**
@@ -42,6 +44,10 @@ export class MarpCommands {
 		}
 		// カーソル位置を復元
 		editor.setCursor(cursorPosition);
+
+		requestAnimationFrame(() => {
+			editor.scrollIntoView({ from: cursorPosition, to: cursorPosition }, true);
+		});
 	}
 
 	/**
@@ -100,6 +106,10 @@ export class MarpCommands {
 		}
 		// カーソル位置を復元
 		editor.setCursor(cursorPosition);
+
+		requestAnimationFrame(() => {
+			editor.scrollIntoView({ from: cursorPosition, to: cursorPosition }, true);
+		});
 	}
 
 	/**
@@ -131,4 +141,22 @@ export class MarpCommands {
 			throw new Error('Marpエクスポートコマンドのコピーに失敗しました: ' + error.message);
 		}
 	}
+
+	async onload() {
+		this.plugin.addCommand({
+			id: 'crystal-preview-marp-slide',
+			name: 'Preview Marp Slide',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.previewMarpSlide(editor, view);
+			}
+		});
+
+		this.plugin.addCommand({
+			id: 'crystal-export-marp-slide',
+			name: 'Export Marp Slide',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.exportMarpSlide(editor, view);
+			}
+		});
+	}	
 }
