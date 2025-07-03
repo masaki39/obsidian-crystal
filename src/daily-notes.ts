@@ -186,7 +186,7 @@ export class DailyNotesManager {
             if (fileFolder === dailyNotesFolder) {
                 this.app.vault.process(file, (content) => {
                     const { frontmatter, content: parsedContent } = parseFrontmatter(content);
-                    const orderedContent = this.orderTaskList(parsedContent).trim();
+                    const orderedContent = this.orderTaskList(parsedContent);
                     const newContent = `${frontmatter}${orderedContent}`;
                     return newContent;
                 });
