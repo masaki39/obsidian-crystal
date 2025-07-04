@@ -20,7 +20,7 @@ export class QuartzService {
         const publishFolderRelativePath = this.settings.publishFolderPath;
         const publishFolderAbsolutePath = `${basePath}/${publishFolderRelativePath}`;
         const quartzPath = this.settings.quartzPath;
-        const command = `rsync -av --delete ${publishFolderAbsolutePath} ${quartzPath} && cd ${quartzPath} && npx quartz sync`;
+        const command = `rsync -av --delete ${publishFolderAbsolutePath}/ ${quartzPath}/content/ && cd ${quartzPath} && npx quartz sync`;
         console.log(command);
         return command;
     }
