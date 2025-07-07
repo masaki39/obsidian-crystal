@@ -12,6 +12,7 @@ import { AnkiService } from './src/anki-service';
 import { TerminalService } from './src/terminal-service';
 import { QuartzService } from './src/quartz-service';
 import { ShortcutService } from './src/shorcut-service';
+import { ClaudeService } from './src/claude-service';
 
 // Crystal Plugin for Obsidian
 
@@ -29,6 +30,7 @@ export default class CrystalPlugin extends Plugin {
 	private terminalService: TerminalService;
 	private quartzService: QuartzService;
 	private shortcutService: ShortcutService;
+	private claudeService: ClaudeService;
 
 	async onload() {
 		await this.loadSettings();
@@ -46,6 +48,7 @@ export default class CrystalPlugin extends Plugin {
 		this.terminalService = new TerminalService();
 		this.quartzService = new QuartzService(this.app, this, this.settings, this.terminalService);
 		this.shortcutService = new ShortcutService(this.terminalService, this.settings, this);
+		this.claudeService = new ClaudeService(this.app, this);
 
 		// Load Quartz Service
 		this.blueskyService.onload();
@@ -53,6 +56,7 @@ export default class CrystalPlugin extends Plugin {
 		this.dailyNotesManager.onLoad();
 		this.shortcutService.onLoad();
 		this.marpCommands.onload();
+		this.claudeService.onload();
 
 		// Enable image paste and drop handler if auto paste is enabled
 		if (this.settings.autoWebpPaste) {
