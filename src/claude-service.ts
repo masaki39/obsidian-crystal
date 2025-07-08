@@ -17,7 +17,6 @@ export class ClaudeService {
 
         const claude = this.app.vault.getFileByPath("CLAUDE.md");
         if (!claude) {
-            console.log("CLAUDE.md not found");
             return;
         }
             
@@ -28,7 +27,6 @@ export class ClaudeService {
     async onload(){
 
         this.plugin.registerEvent(this.app.workspace.on("active-leaf-change", () => {
-            console.log("active-leaf-change");
             this.updateActiveFile();
         }));
     }
