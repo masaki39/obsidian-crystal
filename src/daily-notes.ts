@@ -156,7 +156,8 @@ export class DailyNotesManager {
 
     private orderTaskList(taskList: string): string {
         const lines = taskList.split('\n');
-        const orderedLines = lines.sort((a, b) => {
+        const filteredLines = lines.filter(line => line.trim() !== '');
+        const orderedLines = filteredLines.sort((a, b) => {
             const aIsDone = a.trim().startsWith('- [x]');
             const aIsNotDone = a.trim().startsWith('- [ ]');
             const bIsDone = b.trim().startsWith('- [x]');

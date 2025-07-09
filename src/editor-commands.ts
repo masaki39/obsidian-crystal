@@ -232,7 +232,13 @@ export class EditorCommands {
 
 		// 現在の日付を取得
 		const createdAt = new Date(file.stat.ctime);
-		const date = `${createdAt.getFullYear()}-${(createdAt.getMonth() + 1).toString().padStart(2, '0')}-${createdAt.getDate().toString().padStart(2, '0')}`;
+		let date = `${createdAt.getFullYear()}-${(createdAt.getMonth() + 1).toString().padStart(2, '0')}-${createdAt.getDate().toString().padStart(2, '0')}`;
+		
+		// フロントマターのdateがあればそれを使用
+		const fileCache = this.app.metadataCache.getFileCache(file);
+		if (fileCache?.frontmatter?.date) {
+			date = fileCache.frontmatter.date;
+		}
 
 		// タグに基づいてファイル名を変更
 		let newfilename: string;
