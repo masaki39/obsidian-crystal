@@ -29,6 +29,10 @@ export class ClaudeService {
         this.plugin.registerEvent(this.app.workspace.on("active-leaf-change", () => {
             this.updateActiveFile();
         }));
+        
+        this.plugin.registerEvent(this.app.vault.on("rename", () => {
+            this.updateActiveFile();
+        }));
     }
 
 }
