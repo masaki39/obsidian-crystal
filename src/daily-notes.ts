@@ -174,7 +174,7 @@ export class DailyNotesManager {
             // その他の行が最後（同じカテゴリ内では元の順序を保持）
             return 0;
         });
-        return orderedLines.join('\n');
+        return orderedLines.join('\n') + '\n';
     }
 
     async onLoad() {
