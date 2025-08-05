@@ -142,11 +142,22 @@ export class PCloudService {
 				throw new Error('Only image files are supported');
 			}
 
-			// Process image using shared processor
-			const processed = await this.imageProcessor.processImage(file);
+			let imageBlob: Blob;
+			let originalType: string;
 
-			// Upload processed image
-			return await this.uploadProcessedImage(processed.blob, processed.originalType, editor);
+			if (this.settings.autoWebpPaste) {
+				// Process image using shared processor
+				const processed = await this.imageProcessor.processImage(file);
+				imageBlob = processed.blob;
+				originalType = processed.originalType;
+			} else {
+				// Skip image processing, upload original file
+				imageBlob = file;
+				originalType = file.type;
+			}
+
+			// Upload image
+			return await this.uploadProcessedImage(imageBlob, originalType, editor);
 
 		} catch (error) {
 			console.error('Upload error:', error);
@@ -165,6 +176,7 @@ export class PCloudService {
 			// Get image from clipboard
 			const clipboardItems = await navigator.clipboard.read();
 			let imageBlob: Blob | null = null;
+			let originalType: string = '';
 
 			for (const item of clipboardItems) {
 				for (const type of item.types) {
@@ -172,6 +184,7 @@ export class PCloudService {
 					if (type === 'image/png' || type === 'image/jpeg' || type === 'image/jpg' || 
 						type === 'image/gif' || type === 'image/webp' || type === 'image/svg+xml') {
 						imageBlob = await item.getType(type);
+						originalType = type;
 						break;
 					}
 				}
@@ -182,11 +195,22 @@ export class PCloudService {
 				throw new Error('No image found in clipboard');
 			}
 
-			// Process image using shared processor
-			const processed = await this.imageProcessor.processImage(imageBlob);
+			let finalBlob: Blob;
+			let finalType: string;
 
-			// Upload processed image
-			return await this.uploadProcessedImage(processed.blob, processed.originalType, editor);
+			if (this.settings.autoWebpPaste) {
+				// Process image using shared processor
+				const processed = await this.imageProcessor.processImage(imageBlob);
+				finalBlob = processed.blob;
+				finalType = processed.originalType;
+			} else {
+				// Skip image processing, upload original image
+				finalBlob = imageBlob;
+				finalType = originalType;
+			}
+
+			// Upload image
+			return await this.uploadProcessedImage(finalBlob, finalType, editor);
 
 		} catch (error) {
 			console.error('Upload error:', error);
