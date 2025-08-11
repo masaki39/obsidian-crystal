@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { App, Editor, MarkdownView, Notice, TFile } from 'obsidian';
+import { App, Editor, MarkdownView, Notice, TFile, Plugin } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
 import { promptForText } from './utils';
 import { AnkiService } from './anki-service';
@@ -7,9 +7,11 @@ import { AnkiService } from './anki-service';
 export class GeminiService {
 	private genAI: GoogleGenerativeAI | null = null;
 	private app: App;
+	private plugin: Plugin;
 
-	constructor(app: App, apiKey?: string) {
+	constructor(app: App, plugin: Plugin, apiKey?: string) {
 		this.app = app;
+		this.plugin = plugin;
 		if (apiKey) {
 			this.genAI = new GoogleGenerativeAI(apiKey);
 		}
@@ -149,7 +151,7 @@ ${content}`;
 			
 			const model = this.genAI!.getGenerativeModel({ model: "gemini-2.0-flash" });
 			
-			const prompt = `以下の日本語テキストを自然な英語に翻訳してください。翻訳結果のみを出力し、余計な説明は含めないでください。
+			const prompt = `以下のテキストを翻訳してください。日本語の場合は英語に、英語の場合は日本語に翻訳してください。翻訳結果のみを出力し、余計な説明は含めないでください。
 
 ${selectedText}`;
 
@@ -167,7 +169,7 @@ ${selectedText}`;
 		}
 	}
 
-	async translateAboveCursorText(editor: Editor, view: MarkdownView): Promise<void> {
+	async translateAdjacentText(editor: Editor, view: MarkdownView, direction: 'above' | 'below'): Promise<void> {
 		if (!this.isAvailable()) {
 			new Notice('Gemini API Keyが設定されていません。設定からAPIキーを入力してください。');
 			return;
@@ -175,30 +177,39 @@ ${selectedText}`;
 		
 		const cursor = editor.getCursor();
 		const currentLine = cursor.line;
+		const totalLines = editor.lineCount();
 		
-		// カーソルが最初の行にある場合は処理できない
-		if (currentLine === 0) {
+		// 境界チェック
+		if (direction === 'above' && currentLine === 0) {
 			new Notice('カーソルが最初の行にあるため、上の行が存在しません。');
 			return;
 		}
 		
-		// 上の行のテキストを取得
-		const previousLineText = editor.getLine(currentLine - 1);
-		const previousLinePureText = await this.getPureTextFromLine(previousLineText);
+		if (direction === 'below' && currentLine === totalLines - 1) {
+			new Notice('カーソルが最後の行にあるため、下の行が存在しません。');
+			return;
+		}
+		
+		// 隣接行のテキストを取得
+		const targetLineIndex = direction === 'above' ? currentLine - 1 : currentLine + 1;
+		const targetLineText = editor.getLine(targetLineIndex);
+		const targetLinePureText = await this.getPureTextFromLine(targetLineText);
 
-		if (!previousLinePureText) {
-			new Notice('上の行が空行のため、翻訳できません。');
+		if (!targetLinePureText) {
+			const directionText = direction === 'above' ? '上' : '下';
+			new Notice(`${directionText}の行が空行のため、翻訳できません。`);
 			return;
 		}
 		
 		try {
-			new Notice('翻訳中...');
+			const directionText = direction === 'above' ? '上' : '下';
+			new Notice(`${directionText}の行を翻訳中...`);
 			
 			const model = this.genAI!.getGenerativeModel({ model: "gemini-2.0-flash" });
 			
-			const prompt = `以下の日本語テキストを自然な英語に翻訳してください。翻訳結果のみを出力し、余計な説明は含めないでください。
+			const prompt = `以下のテキストを翻訳してください。日本語の場合は英語に、英語の場合は日本語に翻訳してください。翻訳結果のみを出力し、余計な説明は含めないでください。
 
-${previousLinePureText}`;
+${targetLinePureText}`;
 
 			const result = await model.generateContent(prompt);
 			const response = await result.response;
@@ -219,6 +230,14 @@ ${previousLinePureText}`;
 			console.error('Error translating text:', error);
 			new Notice(`翻訳エラー: ${error.message}`);
 		}
+	}
+
+	async translateAboveCursorText(editor: Editor, view: MarkdownView): Promise<void> {
+		await this.translateAdjacentText(editor, view, 'above');
+	}
+
+	async translateBelowCursorText(editor: Editor, view: MarkdownView): Promise<void> {
+		await this.translateAdjacentText(editor, view, 'below');
 	}
 
 	async grammarCheckCurrentLine(editor: Editor, view: MarkdownView): Promise<void> {
@@ -303,4 +322,51 @@ ${front}`;
 
 	}
 
+	async onload() {
+
+		// AI Description Generation Command
+		this.plugin.addCommand({
+			id: 'crystal-generate-description',
+			name: 'Generate Description for Current File',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.generateDescriptionForCurrentFile(editor, view);
+			}
+		});
+
+		// AI Translate Selected Text Command
+		this.plugin.addCommand({
+			id: 'crystal-translate-selected-text',
+			name: 'Translate Selected Text',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.translateSelectedText(editor, view);
+			}
+		});
+
+		// AI Translate Above Cursor Text Command
+		this.plugin.addCommand({
+			id: 'crystal-translate-above-cursor-text',
+			name: 'Translate Above Cursor Text',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.translateAboveCursorText(editor, view);
+			}
+		});
+
+		// AI Grammar Check Command
+		this.plugin.addCommand({
+			id: 'crystal-grammar-check-current-line',
+			name: 'Grammar Check Current Line',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.grammarCheckCurrentLine(editor, view);
+			}
+		});
+
+
+		this.plugin.addCommand({
+			id: 'crystal-translate-below-cursor-text',
+			name: 'Translate Below Cursor Text',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.translateBelowCursorText(editor, view);
+			}
+		});
+	}
 } 

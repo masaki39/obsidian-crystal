@@ -36,7 +36,7 @@ export default class CrystalPlugin extends Plugin {
 		await this.loadSettings();
 
 		// Initialize services
-		this.geminiService = new GeminiService(this.app, this.settings.GeminiAPIKey);
+		this.geminiService = new GeminiService(this.app, this, this.settings.GeminiAPIKey);
 		this.blueskyService = new BlueskyService(this.app, this, this.settings.blueskyIdentifier, this.settings.blueskyPassword);
 		this.dailyNotesManager = new DailyNotesManager(this.app, this.settings, this);
 		this.pcloudService = new PCloudService(this.app, this.settings);
@@ -50,54 +50,19 @@ export default class CrystalPlugin extends Plugin {
 		this.shortcutService = new ShortcutService(this.terminalService, this.settings, this);
 		this.claudeService = new ClaudeService(this.app, this);
 
-		// Load Quartz Service
+		// Load Services
 		this.blueskyService.onload();
 		this.quartzService.onload();
 		this.dailyNotesManager.onLoad();
 		this.shortcutService.onLoad();
 		this.marpCommands.onload();
 		this.claudeService.onload();
+		this.geminiService.onload();
 
 		// Enable image paste and drop handler if auto paste is enabled
 		if (this.settings.autoWebpPaste) {
 			this.imagePasteAndDropHandler.enable();
 		}
-
-		// AI Description Generation Command
-		this.addCommand({
-			id: 'crystal-generate-description',
-			name: 'Generate Description for Current File',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.geminiService.generateDescriptionForCurrentFile(editor, view);
-			}
-		});
-
-		// AI Translate Selected Text Command
-		this.addCommand({
-			id: 'crystal-translate-selected-text',
-			name: 'Translate Selected Text',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.geminiService.translateSelectedText(editor, view);
-			}
-		});
-
-		// AI Translate Above Cursor Text Command
-		this.addCommand({
-			id: 'crystal-translate-above-cursor-text',
-			name: 'Translate Above Cursor Text',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.geminiService.translateAboveCursorText(editor, view);
-			}
-		});
-
-		// AI Grammar Check Command
-		this.addCommand({
-			id: 'crystal-grammar-check-current-line',
-			name: 'Grammar Check Current Line',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.geminiService.grammarCheckCurrentLine(editor, view);
-			}
-		});
 
 		// Daily Notes Commands
 		this.addCommand({
