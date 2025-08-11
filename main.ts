@@ -59,10 +59,8 @@ export default class CrystalPlugin extends Plugin {
 		this.claudeService.onload();
 		this.geminiService.onload();
 
-		// Enable image paste and drop handler if auto paste is enabled
-		if (this.settings.autoWebpPaste) {
-			this.imagePasteAndDropHandler.enable();
-		}
+		// Always enable image paste and drop handler (processing depends on settings)
+		this.imagePasteAndDropHandler.enable();
 
 		// Daily Notes Commands
 		this.addCommand({
@@ -247,11 +245,7 @@ export default class CrystalPlugin extends Plugin {
 		this.editorCommands.updateSettings(this.settings);
 		this.quickAddCommands.updateSettings(this.settings);
 		
-		// Toggle image paste and drop handler based on settings
-		if (this.settings.autoWebpPaste) {
-			this.imagePasteAndDropHandler.enable();
-		} else {
-			this.imagePasteAndDropHandler.disable();
-		}
+		// Handler is always enabled, processing behavior depends on autoWebpPaste setting
+		// No need to enable/disable the handler itself
 	}
 }

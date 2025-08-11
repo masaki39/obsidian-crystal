@@ -49,14 +49,9 @@ export class ImagePasteAndDropHandler {
 	}
 
 	private handleDragOver(event: DragEvent): void {
-		// Check if auto WebP paste is enabled
-		if (!this.settings.autoWebpPaste) {
-			return;
-		}
-
 		// Only handle drag over in markdown views
-		const activeLeaf = this.app.workspace.activeLeaf;
-		if (!activeLeaf || !activeLeaf.view || !(activeLeaf.view instanceof MarkdownView)) {
+		const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (!activeView) {
 			return;
 		}
 
@@ -78,18 +73,11 @@ export class ImagePasteAndDropHandler {
 	}
 
 	private async handleDrop(event: DragEvent): Promise<void> {
-		// Check if auto WebP paste is enabled
-		if (!this.settings.autoWebpPaste) {
-			return;
-		}
-
 		// Only handle drop in markdown views
-		const activeLeaf = this.app.workspace.activeLeaf;
-		if (!activeLeaf || !activeLeaf.view || !(activeLeaf.view instanceof MarkdownView)) {
+		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (!markdownView) {
 			return;
 		}
-
-		const markdownView = activeLeaf.view as MarkdownView;
 		const editor = markdownView.editor;
 
 		// Check if drop contains image data
@@ -124,18 +112,11 @@ export class ImagePasteAndDropHandler {
 	}
 
 	private async handlePaste(event: ClipboardEvent): Promise<void> {
-		// Check if auto WebP paste is enabled
-		if (!this.settings.autoWebpPaste) {
-			return;
-		}
-
 		// Only handle paste in markdown views
-		const activeLeaf = this.app.workspace.activeLeaf;
-		if (!activeLeaf || !activeLeaf.view || !(activeLeaf.view instanceof MarkdownView)) {
+		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (!markdownView) {
 			return;
 		}
-
-		const markdownView = activeLeaf.view as MarkdownView;
 		const editor = markdownView.editor;
 
 		// Check if clipboard contains image data
@@ -185,8 +166,19 @@ export class ImagePasteAndDropHandler {
 
 	private async processImagePaste(imageFile: File, editor: Editor): Promise<void> {
 		try {
-			// Process image using shared processor (without notice since we'll show our own)
-			const processed = await this.imageProcessor.processImage(imageFile, false);
+			let processed: {blob: Blob, originalType: string, isConverted: boolean};
+			
+			if (this.settings.autoWebpPaste) {
+				// Process image using shared processor (without notice since we'll show our own)
+				processed = await this.imageProcessor.processImage(imageFile, false);
+			} else {
+				// Don't process image, just use original
+				processed = {
+					blob: imageFile,
+					originalType: imageFile.type,
+					isConverted: false
+				};
+			}
 
 			// Generate filename for the vault
 			const filename = this.imageProcessor.generateTimestampFilename('pasted-image', processed.blob, processed.originalType);
@@ -212,13 +204,16 @@ export class ImagePasteAndDropHandler {
 			editor.replaceSelection(markdownImage);
 
 			// Show appropriate message
-			if (processed.isConverted) {
-				console.log(`画像をWebPに変換した (品質: ${Math.round(this.settings.webpQuality * 100)}%)`);
-			} else if (processed.originalType === 'image/gif') {
-				console.log('GIFファイルのためアニメーション保持のため変換をスキップ');
+			if (this.settings.autoWebpPaste) {
+				if (processed.isConverted) {
+					console.log(`画像をWebPに変換した (品質: ${Math.round(this.settings.webpQuality * 100)}%)`);
+				} else if (processed.originalType === 'image/gif') {
+					console.log('GIFファイルのためアニメーション保持のため変換をスキップ');
+				}
+				console.log(`画像がWebP形式でヴォルトに保存された: ${filename}`);
+			} else {
+				console.log(`画像がヴォルトに保存された: ${filename}`);
 			}
-			
-			console.log(`画像がWebP形式でヴォルトに保存された: ${filename}`);
 
 		} catch (error) {
 			console.error('Error processing image paste:', error);
