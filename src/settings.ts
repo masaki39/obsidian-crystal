@@ -2,6 +2,7 @@ import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 export interface CrystalPluginSettings {
 	GeminiAPIKey: string;
+	GeminiModel: string;
 	blueskyIdentifier: string;
 	blueskyPassword: string;
 	dailyNotesFolder: string;
@@ -27,6 +28,7 @@ export interface CrystalPluginSettings {
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	GeminiAPIKey: '',
+	GeminiModel: 'gemini-2.0-flash',
 	blueskyIdentifier: '',
 	blueskyPassword: '',
 	dailyNotesFolder: 'DailyNotes',
@@ -106,6 +108,18 @@ export class CrystalSettingTab extends PluginSettingTab {
 				text.inputEl.type = 'password';
 				return text;
 			});
+
+		new Setting(containerEl)
+			.setName('Gemini Model')
+			.setDesc('Select the Gemini model to use')
+			.addDropdown(dropdown => dropdown
+				.addOption('gemini-2.0-flash', 'gemini-2.0-flash')
+				.addOption('gemini-2.5-flash', 'gemini-2.5-flash')
+				.setValue(this.plugin.settings.GeminiModel)
+				.onChange(async (value) => {
+					this.plugin.settings.GeminiModel = value;
+					await this.plugin.saveSettings();
+				}));
 
 		// Bluesky settings
 		containerEl.createEl('h3', { text: 'Bluesky' });

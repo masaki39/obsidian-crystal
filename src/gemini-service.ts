@@ -8,6 +8,7 @@ export class GeminiService {
 	private genAI: GoogleGenerativeAI | null = null;
 	private app: App;
 	private plugin: Plugin;
+	private settings: CrystalPluginSettings | null = null;
 
 	constructor(app: App, plugin: Plugin, apiKey?: string) {
 		this.app = app;
@@ -32,6 +33,7 @@ export class GeminiService {
 	 * 設定に基づいてサービスを更新する
 	 */
 	updateSettings(settings: CrystalPluginSettings): void {
+		this.settings = settings;
 		this.updateApiKey(settings.GeminiAPIKey || '');
 	}
 
@@ -40,6 +42,13 @@ export class GeminiService {
 	 */
 	isAvailable(): boolean {
 		return this.genAI !== null;
+	}
+
+	/**
+	 * 設定からモデル名を取得する（設定がない場合はデフォルトモデルを返す）
+	 */
+	private getModelName(): string {
+		return this.settings?.GeminiModel || 'gemini-2.0-flash';
 	}
 
 	/**
@@ -76,7 +85,7 @@ export class GeminiService {
 		}
 
 		try {
-			const model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+			const model = this.genAI.getGenerativeModel({ model: this.getModelName() });
 			
 			const prompt = `以下のMarkdownファイルの内容を読んで、一文で簡潔な説明（description）を日本語で生成してください。検索用のキーワードを意識した説明にしてください。説明のみを出力し、余計な文言は含めないでください。
 ファイル名:
@@ -149,7 +158,7 @@ ${content}`;
 		try {
 			new Notice('翻訳中...');
 			
-			const model = this.genAI!.getGenerativeModel({ model: "gemini-2.0-flash" });
+			const model = this.genAI!.getGenerativeModel({ model: this.getModelName() });
 			
 			const prompt = `以下のテキストを翻訳してください。日本語の場合は英語に、英語の場合は日本語に翻訳してください。翻訳結果のみを出力し、余計な説明は含めないでください。
 
@@ -205,7 +214,7 @@ ${selectedText}`;
 			const directionText = direction === 'above' ? '上' : '下';
 			new Notice(`${directionText}の行を翻訳中...`);
 			
-			const model = this.genAI!.getGenerativeModel({ model: "gemini-2.0-flash" });
+			const model = this.genAI!.getGenerativeModel({ model: this.getModelName() });
 			
 			const prompt = `以下のテキストを翻訳してください。日本語の場合は英語に、英語の場合は日本語に翻訳してください。翻訳結果のみを出力し、余計な説明は含めないでください。
 
@@ -268,7 +277,7 @@ ${targetLinePureText}`;
 		try {
 			new Notice('文法チェック中...');
 
-			const model = this.genAI!.getGenerativeModel({ model: "gemini-2.0-flash" });
+			const model = this.genAI!.getGenerativeModel({ model: this.getModelName() });
 
 			const prompt = `以下のテキストの文法をチェックして、より自然で正しい文に校正してください。言語は変更せず、日本語の場合は日本語のまま、英語の場合は英語のまま校正してください。校正結果のみを出力し、余計な説明は含めないでください。
 
@@ -301,7 +310,7 @@ ${pureText}`;
         if (!front) {
 			return;
         }
-		const model = this.genAI!.getGenerativeModel({ model: "gemini-2.0-flash" });
+		const model = this.genAI!.getGenerativeModel({ model: this.getModelName() });
 		const prompt = `以下のテキストの日本語訳を出力してください。日本語訳のみを出力し、余計な説明は含めないでください。不明の場合は何も返さないでください('')。
 		
 ${front}`;
