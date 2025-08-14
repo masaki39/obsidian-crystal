@@ -119,12 +119,37 @@ export class ImagePasteAndDropHandler {
 		}
 		const editor = markdownView.editor;
 
-		// Check if clipboard contains image data
+		// Check if clipboard contains data
 		const clipboardData = event.clipboardData;
 		if (!clipboardData) {
 			return;
 		}
 
+		// First priority: Check for plain text content
+		// This prevents rich text (like from Word) from being treated as an image
+		const textData = clipboardData.getData('text/plain');
+		if (textData && textData.trim()) {
+			// If there's text content, let the default paste behavior handle it
+			return;
+		}
+
+		// Second priority: Check for HTML content that should be treated as text
+		const htmlData = clipboardData.getData('text/html');
+		if (htmlData && htmlData.trim()) {
+			// Extract text content from HTML and paste as plain text
+			const tempDiv = document.createElement('div');
+			tempDiv.innerHTML = htmlData;
+			const textContent = tempDiv.textContent || tempDiv.innerText || '';
+			
+			if (textContent.trim()) {
+				event.preventDefault();
+				event.stopPropagation();
+				editor.replaceSelection(textContent);
+				return;
+			}
+		}
+
+		// Third priority: Check for actual image files
 		let imageFile: File | null = null;
 		for (let i = 0; i < clipboardData.files.length; i++) {
 			const file = clipboardData.files[i];

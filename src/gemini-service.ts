@@ -311,7 +311,7 @@ ${pureText}`;
 			return;
         }
 		const model = this.genAI!.getGenerativeModel({ model: this.getModelName() });
-		const prompt = `以下のテキストの日本語訳を出力してください。日本語訳のみを出力し、余計な説明は含めないでください。不明の場合は何も返さないでください('')。
+		const prompt = `以下のテキストの日本語訳を出力してください。日本語訳のみを出力し、余計な説明は含めないでください。複数の意味がある場合はコンマ+半角スペース区切り(, )にしてください。不明の場合は何も返さないでください('')。
 		
 ${front}`;
         const result = await model.generateContent(prompt);

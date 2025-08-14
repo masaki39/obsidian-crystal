@@ -42,8 +42,8 @@ export class AnkiService {
                 "deckName": "Default",
                 "modelName": "基本",
                 "fields": {
-                    "表面": front,
-                    "裏面": back
+                    "表面": front.trim(),
+                    "裏面": back.trim()
                 },
                 "options": {
                     "allowDuplicate": false
