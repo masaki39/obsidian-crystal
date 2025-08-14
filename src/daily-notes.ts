@@ -223,7 +223,7 @@ export class DailyNotesManager {
                     }
                     const fileLink = `[[${file.name.replace(/\.md$/, '')}]]`;
                     // 正規表現の特殊文字をエスケープ
-                    const escapedFileLink = fileLink.replace(/[[\]]/g, '\\$&');
+                    const escapedFileLink = fileLink.replace(/[[\](){}.*+?^$|\\]/g, '\\$&');
                     this.app.vault.process(todayNote as TFile, (content) => {
                         // 行全体をマッチして削除（改行も含む）
                         const regex = new RegExp(`^- \\d{2}:\\d{2} ${escapedFileLink}$`, 'gm');
