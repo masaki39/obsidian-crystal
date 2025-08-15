@@ -19,6 +19,7 @@ export interface CrystalPluginSettings {
 	pcloudPassword: string;
 	pcloudPublicFolderId: string;
 	exportFolderPath: string;
+	marpThemePath: string;
 	publishFolderPath: string;
 	quartzPath: string;
 	quartzSiteName: string;
@@ -45,6 +46,7 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	pcloudPassword: '',
 	pcloudPublicFolderId: '',
 	exportFolderPath: '',
+	marpThemePath: '',
 	publishFolderPath: 'Publish',
 	quartzPath: '',
 	quartzSiteName: '',
@@ -245,9 +247,10 @@ export class CrystalSettingTab extends PluginSettingTab {
 			});
 
 		// Marp settings
-		containerEl.createEl('h3', { text: 'Export Folder' });
+		containerEl.createEl('h3', { text: 'Marp & Export' });
 
 		this.textSetting(containerEl, 'Export Folder Path', 'Folder where this plugin exports files', 'exportFolderPath', 'Enter Export Folder Path');
+		this.textSetting(containerEl, 'Marp Theme Path', 'Absolute path to Marp theme CSS file (optional)', 'marpThemePath', 'Enter Marp Theme Path');
 
 		// Quartz settings
 		containerEl.createEl('h3', { text: 'Quartz' });

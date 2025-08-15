@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Notice, Plugin } from 'obsidian';
+import { App, Editor, MarkdownView, Notice, Plugin, normalizePath } from 'obsidian';
 import { EditorCommands } from './editor-commands';
 import * as path from 'path';
 import { CrystalPluginSettings } from './settings';
@@ -36,7 +36,7 @@ export class MarpCommands {
 			await this.copyMarpPreviewCommand(view);
 
 			// 成功通知
-			new Notice('リンクパス変換完了・Marpコマンドをコピーしました');
+			new Notice('Marpコマンドをコピーしました');
 
 		} catch (error) {
 			console.error('Marp slide preparation failed:', error);
@@ -60,15 +60,20 @@ export class MarpCommands {
 		try {
 			// アクティブファイルの絶対パス（Vaultのパスを使用）
 			const vaultPath = (this.app.vault.adapter as any).basePath || '';
-			const activeFilePath = path.join(vaultPath, file.path);
+			const activeFilePath = path.join(vaultPath, normalizePath(file.path));
 			
 			// 出力ファイル名（固定）- アクティブファイルと同じディレクトリに出力
 			const outputFileName = 'marp-preview.html';
-			const fileDirectory = file.parent ? path.join(vaultPath, file.parent.path) : vaultPath;
+			const fileDirectory = file.parent ? path.join(vaultPath, normalizePath(file.parent.path)) : vaultPath;
 			const outputPath = path.join(fileDirectory, outputFileName);
 
+			// テーマオプションの追加
+			const themeOption = this.settings.marpThemePath 
+				? ` --theme "${this.settings.marpThemePath}"` 
+				: '';
+
 			// Marpコマンドを生成
-			const marpCommand = `marp -p "${activeFilePath}" -o "${outputPath}"`;
+			const marpCommand = `marp -p${themeOption} "${activeFilePath}" -o "${outputPath}"`;
 
 			// クリップボードにコピー
 			await navigator.clipboard.writeText(marpCommand);
@@ -98,7 +103,7 @@ export class MarpCommands {
 			await this.copyMarpExportCommand(view);
 
 			// 成功通知
-			new Notice('リンクパス変換完了・Marpエクスポートコマンドをコピーしました');
+			new Notice('Marpコマンドをコピーしました');
 
 		} catch (error) {
 			console.error('Marp export command generation failed:', error);
@@ -122,17 +127,22 @@ export class MarpCommands {
 		try {
 			// アクティブファイルの絶対パス（Vaultのパスを使用）
 			const vaultPath = (this.app.vault.adapter as any).basePath || '';
-			const activeFilePath = path.join(vaultPath, file.path);
+			const activeFilePath = path.join(vaultPath, normalizePath(file.path));
 
 			// エクスポート先フォルダの決定
 			const exportFolderPath = this.settings.exportFolderPath || 
-				(file.parent ? path.join(vaultPath, file.parent.path) : vaultPath);
+				(file.parent ? path.join(vaultPath, normalizePath(file.parent.path)) : vaultPath);
 			
 			// 出力ファイルパス（.pptx形式）
 			const outputPath = path.join(exportFolderPath, file.basename + '.pptx');
 
+			// テーマオプションの追加
+			const themeOption = this.settings.marpThemePath 
+				? ` --theme "${this.settings.marpThemePath}"` 
+				: '';
+
 			// Marpエクスポートコマンドを生成
-			const marpCommand = `marp --allow-local-files "${activeFilePath}" -o "${outputPath}"`;
+			const marpCommand = `marp --allow-local-files${themeOption} "${activeFilePath}" -o "${outputPath}"`;
 
 			// クリップボードにコピー
 			await navigator.clipboard.writeText(marpCommand);
