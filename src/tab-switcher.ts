@@ -1,4 +1,4 @@
-import { App, Plugin, MarkdownView } from "obsidian";
+import { App, Plugin} from "obsidian";
 
 export class TabSwitcherService {
     constructor(private app: App, private plugin: Plugin) {}
@@ -20,7 +20,7 @@ export class TabSwitcherService {
     }
 
     moveTab(direction: -1 | 1) {
-        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+        const view = this.app.workspace.activeLeaf?.view;
         if (!view) return;
         
         const activeTab = view.leaf;
