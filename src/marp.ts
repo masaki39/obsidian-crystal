@@ -25,8 +25,9 @@ export class MarpCommands {
 			// アクティブファイルの相対パス
 			const activeFilePath = normalizePath(file.path);
 			
-			// 出力ファイル名（固定）- 常にVaultのrootに出力
-			const outputPath = 'marp-preview.html';
+			// 出力ファイル名 - Markdownファイルと同じディレクトリに出力
+			const parentPath = file.parent?.path === '/' ? '' : (file.parent?.path || '');
+			const outputPath = parentPath ? `${parentPath}/marp-preview.html` : 'marp-preview.html';
 
 			// テーマオプションの追加
 			const themeOption = this.settings.marpThemePath 
