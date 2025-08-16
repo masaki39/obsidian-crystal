@@ -45,9 +45,9 @@ export default class CrystalPlugin extends Plugin {
 		this.imagePasteAndDropHandler = new ImagePasteAndDropHandler(this.app, this.settings);
 		this.editorCommands = new EditorCommands(this.app, this.settings);
 		this.quickAddCommands = new QuickAddCommands(this.app, this.settings);
-		this.marpCommands = new MarpCommands(this.app, this.editorCommands, this.settings, this);
 		this.ankiService = new AnkiService(this.app);
 		this.terminalService = new TerminalService();
+		this.marpCommands = new MarpCommands(this.app, this.editorCommands, this.terminalService, this.settings, this);
 		this.quartzService = new QuartzService(this.app, this, this.settings, this.terminalService);
 		this.shortcutService = new ShortcutService(this.terminalService, this.settings, this);
 		this.claudeService = new ClaudeService(this.app, this);

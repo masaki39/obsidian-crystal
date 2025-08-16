@@ -1,17 +1,20 @@
 import { App, Editor, MarkdownView, Notice, Plugin, normalizePath } from 'obsidian';
 import { EditorCommands } from './editor-commands';
+import { TerminalService } from './terminal-service';
 import * as path from 'path';
 import { CrystalPluginSettings } from './settings';
 
 export class MarpCommands {
 	private app: App;
 	private editorCommands: EditorCommands;
+	private terminalService: TerminalService;
 	private settings: CrystalPluginSettings;
 	private plugin: Plugin;
 
-	constructor(app: App, editorCommands: EditorCommands, settings: CrystalPluginSettings, plugin: Plugin) {
+	constructor(app: App, editorCommands: EditorCommands, terminalService: TerminalService, settings: CrystalPluginSettings, plugin: Plugin) {
 		this.app = app;
 		this.editorCommands = editorCommands;
+		this.terminalService = terminalService;
 		this.settings = settings;
 		this.plugin = plugin;
 	}
@@ -32,11 +35,8 @@ export class MarpCommands {
 			// 1. crystal-convert-links-to-relative-pathsを実行
 			await this.editorCommands.convertLinksToRelativePaths(editor, view);
 
-			// 2. Marpコマンドをクリップボードにコピー
-			await this.copyMarpPreviewCommand(view);
-
-			// 成功通知
-			new Notice('Marpコマンドをコピーしました');
+			// 2. Marpプレビューを直接実行
+			await this.executeMarpPreviewCommand(view);
 
 		} catch (error) {
 			console.error('Marp slide preparation failed:', error);
@@ -51,9 +51,9 @@ export class MarpCommands {
 	}
 
 	/**
-	 * Marpコマンドをクリップボードにコピーする
+	 * Marpプレビューコマンドを直接実行する
 	 */
-	private async copyMarpPreviewCommand(view: MarkdownView) {
+	private async executeMarpPreviewCommand(view: MarkdownView) {
 		const file = view.file;
 		if (!file) return;
 
@@ -75,11 +75,19 @@ export class MarpCommands {
 			// Marpコマンドを生成
 			const marpCommand = `marp -p${themeOption} "${activeFilePath}" -o "${outputPath}"`;
 
-			// クリップボードにコピー
-			await navigator.clipboard.writeText(marpCommand);
+			new Notice('Marpプレビューを実行中...');
+			
+			// コマンドを実行
+			const result = await this.terminalService.executeCommand(marpCommand);
+			
+			if (result.exitCode === 0) {
+				new Notice('Marpプレビューが完了しました');
+			} else {
+				new Notice(`Marpプレビューでエラーが発生しました: ${result.stderr}`);
+			}
 		} catch (error) {
-			console.error('Failed to copy Marp command:', error);
-			throw new Error('Marpコマンドのコピーに失敗しました: ' + error.message);
+			console.error('Failed to execute Marp preview command:', error);
+			new Notice('Marpプレビューの実行に失敗しました: ' + error.message);
 		}
 	}
 
@@ -99,11 +107,8 @@ export class MarpCommands {
 			// 1. crystal-convert-links-to-relative-pathsを実行
 			await this.editorCommands.convertLinksToRelativePaths(editor, view);
 
-			// 2. Marpエクスポートコマンドをクリップボードにコピー
-			await this.copyMarpExportCommand(view);
-
-			// 成功通知
-			new Notice('Marpコマンドをコピーしました');
+			// 2. Marpエクスポートを直接実行
+			await this.executeMarpExportCommand(view);
 
 		} catch (error) {
 			console.error('Marp export command generation failed:', error);
@@ -117,10 +122,11 @@ export class MarpCommands {
 		});
 	}
 
+
 	/**
-	 * Marpエクスポートコマンドをクリップボードにコピーする
+	 * Marpエクスポートコマンドを直接実行する
 	 */
-	private async copyMarpExportCommand(view: MarkdownView) {
+	private async executeMarpExportCommand(view: MarkdownView) {
 		const file = view.file;
 		if (!file) return;
 
@@ -144,11 +150,19 @@ export class MarpCommands {
 			// Marpエクスポートコマンドを生成
 			const marpCommand = `marp --allow-local-files${themeOption} "${activeFilePath}" -o "${outputPath}"`;
 
-			// クリップボードにコピー
-			await navigator.clipboard.writeText(marpCommand);
+			new Notice('Marpエクスポートを実行中...');
+			
+			// コマンドを実行
+			const result = await this.terminalService.executeCommand(marpCommand);
+			
+			if (result.exitCode === 0) {
+				new Notice('Marpエクスポートが完了しました');
+			} else {
+				new Notice(`Marpエクスポートでエラーが発生しました: ${result.stderr}`);
+			}
 		} catch (error) {
-			console.error('Failed to copy Marp export command:', error);
-			throw new Error('Marpエクスポートコマンドのコピーに失敗しました: ' + error.message);
+			console.error('Failed to execute Marp export command:', error);
+			new Notice('Marpエクスポートの実行に失敗しました: ' + error.message);
 		}
 	}
 

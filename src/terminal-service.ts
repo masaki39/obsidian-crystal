@@ -4,8 +4,9 @@ export class TerminalService {
     async executeCommand(command: string): Promise<{ stdout: string; stderr: string; exitCode: number }> {
         return new Promise((resolve, reject) => {
             // ログインシェル(-l)を使用してコマンドを実行
+            // 標準入力を無視してCLIツールの標準入力待ちを防ぐ
             const child = spawn('zsh', ['-l', '-c', command], {
-                stdio: ['pipe', 'pipe', 'pipe']
+                stdio: ['ignore', 'pipe', 'pipe']
             });
 
             let stdout = '';
@@ -20,8 +21,6 @@ export class TerminalService {
             });
 
             child.on('close', (code) => {
-                console.log(stdout);
-                console.log(stderr);
                 resolve({
                     stdout: stdout.trim(),
                     stderr: stderr.trim(),
@@ -29,6 +28,7 @@ export class TerminalService {
                 });
             });
             child.on('error', (error) => {
+                console.error('Terminal command execution error:', error);
                 reject(error);
             });
         });

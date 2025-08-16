@@ -367,9 +367,9 @@ export class EditorCommands {
 
 		if (changeCount > 0) {
 			editor.setValue(convertedContent);
-			new Notice(`${changeCount}個のリンクを相対パスに変換しました`);
+			console.log(`${changeCount}個のリンクを相対パスに変換しました`);
 		} else {
-			new Notice('変換対象のリンクが見つかりませんでした');
+			console.log('変換対象のリンクが見つかりませんでした');
 		}
 	}
 
