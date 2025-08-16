@@ -46,9 +46,9 @@ export default class CrystalPlugin extends Plugin {
 		this.editorCommands = new EditorCommands(this.app, this.settings);
 		this.quickAddCommands = new QuickAddCommands(this.app, this.settings);
 		this.ankiService = new AnkiService(this.app);
-		this.terminalService = new TerminalService();
-		this.marpCommands = new MarpCommands(this.app, this.editorCommands, this.terminalService, this.settings, this);
-		this.quartzService = new QuartzService(this.app, this, this.settings, this.terminalService);
+		this.terminalService = new TerminalService(this.app);
+		this.marpCommands = new MarpCommands(this.editorCommands, this.terminalService, this.settings, this);
+		this.quartzService = new QuartzService(this, this.settings, this.terminalService);
 		this.shortcutService = new ShortcutService(this.terminalService, this.settings, this);
 		this.claudeService = new ClaudeService(this.app, this);
 		this.tabSwitcherService = new TabSwitcherService(this.app, this);

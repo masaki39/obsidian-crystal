@@ -1,24 +1,19 @@
 import { TerminalService } from "./terminal-service";
 import { CrystalPluginSettings } from "./settings";
-import { App, Plugin, Notice } from "obsidian";
+import { Plugin, Notice } from "obsidian";
 
 export class QuartzService {
     private terminalService: TerminalService;
     private settings: CrystalPluginSettings;
-    private app: App;
     private plugin: Plugin;
 
-    constructor(app: App, plugin: Plugin, settings: CrystalPluginSettings, terminalService: TerminalService) {
-        this.app = app;
+    constructor(plugin: Plugin, settings: CrystalPluginSettings, terminalService: TerminalService) {
         this.plugin = plugin;
         this.settings = settings;
         this.terminalService = terminalService;
     }
 
     private async generateQuartzSyncCommand() {
-        const basePath = (this.app.vault.adapter as any).basePath;
-        const publishFolderRelativePath = this.settings.publishFolderPath;
-        const publishFolderAbsolutePath = `${basePath}/${publishFolderRelativePath}`;
         const quartzPath = this.settings.quartzPath;
         const command = `cd ${quartzPath} && npx quartz sync`;
         console.log(command);

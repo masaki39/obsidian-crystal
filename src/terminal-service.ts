@@ -1,12 +1,19 @@
 import { spawn } from "child_process";
+import { App } from 'obsidian';
 
 export class TerminalService {
-    async executeCommand(command: string): Promise<{ stdout: string; stderr: string; exitCode: number }> {
+    private vaultPath: string;
+
+    constructor(app?: App) {
+        this.vaultPath = app ? ((app.vault.adapter as any).basePath || '') : '';
+    }
+    async executeCommand(command: string, workingDirectory?: string): Promise<{ stdout: string; stderr: string; exitCode: number }> {
         return new Promise((resolve, reject) => {
             // ログインシェル(-l)を使用してコマンドを実行
             // 標準入力を無視してCLIツールの標準入力待ちを防ぐ
             const child = spawn('zsh', ['-l', '-c', command], {
-                stdio: ['ignore', 'pipe', 'pipe']
+                stdio: ['ignore', 'pipe', 'pipe'],
+                cwd: workingDirectory || this.vaultPath || undefined
             });
 
             let stdout = '';
