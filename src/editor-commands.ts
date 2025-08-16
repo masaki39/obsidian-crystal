@@ -1,5 +1,6 @@
 import { App, Editor, MarkdownView, Notice, SuggestModal, Plugin } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
+import * as path from 'path';
 
 // タグ選択のためのSuggestModal
 class TagSuggestModal extends SuggestModal<string> {
@@ -349,11 +350,6 @@ export class EditorCommands {
 				return match;
 			}
 
-			// Skip already relative paths
-			if (url.startsWith('./') || url.startsWith('../')) {
-				return match;
-			}
-
 			// Try to find the file in vault - first try as absolute path, then as filename
 			let targetFile = this.app.vault.getAbstractFileByPath(url);
 			
@@ -399,45 +395,14 @@ export class EditorCommands {
 	 * Calculate relative path from current folder to target file
 	 */
 	private getRelativePath(currentFolder: string, targetPath: string): string {
-		// Normalize paths - remove leading/trailing slashes and split
-		const normalizePath = (path: string) => path.replace(/^\/+|\/+$/g, '').split('/').filter(p => p.length > 0);
-		
-		const currentParts = currentFolder ? normalizePath(currentFolder) : [];
-		const targetParts = normalizePath(targetPath);
-		
-		// If target is in root and current is also in root
-		if (currentParts.length === 0 && targetParts.length === 1) {
-			return targetParts[0];
-		}
-		
-		// If current is in root, return target path as is
-		if (currentParts.length === 0) {
-			return targetParts.join('/');
-		}
+		// path.posix.relative を使って相対パスを計算
+    	let relativePath = path.posix.relative(currentFolder, targetPath);
 
-		// Find common prefix length
-		let commonLength = 0;
-		while (commonLength < currentParts.length && 
-			   commonLength < targetParts.length - 1 && // -1 because target includes filename
-			   currentParts[commonLength] === targetParts[commonLength]) {
-			commonLength++;
-		}
-
-		// Calculate how many levels to go up
-		const upLevels = currentParts.length - commonLength;
-		
-		// Get remaining path after common prefix
-		const downPath = targetParts.slice(commonLength).join('/');
-
-		// Build relative path
-		if (upLevels === 0) {
-			// Same folder - just return filename
-			return targetParts[targetParts.length - 1];
-		} else {
-			// Different folder - need to go up
-			const upPath = '../'.repeat(upLevels);
-			return upPath + downPath;
-		}
+    	// 同じフォルダ内の場合、'./' を付け加えるとより親切
+    	if (!relativePath.startsWith('../')) {
+      	  relativePath = './' + relativePath;
+    	}
+    	return relativePath;
 	}
 
 	async onload() {
