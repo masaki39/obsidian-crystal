@@ -43,11 +43,11 @@ export default class CrystalPlugin extends Plugin {
 		this.dailyNotesManager = new DailyNotesManager(this.app, this.settings, this);
 		this.pcloudService = new PCloudService(this.app, this.settings);
 		this.imagePasteAndDropHandler = new ImagePasteAndDropHandler(this.app, this.settings);
-		this.editorCommands = new EditorCommands(this.app, this.settings);
+		this.editorCommands = new EditorCommands(this.app, this.settings, this);
 		this.quickAddCommands = new QuickAddCommands(this.app, this.settings);
 		this.ankiService = new AnkiService(this.app);
 		this.terminalService = new TerminalService(this.app);
-		this.marpCommands = new MarpCommands(this.editorCommands, this.terminalService, this.settings, this);
+		this.marpCommands = new MarpCommands(this.terminalService, this.settings, this);
 		this.quartzService = new QuartzService(this, this.settings, this.terminalService);
 		this.shortcutService = new ShortcutService(this.terminalService, this.settings, this);
 		this.claudeService = new ClaudeService(this.app, this);
@@ -62,6 +62,7 @@ export default class CrystalPlugin extends Plugin {
 		this.claudeService.onload();
 		this.geminiService.onload();
 		this.tabSwitcherService.onload();
+		this.editorCommands.onload();
 
 		// Always enable image paste and drop handler (processing depends on settings)
 		this.imagePasteAndDropHandler.enable();
@@ -114,72 +115,6 @@ export default class CrystalPlugin extends Plugin {
 				} catch (error) {
 					console.error('Failed to upload image file:', error);
 				}
-			}
-		});
-
-		// Editor Commands
-		this.addCommand({
-			id: 'crystal-create-timestamp-file',
-			name: 'Create New File with Timestamp',
-			callback: () => {
-				this.editorCommands.createTimestampFile();
-			}
-		});
-
-		this.addCommand({
-			id: 'crystal-create-linked-timestamp-file',
-			name: 'Create New File with Link at Cursor',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.editorCommands.createLinkedTimestampFile(editor, view);
-			}
-		});
-
-		this.addCommand({
-			id: 'crystal-copy-file-link',
-			name: 'Copy File Link to Clipboard',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.editorCommands.copyFileLink(editor, view);
-			}
-		});
-
-		this.addCommand({
-			id: 'crystal-copy-file-link-with-alias',
-			name: 'Copy File Link with Alias to Clipboard',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.editorCommands.copyFileLinkWithAlias(editor, view);
-			}
-		});
-
-		this.addCommand({
-			id: 'crystal-wrap-subscript',
-			name: 'Wrap Selection with Subscript',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.editorCommands.wrapWithSubscript(editor, view);
-			}
-		});
-
-		this.addCommand({
-			id: 'crystal-wrap-superscript',
-			name: 'Wrap Selection with Superscript',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.editorCommands.wrapWithSuperscript(editor, view);
-			}
-		});
-
-		this.addCommand({
-			id: 'crystal-organize-file-with-tags',
-			name: 'Organize File with Prefix and Tags',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.editorCommands.organizeFileWithTags(editor, view);
-			}
-		});
-
-		// Convert Links Command
-		this.addCommand({
-			id: 'crystal-convert-links-to-relative-paths',
-			name: 'Convert Links to Relative Paths',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.editorCommands.convertLinksToRelativePaths(editor, view);
 			}
 		});
 

@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Notice, SuggestModal } from 'obsidian';
+import { App, Editor, MarkdownView, Notice, SuggestModal, Plugin } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
 
 // タグ選択のためのSuggestModal
@@ -35,10 +35,12 @@ class TagSuggestModal extends SuggestModal<string> {
 export class EditorCommands {
 	private app: App;
 	private settings: CrystalPluginSettings;
+	private plugin: Plugin;
 
-	constructor(app: App, settings: CrystalPluginSettings) {
+	constructor(app: App, settings: CrystalPluginSettings, plugin: Plugin) {
 		this.app = app;
 		this.settings = settings;
+		this.plugin = plugin;
 	}
 
 	updateSettings(settings: CrystalPluginSettings) {
@@ -194,7 +196,7 @@ export class EditorCommands {
 				// ファイル名処理
 				await this.processFileName(view.file!, selectedTag);
 
-				new Notice('ファイルが正常に整理されました');
+				new Notice('ファイルが正常に分類されました');
 			} catch (error) {
 				new Notice('ファイル整理中にエラーが発生しました: ' + error.message);
 				console.error('File organization error:', error);
@@ -436,5 +438,73 @@ export class EditorCommands {
 			const upPath = '../'.repeat(upLevels);
 			return upPath + downPath;
 		}
+	}
+
+	async onload() {
+		// Editor Commands
+		this.plugin.addCommand({
+			id: 'crystal-create-timestamp-file',
+			name: 'Create New File with Timestamp',
+			callback: () => {
+				this.createTimestampFile();
+			}
+		});
+
+		this.plugin.addCommand({
+			id: 'crystal-create-linked-timestamp-file',
+			name: 'Create New File with Link at Cursor',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.createLinkedTimestampFile(editor, view);
+			}
+		});
+
+		this.plugin.addCommand({
+			id: 'crystal-copy-file-link',
+			name: 'Copy File Link to Clipboard',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.copyFileLink(editor, view);
+			}
+		});
+
+		this.plugin.addCommand({
+			id: 'crystal-copy-file-link-with-alias',
+			name: 'Copy File Link with Alias to Clipboard',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.copyFileLinkWithAlias(editor, view);
+			}
+		});
+
+		this.plugin.addCommand({
+			id: 'crystal-wrap-subscript',
+			name: 'Wrap Selection with Subscript',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.wrapWithSubscript(editor, view);
+			}
+		});
+
+		this.plugin.addCommand({
+			id: 'crystal-wrap-superscript',
+			name: 'Wrap Selection with Superscript',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.wrapWithSuperscript(editor, view);
+			}
+		});
+
+		this.plugin.addCommand({
+			id: 'crystal-organize-file-with-tags',
+			name: 'Organize File with Prefix and Tags',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.organizeFileWithTags(editor, view);
+			}
+		});
+
+		// Convert Links Command
+		this.plugin.addCommand({
+			id: 'crystal-convert-links-to-relative-paths',
+			name: 'Convert Links to Relative Paths',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.convertLinksToRelativePaths(editor, view);
+			}
+		});
 	}
 } 
