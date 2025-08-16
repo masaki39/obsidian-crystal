@@ -277,9 +277,19 @@ export class EditorCommands {
 
 		// フォルダ移動
 		try {
-			const targetPath = selectedTag === "note/publish" ? 
-				`${this.settings.publishFolderPath}/${newfilename}.md` : 
-				`${newfilename}.md`;
+			let targetPath: string;
+			
+			if (selectedTag === "note/publish") {
+				targetPath = this.settings.publishFolderPath ? 
+					`${this.settings.publishFolderPath}/${newfilename}.md` : 
+					`${newfilename}.md`;
+			} else if (selectedTag === "slide") {
+				targetPath = this.settings.marpSlideFolderPath ? 
+					`${this.settings.marpSlideFolderPath}/${newfilename}.md` : 
+					`${newfilename}.md`;
+			} else {
+				targetPath = `${newfilename}.md`;
+			}
 			
 			// 現在のパスと異なる場合のみ移動
 			if (file.path !== targetPath) {
@@ -299,6 +309,9 @@ export class EditorCommands {
 			new Notice('ファイルが開かれていません');
 			return;
 		}
+
+		// ファイルのカーソル位置を記憶
+		const cursorPosition = editor.getCursor();
 
 		const content = editor.getValue();
 		let convertedContent = content;
@@ -367,10 +380,17 @@ export class EditorCommands {
 
 		if (changeCount > 0) {
 			editor.setValue(convertedContent);
-			console.log(`${changeCount}個のリンクを相対パスに変換しました`);
+			new Notice(`${changeCount}個のリンクを相対パスに変換済`);
 		} else {
-			console.log('変換対象のリンクが見つかりませんでした');
+			new Notice('変換対象のリンクが見つかりませんでした');
 		}
+
+		// カーソル位置を復元
+		editor.setCursor(cursorPosition);
+
+		requestAnimationFrame(() => {
+			editor.scrollIntoView({ from: cursorPosition, to: cursorPosition }, true);
+		});
 	}
 
 	/**

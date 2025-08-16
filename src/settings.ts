@@ -18,6 +18,7 @@ export interface CrystalPluginSettings {
 	pcloudUsername: string;
 	pcloudPassword: string;
 	pcloudPublicFolderId: string;
+	marpSlideFolderPath: string;
 	exportFolderPath: string;
 	marpThemePath: string;
 	publishFolderPath: string;
@@ -45,6 +46,7 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	pcloudUsername: '',
 	pcloudPassword: '',
 	pcloudPublicFolderId: '',
+	marpSlideFolderPath: '',
 	exportFolderPath: '',
 	marpThemePath: '',
 	publishFolderPath: 'Publish',
@@ -249,6 +251,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 		// Marp settings
 		containerEl.createEl('h3', { text: 'Marp & Export' });
 
+		this.textSetting(containerEl, 'Marp Slide Folder Path (relative path)', 'Folder where slide files are organized', 'marpSlideFolderPath', 'e.g. Slides');
 		this.textSetting(containerEl, 'Export Folder Path', 'Folder where this plugin exports files', 'exportFolderPath', 'Enter Export Folder Path');
 		this.textSetting(containerEl, 'Marp Theme Path', 'Absolute path to Marp theme CSS file (optional)', 'marpThemePath', 'Enter Marp Theme Path');
 
