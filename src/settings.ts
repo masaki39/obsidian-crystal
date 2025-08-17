@@ -39,7 +39,7 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	dailyNoteAutoLink: true,
 	todoFileName: 'ToDo',
 	inboxName: 'Inbox',
-	webpQuality: 0.8,
+	webpQuality: 0.85,
 	imageResizeScale: 0.8,
 	imageMaxSize: 700,
 	autoWebpPaste: true,
@@ -184,7 +184,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 			.setName('WebP Compression Quality')
 			.setDesc('Quality for WebP compression (0.1 = lowest quality/smallest file, 1.0 = highest quality/largest file)')
 			.addSlider(slider => slider
-				.setLimits(0.1, 1.0, 0.1)
+				.setLimits(0.1, 1.0, 0.05)
 				.setValue(this.plugin.settings.webpQuality)
 				.setDynamicTooltip()
 				.onChange(async (value) => {
@@ -196,7 +196,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 			.setName('Image Default Resize Scale')
 			.setDesc('Default scale for resizing images (0.1 = 10%, 1.0 = 100%)')
 			.addSlider(slider => slider
-				.setLimits(0.1, 1.0, 0.1)
+				.setLimits(0.1, 1.0, 0.05)
 				.setValue(this.plugin.settings.imageResizeScale)
 				.setDynamicTooltip()
 				.onChange(async (value) => {
