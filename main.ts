@@ -67,36 +67,12 @@ export default class CrystalPlugin extends Plugin {
 		// Always enable image paste and drop handler (processing depends on settings)
 		this.imagePasteAndDropHandler.enable();
 
-		// Daily Notes Commands
-		this.addCommand({
-			id: 'crystal-open-today',
-			name: 'Open Today\'s Daily Note',
-			callback: () => {
-				this.dailyNotesManager.openToday();
-			}
-		});
-
-		this.addCommand({
-			id: 'crystal-open-yesterday',
-			name: 'Open Yesterday\'s Daily Note',
-			callback: () => {
-				this.dailyNotesManager.openYesterday();
-			}
-		});
-
-		this.addCommand({
-			id: 'crystal-open-tomorrow',
-			name: 'Open Tomorrow\'s Daily Note',
-			callback: () => {
-				this.dailyNotesManager.openTomorrow();
-			}
-		});
 
 		// pCloud Upload Command
 		this.addCommand({
 			id: 'crystal-upload-clipboard-image',
 			name: 'Upload Clipboard Image to pCloud Public Folder',
-			editorCallback: async (editor: Editor, view: MarkdownView) => {
+			editorCallback: async (editor: Editor) => {
 				try {
 					await this.pcloudService.uploadClipboardImage(editor);
 				} catch (error) {
@@ -109,7 +85,7 @@ export default class CrystalPlugin extends Plugin {
 		this.addCommand({
 			id: 'crystal-upload-file-image',
 			name: 'Upload Image File to pCloud Public Folder',
-			editorCallback: async (editor: Editor, view: MarkdownView) => {
+			editorCallback: async (editor: Editor) => {
 				try {
 					await this.pcloudService.promptFileUpload(editor);
 				} catch (error) {

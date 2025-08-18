@@ -177,7 +177,73 @@ export class DailyNotesManager {
         return orderedLines.join('\n') + '\n';
     }
 
+    private async rollOverYesterdayUndoTaskList(editor: any): Promise<void> {
+        const baseDate = this.getBaseDateFromActiveFile();
+        const yesterday = new Date(baseDate);
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        const yesterdayFilePath = this.getDailyNoteFilePath(yesterday);
+        const yesterdayFile = this.app.vault.getAbstractFileByPath(yesterdayFilePath);
+        
+        if (!yesterdayFile || !(yesterdayFile instanceof TFile)) {
+            return;
+        }
+        
+        try {
+            const content = await this.app.vault.read(yesterdayFile);
+            const lines = content.split('\n');
+            
+            const undoTasks: string[] = [];
+            const remainingLines: string[] = [];
+            
+            for (const line of lines) {
+                if (line.trim().startsWith('- [ ]')) {
+                    undoTasks.push(line);
+                } else {
+                    remainingLines.push(line);
+                }
+            }
+            
+            if (undoTasks.length === 0) {
+                return;
+            }
+            
+            await this.app.vault.modify(yesterdayFile, remainingLines.join('\n'));
+            
+            const cursor = editor.getCursor();
+            const undoTasksText = undoTasks.join('\n') + '\n';
+            editor.replaceRange(undoTasksText, cursor);
+            
+        } catch (error) {
+            console.error('Error rolling over yesterday undo task list:', error);
+        }
+    }
+
     async onLoad() {
+        this.plugin.addCommand({
+            id: 'crystal-open-today',
+            name: 'Open Today\'s Daily Note',
+            callback: () => this.openToday()
+        });
+
+        this.plugin.addCommand({
+            id: 'crystal-open-yesterday',
+            name: 'Open Yesterday\'s Daily Note',
+            callback: () => this.openYesterday()
+        });
+
+        this.plugin.addCommand({
+            id: 'crystal-open-tomorrow',
+            name: 'Open Tomorrow\'s Daily Note',
+            callback: () => this.openTomorrow()
+        });
+
+        this.plugin.addCommand({
+            id: 'crystal-roll-over-tasks',
+            name: 'Roll Over Yesterday Undo Task List',
+            editorCallback: (editor) => this.rollOverYesterdayUndoTaskList(editor)
+        });
+
         this.plugin.registerEvent(this.app.vault.on('modify', file => {
             if (!(file instanceof TFile)) {
                 return;
