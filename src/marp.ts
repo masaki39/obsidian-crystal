@@ -1,5 +1,6 @@
 import { Editor, MarkdownView, Notice, Plugin, normalizePath } from 'obsidian';
 const { shell } = require('electron');
+const http = require('http');
 import { TerminalService } from './terminal-service';
 import { CrystalPluginSettings } from './settings';
 
@@ -116,42 +117,13 @@ export class MarpCommands {
 			// Marpサーバーコマンドを生成
 			const marpCommand = `marp -s --allow-local-files${themeOption} "${this.settings.marpSlideFolderPath}"`;
 
-			new Notice('Marpサーバーにアクセス中...');
+			new Notice('Marpサーバーを起動中...');
 			
 			// サーバーをバックグラウンドで実行（非同期で起動、結果は待たない）
 			this.terminalService.executeCommand(marpCommand);
 			
-			// 即座にブラウザを開く（サーバー起動を待つ）
-			setTimeout(async () => {
-				// WebViewerコアプラグインが有効かどうかを確認
-				const isWebViewerEnabled = (this.plugin.app as any).internalPlugins.getEnabledPluginById?.('webviewer');
-				
-				if (isWebViewerEnabled) {
-					try {
-						const leaf = this.plugin.app.workspace.getLeaf("tab");
-						await leaf.setViewState({
-							type: 'webviewer',
-							state: {
-								url: 'http://localhost:8080',
-								navigate: true,
-							},
-							active: true,
-						});
-						console.log('WebViewer opened successfully');
-					} catch (error) {
-						console.log('WebViewer failed to open, falling back to external browser:', error);
-						shell.openExternal('http://localhost:8080');
-					}
-				} else {
-					console.log('WebViewer core plugin is disabled, opening in external browser');
-					shell.openExternal('http://localhost:8080');
-				}
-			}, 1000);
-			
-			// 遅延して起動完了通知
-			setTimeout(() => {
-				new Notice('Marpサーバーが起動しました');
-			}, 2000);
+			// サーバーの応答を確認してからブラウザを開く
+			this.waitForServerAndOpen();
 		} catch (error) {
 			console.error('Failed to start Marp server:', error);
 			new Notice('Marpサーバーの起動に失敗しました: ' + error.message);
@@ -182,6 +154,75 @@ export class MarpCommands {
 			console.error('Failed to stop Marp server:', error);
 			new Notice('Marpサーバーの停止に失敗しました: ' + error.message);
 		}
+	}
+
+	/**
+	 * サーバーの応答を確認してからブラウザを開く
+	 */
+	private async waitForServerAndOpen(): Promise<void> {
+		const maxAttempts = 30; // 最大30回試行（30秒）
+		let attempts = 0;
+
+		const checkServer = async (): Promise<boolean> => {
+			return new Promise((resolve) => {
+				const req = http.get('http://localhost:8080', (res: any) => {
+					resolve(res.statusCode === 200);
+				});
+
+				req.on('error', () => {
+					resolve(false);
+				});
+
+				req.setTimeout(1000, () => {
+					req.destroy();
+					resolve(false);
+				});
+			});
+		};
+
+		const tryOpenBrowser = async () => {
+			attempts++;
+			
+			if (await checkServer()) {
+				// サーバーが応答したらブラウザを開く
+				const isWebViewerEnabled = (this.plugin.app as any).internalPlugins.getEnabledPluginById?.('webviewer');
+				
+				if (isWebViewerEnabled) {
+					try {
+						const leaf = this.plugin.app.workspace.getLeaf("tab");
+						await leaf.setViewState({
+							type: 'webviewer',
+							state: {
+								url: 'http://localhost:8080',
+								navigate: true,
+							},
+							active: true,
+						});
+						console.log('WebViewer opened successfully');
+					} catch (error) {
+						console.log('WebViewer failed to open, falling back to external browser:', error);
+						shell.openExternal('http://localhost:8080');
+					}
+				} else {
+					console.log('WebViewer core plugin is disabled, opening in external browser');
+					shell.openExternal('http://localhost:8080');
+				}
+				
+				new Notice('Marpサーバーが起動しました');
+				return;
+			}
+
+			if (attempts >= maxAttempts) {
+				new Notice('Marpサーバーの起動を確認できませんでしたが、ブラウザを開きます');
+				shell.openExternal('http://localhost:8080');
+				return;
+			}
+
+			// 1秒後に再試行
+			setTimeout(tryOpenBrowser, 1000);
+		};
+
+		tryOpenBrowser();
 	}
 
 	async onload() {
