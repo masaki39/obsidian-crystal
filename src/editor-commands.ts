@@ -137,16 +137,35 @@ export class EditorCommands {
 		const selection = editor.getSelection();
 		const regex = new RegExp(`<${tag}>(.*?)<\\/${tag}>`, 'g');
 		
-		// Check if selection contains the tag
+		// Case 1: Selection contains complete tags - remove them
 		if (regex.test(selection)) {
-			// Already contains tag, remove all instances of the tag
 			const unwrappedSelection = selection.replace(regex, '$1');
 			editor.replaceSelection(unwrappedSelection);
-		} else {
-			// Not wrapped, wrap it
-			const wrappedSelection = `<${tag}>${selection}</${tag}>`;
-			editor.replaceSelection(wrappedSelection);
+			return;
 		}
+		
+		// Case 2: Check if cursor/selection is inside a tag on current line
+		const cursor = editor.getCursor();
+		const line = editor.getLine(cursor.line);
+		const tagRegex = new RegExp(`<${tag}>(.*?)<\\/${tag}>`, 'g');
+		let match;
+		
+		while ((match = tagRegex.exec(line)) !== null) {
+			const tagStart = match.index;
+			const tagEnd = match.index + match[0].length;
+			
+			// Check if cursor is inside this tag
+			if (cursor.ch >= tagStart && cursor.ch <= tagEnd) {
+				const from = { line: cursor.line, ch: tagStart };
+				const to = { line: cursor.line, ch: tagEnd };
+				editor.replaceRange(match[1], from, to);
+				return;
+			}
+		}
+		
+		// Case 3: Add tag to selection
+		const wrappedSelection = `<${tag}>${selection}</${tag}>`;
+		editor.replaceSelection(wrappedSelection);
 	}
 
 	/**
