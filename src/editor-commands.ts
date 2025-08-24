@@ -150,6 +150,28 @@ export class EditorCommands {
 	}
 
 	/**
+	 * Increase blockquote level
+	 */
+	increaseBlockquote(editor: Editor, view: MarkdownView) {
+		const selection = editor.listSelections()[0];
+		const fromLine = Math.min(selection.anchor.line, selection.head.line);
+		const toLine = Math.max(selection.anchor.line, selection.head.line);
+		
+		const changes = [];
+		for (let lineNum = fromLine; lineNum <= toLine; lineNum++) {
+			const line = editor.getLine(lineNum);
+			const newLine = line.startsWith('>') ? `> ${line}` : `> ${line}`;
+			changes.push({
+				from: { line: lineNum, ch: 0 },
+				to: { line: lineNum, ch: line.length },
+				text: newLine
+			});
+		}
+		
+		editor.transaction({ changes });
+	}
+
+	/**
 	 * Generate timestamp filename in YYYYMMDDHHmmss format
 	 */
 	private generateTimestampFilename(): string {
@@ -456,6 +478,14 @@ export class EditorCommands {
 			name: 'Wrap Selection with Superscript',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.wrapWithSuperscript(editor, view);
+			}
+		});
+
+		this.plugin.addCommand({
+			id: 'crystal-increase-blockquote',
+			name: 'Increase Blockquote Level',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.increaseBlockquote(editor, view);
 			}
 		});
 
