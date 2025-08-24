@@ -324,18 +324,19 @@ export class EditorCommands {
 		const currentFile = view.file;
 		const currentFolder = currentFile.parent?.path || '';
 
-		// Convert Wiki links: [[filename]] or [[filename|display]]
-		const wikiLinkRegex = /\[\[([^\]|]+)(\|[^\]]+)?\]\]/g;
-		convertedContent = convertedContent.replace(wikiLinkRegex, (match, filename, alias) => {
+		// Convert Wiki links: [[filename]] or [[filename|display]] and embed links: ![[filename]]
+		const wikiLinkRegex = /(!)?\[\[([^\]|]+)(\|[^\]]+)?\]\]/g;
+		convertedContent = convertedContent.replace(wikiLinkRegex, (match, embed, filename, alias) => {
 			// Use Obsidian's built-in link resolution logic
 			const targetFile = this.app.metadataCache.getFirstLinkpathDest(filename, currentFile.path);
 			
 			if (targetFile && targetFile.path) {
 				// Calculate relative path
 				const relativePath = this.getRelativePath(currentFolder, targetFile.path);
-				const displayText = alias ? alias.slice(1) : filename; // Remove | from alias
+				// For embed links (![[...]]), use empty alt text; otherwise use alias or filename
+				const displayText = embed ? '' : (alias ? alias.slice(1) : filename); // Remove | from alias
 				changeCount++;
-				return `[${displayText}](${relativePath})`;
+				return `${embed || ''}[${displayText}](${relativePath})`;
 			}
 			
 			// If file not found, keep original
@@ -369,7 +370,10 @@ export class EditorCommands {
 			if (targetFile && targetFile.path) {
 				// Calculate relative path
 				const relativePath = this.getRelativePath(currentFolder, targetFile.path);
-				changeCount++;
+				// Only count as change if the path actually changed
+				if (relativePath !== url) {
+					changeCount++;
+				}
 				return `[${text}](${relativePath})`;
 			}
 
