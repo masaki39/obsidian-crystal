@@ -46,9 +46,11 @@ Gemini APIを利用して、文章作成や翻訳を強力にサポートする�
 |---|---|---|
 | `Upload Clipboard Image to pCloud` | ｸﾘｯﾌﾟﾎﾞｰﾄﾞ画像をpCloudにｱｯﾌﾟﾛｰﾄﾞ | クリップボードにある画像をpCloudの公開フォルダにアップロードし、Markdownリンクをカーソル位置に挿入する。 |
 | `Upload Image File to pCloud` | 画像ファイルをpCloudにｱｯﾌﾟﾛｰﾄﾞ | ファイルを選択ダイアログから選び、pCloudにアップロードしてリンクを挿入する。 |
+| `Move Images to Marp Folder` | 画像をMarpフォルダに移動 | Vault内の画像ファイルをMarp用フォルダに移動し、リンクを更新する。プレゼンテーション作成時に便利。 |
 
 **自動化機能（設定で有効化が必要）：**
 - **自動WebP変換とローカル保存:** クリップボードからのペーストやドラッグ＆ドロップで画像を貼り付けると、自動でWebP形式に変換し、Vault内の添付ファイルフォルダに保存してリンクを挿入する。GIFアニメはそのまま維持される。
+- **Marpフォルダ連携:** 画像を自動的にプレゼンテーション用フォルダに整理し、attachment設定を自動調整する。
 
 ### ✍️ エディタ拡張
 
@@ -62,6 +64,7 @@ Gemini APIを利用して、文章作成や翻訳を強力にサポートする�
 | `Copy File Link with Alias to Clipboard` | エイリアス付きファイルリンクをコピー | ファイルのフロントマターに`aliases`があれば、それを使ったリンク（`[[ファイル名|エイリアス]]`）をコピーする。 |
 | `Wrap Selection with Subscript` | 下付き文字 | 選択テキストを`<sub>`タグで囲む。すでにある場合は解除する。 |
 | `Wrap Selection with Superscript` | 上付き文字 | 選択テキストを`<sup>`タグで囲む。すでにある場合は解除する。 |
+| `Increase Blockquote Level` | ブロッククォートレベル増加 | 選択した行のブロッククォート（`>`）レベルを1段階増加させる。 |
 | `Organize File with Tags` | タグでファイルを整理 | タグを選択し、ファイル名に絵文字プレフィックスや日付を追加、フロントマターを更新し、指定フォルダへ移動させる。 |
 | `Convert Links to Relative Paths` | リンクを相対パスに変換 | ファイル内のWikiリンクやMarkdownリンクを、すべて相対パス形式のMarkdownリンクに一括変換する。 |
 | `Move Tab Left` | タブを左に移動 | 現在のアクティブタブを左隣のタブと交換して移動する。ピン留めタブにも対応。 |
