@@ -255,7 +255,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 
 		this.textSetting(containerEl, 'Marp Slide Folder Path (relative path)', 'Folder where slide files are organized', 'marpSlideFolderPath', 'e.g. Slides');
 		this.textSetting(containerEl, 'Export Folder Path', 'Folder where this plugin exports files', 'exportFolderPath', 'Enter Export Folder Path');
-		this.textSetting(containerEl, 'Marp Theme Path', 'Absolute path to Marp theme CSS file (optional)', 'marpThemePath', 'Enter Marp Theme Path');
+		this.textSetting(containerEl, 'Marp Theme Path', 'Absolute or relative path to Marp theme CSS file (optional)', 'marpThemePath', 'Enter Marp Theme Path');
 		this.textSetting(containerEl, 'Marp Attachment Folder Path', 'Folder where Marp images are stored (relative path)', 'marpAttachmentFolderPath', 'e.g. Slides/attachments');
 
 		// Quartz settings

@@ -59,7 +59,7 @@ export class MarpCommands {
 	/**
 	 * Marpエクスポートコマンドを直接実行する
 	 */
-	async executeMarpExportCommand(_editor: Editor, view: MarkdownView, editable: boolean = false) {
+	async executeMarpExportCommand(_editor: Editor, view: MarkdownView, format: string = 'pptx', editable: boolean = false) {
 		const file = view.file;
 		if (!file) return;
 
@@ -71,10 +71,10 @@ export class MarpCommands {
 			const parentPath = file.parent?.path === '/' ? '' : (file.parent?.path || '');
 			const exportFolderPath = this.settings.exportFolderPath || parentPath;
 			
-			// 出力ファイルパス（.pptx形式）
+			// 出力ファイルパス
 			const outputPath = exportFolderPath 
-				? `${exportFolderPath}/${file.basename}.pptx`
-				: `${file.basename}.pptx`;
+				? `${exportFolderPath}/${file.basename}.${format}`
+				: `${file.basename}.${format}`;
 
 			// テーマオプションの追加
 			const themeOption = this.settings.marpThemePath 
@@ -82,17 +82,22 @@ export class MarpCommands {
 				: '';
 
 			// Marpエクスポートコマンドを生成
-			const editableOption = editable ? ' --pptx-editable' : '';
+			const editableOption = (editable && format === 'pptx') ? ' --pptx-editable' : '';
 			const marpCommand = `marp --allow-local-files${editableOption}${themeOption} "${activeFilePath}" -o "${outputPath}"`;
+			console.log('Executing Marp command:', marpCommand);
 
-			const noticeMessage = editable ? 'Marpエクスポート（編集可能）を実行中...' : 'Marpエクスポートを実行中...';
+			const noticeMessage = (editable && format === 'pptx') 
+				? `Marpエクスポート（${format.toUpperCase()}・編集可能）を実行中...` 
+				: `Marpエクスポート（${format.toUpperCase()}）を実行中...`;
 			new Notice(noticeMessage);
 			
 			// コマンドを実行
 			const result = await this.terminalService.executeCommand(marpCommand);
 			
 			if (result.exitCode === 0) {
-				const successMessage = editable ? 'Marpエクスポート（編集可能）が完了しました' : 'Marpエクスポートが完了しました';
+				const successMessage = (editable && format === 'pptx') 
+					? `Marpエクスポート（${format.toUpperCase()}・編集可能）が完了しました` 
+					: `Marpエクスポート（${format.toUpperCase()}）が完了しました`;
 				new Notice(successMessage);
 			} else {
 				new Notice(`Marpエクスポートでエラーが発生しました: ${result.stderr}`);
@@ -387,17 +392,33 @@ export class MarpCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-export-marp-slide',
-			name: 'Export Marp Slide',
+			name: 'Export Marp Slide (PPTX)',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.executeMarpExportCommand(editor, view);
+				this.executeMarpExportCommand(editor, view, 'pptx');
 			}
 		});
 
 		this.plugin.addCommand({
 			id: 'crystal-export-marp-slide-editable',
-			name: 'Export Marp Slide (Editable)',
+			name: 'Export Marp Slide (PPTX Editable)',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.executeMarpExportCommand(editor, view, true);
+				this.executeMarpExportCommand(editor, view, 'pptx', true);
+			}
+		});
+
+		this.plugin.addCommand({
+			id: 'crystal-export-marp-slide-html',
+			name: 'Export Marp Slide (HTML)',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.executeMarpExportCommand(editor, view, 'html');
+			}
+		});
+
+		this.plugin.addCommand({
+			id: 'crystal-export-marp-slide-pdf',
+			name: 'Export Marp Slide (PDF)',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.executeMarpExportCommand(editor, view, 'pdf');
 			}
 		});
 
