@@ -59,7 +59,7 @@ export class MarpCommands {
 	/**
 	 * Marpエクスポートコマンドを直接実行する
 	 */
-	async executeMarpExportCommand(_editor: Editor, view: MarkdownView) {
+	async executeMarpExportCommand(_editor: Editor, view: MarkdownView, editable: boolean = false) {
 		const file = view.file;
 		if (!file) return;
 
@@ -82,15 +82,18 @@ export class MarpCommands {
 				: '';
 
 			// Marpエクスポートコマンドを生成
-			const marpCommand = `marp --allow-local-files${themeOption} "${activeFilePath}" -o "${outputPath}"`;
+			const editableOption = editable ? ' --pptx-editable' : '';
+			const marpCommand = `marp --allow-local-files${editableOption}${themeOption} "${activeFilePath}" -o "${outputPath}"`;
 
-			new Notice('Marpエクスポートを実行中...');
+			const noticeMessage = editable ? 'Marpエクスポート（編集可能）を実行中...' : 'Marpエクスポートを実行中...';
+			new Notice(noticeMessage);
 			
 			// コマンドを実行
 			const result = await this.terminalService.executeCommand(marpCommand);
 			
 			if (result.exitCode === 0) {
-				new Notice('Marpエクスポートが完了しました');
+				const successMessage = editable ? 'Marpエクスポート（編集可能）が完了しました' : 'Marpエクスポートが完了しました';
+				new Notice(successMessage);
 			} else {
 				new Notice(`Marpエクスポートでエラーが発生しました: ${result.stderr}`);
 			}
@@ -387,6 +390,14 @@ export class MarpCommands {
 			name: 'Export Marp Slide',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.executeMarpExportCommand(editor, view);
+			}
+		});
+
+		this.plugin.addCommand({
+			id: 'crystal-export-marp-slide-editable',
+			name: 'Export Marp Slide (Editable)',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.executeMarpExportCommand(editor, view, true);
 			}
 		});
 
