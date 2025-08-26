@@ -1,35 +1,29 @@
 import { App, Editor, MarkdownView, Notice, SuggestModal, Plugin } from 'obsidian';
-import { CrystalPluginSettings } from './settings';
+import { CrystalPluginSettings, FileOrganizationRule } from './settings';
 import * as path from 'path';
 
-// タグ選択のためのSuggestModal
-class TagSuggestModal extends SuggestModal<string> {
-	private targetTags: string[];
-	private displayNames: string[];
-	private onChoose: (tag: string) => void;
-
-	constructor(app: App, onChoose: (tag: string) => void) {
+class RuleSuggestModal extends SuggestModal<FileOrganizationRule> {
+	constructor(app: App, private rules: FileOrganizationRule[], private onChoose: (rule: FileOrganizationRule) => void) {
 		super(app);
-		this.targetTags = ["note/term", "note/topic", "note/knowledge", "note/idea", "note/log", "note/report", "note/publish", "slide"];
-		this.displayNames = ["1: 📖Term note", "2: 📒Topic note", "3: 📝Knowledge note", "4: 🧠Idea note", "5: 📜Log note", "6: 📰Report note", "7: 📘Publish note", "8: ▶️Slide"];
-		this.onChoose = onChoose;
 	}
 
-	getSuggestions(query: string): string[] {
-		return this.displayNames.filter((item) =>
-			item.toLowerCase().includes(query.toLowerCase())
+	getSuggestions(query: string): FileOrganizationRule[] {
+		return this.rules.filter(rule => 
+			this.getDisplayText(rule).toLowerCase().includes(query.toLowerCase())
 		);
 	}
 
-	renderSuggestion(value: string, el: HTMLElement) {
-		el.createEl("div", { text: value });
+	renderSuggestion(rule: FileOrganizationRule, el: HTMLElement) {
+		el.createEl("div", { text: this.getDisplayText(rule) });
 	}
 
-	onChooseSuggestion(item: string, evt: MouseEvent | KeyboardEvent) {
-		const index = this.displayNames.indexOf(item);
-		if (index !== -1) {
-			this.onChoose(this.targetTags[index]);
-		}
+	onChooseSuggestion(rule: FileOrganizationRule) {
+		this.onChoose(rule);
+	}
+
+	private getDisplayText(rule: FileOrganizationRule): string {
+		const index = this.rules.indexOf(rule) + 1;
+		return rule.displayName || rule.tag || `Rule ${index}`;
 	}
 }
 
@@ -214,29 +208,41 @@ export class EditorCommands {
 			return;
 		}
 
-		const targetTags = ["note/term", "note/topic", "note/knowledge", "note/idea", "note/log", "note/report", "note/publish", "slide"];
+		// 設定からルールを取得
+		const rules = this.settings.fileOrganizationRules;
 
-		// タグ選択モーダルを表示
-		const tagModal = new TagSuggestModal(this.app, async (selectedTag: string) => {
-			if (!selectedTag) {
+		if (rules.length === 0) {
+			new Notice('ファイル整理ルールが設定されていません');
+			return;
+		}
+
+		// ルール選択モーダルを表示
+		const ruleModal = new RuleSuggestModal(this.app, rules, async (selectedRule: FileOrganizationRule) => {
+			if (!selectedRule) {
 				return;
 			}
 
 			try {
-				// フロントマターにタグを追加
+				// フロントマターのタグを処理
 				await this.app.fileManager.processFrontMatter(view.file!, (fm) => {
 					if (!fm.tags) {
 						fm.tags = [];
 					} else if (!Array.isArray(fm.tags)) {
 						fm.tags = [fm.tags];
 					}
-					// 既存のtargetTagsを削除してから新しいタグを追加
-					fm.tags = fm.tags.filter((tag: string) => !targetTags.includes(tag));
-					fm.tags.push(selectedTag);
+					
+					// 既存のルールのタグを削除
+					const allRuleTags = this.settings.fileOrganizationRules.map(rule => rule.tag).filter(tag => tag.trim());
+					fm.tags = fm.tags.filter((tag: string) => !allRuleTags.includes(tag));
+					
+					// 新しいタグを追加（設定されている場合のみ）
+					if (selectedRule.tag.trim()) {
+						fm.tags.push(selectedRule.tag);
+					}
 				});
 
 				// ファイル名処理
-				await this.processFileName(view.file!, selectedTag);
+				await this.processFileNameWithRule(view.file!, selectedRule);
 
 				new Notice('ファイルが正常に分類されました');
 			} catch (error) {
@@ -250,100 +256,73 @@ export class EditorCommands {
 
 		});
 
-		tagModal.open();
+		ruleModal.open();
 	}
 
-	/**
-	 * Process filename based on selected tag
-	 */
-	private async processFileName(file: any, selectedTag: string) {
-		let basefilename = file.basename;
+	private async processFileNameWithRule(file: any, rule: FileOrganizationRule) {
+		// 既存の装飾を削除してベースファイル名を取得
+		let basename = this.cleanFileName(file.basename);
+		
+		// 新しいファイル名を構築
+		let newname = this.buildFileName(basename, rule, file);
+		
+		// ファイルの移動とリネーム
+		await this.moveAndRenameFile(file, newname, rule.folder);
+	}
 
-		// 絵文字プレフィックスを削除
-		const emojiPrefixes = ["📒", "🧠", "📜", "📰", "📘", "▶️"];
-		for (const emoji of emojiPrefixes) {
-			if (basefilename.startsWith(emoji)) {
-				basefilename = basefilename.slice(emoji.length).trim();
+	private cleanFileName(filename: string): string {
+		// 既存のプレフィックスを削除
+		const prefixes = this.settings.fileOrganizationRules.map(r => r.prefix).filter(Boolean);
+		for (const prefix of prefixes) {
+			if (filename.startsWith(prefix)) {
+				filename = filename.slice(prefix.length).trim();
 				break;
 			}
 		}
-
-		// 最初の日付を削除 (YYYY-MM-DD format)
-		const dateMatch = basefilename.match(/^\d{4}-\d{2}-\d{2} /) || basefilename.match(/^\d{4}-\d{2}-\d{2}_/);
-		if (dateMatch) {
-			basefilename = basefilename.slice(dateMatch[0].length).trim(); 
-		}
-
-		// 現在の日付を取得
-		const createdAt = new Date(file.stat.ctime);
-		let date = `${createdAt.getFullYear()}-${(createdAt.getMonth() + 1).toString().padStart(2, '0')}-${createdAt.getDate().toString().padStart(2, '0')}`;
 		
-		// フロントマターのdateがあればそれを使用
+		// 既存の日付を削除
+		return filename.replace(/^\d{4}-\d{2}-\d{2}[_ ]?/, '').trim();
+	}
+
+	private buildFileName(basename: string, rule: FileOrganizationRule, file: any): string {
+		let filename = basename;
+		
+		if (rule.includeDate) {
+			const date = this.getFileDate(file);
+			filename = `${date}_${filename}`;
+		}
+		
+		if (rule.prefix) {
+			filename = `${rule.prefix}${filename}`;
+		}
+		
+		return filename;
+	}
+
+	private getFileDate(file: any): string {
+		// フロントマターから日付を取得、なければファイル作成日を使用
 		const fileCache = this.app.metadataCache.getFileCache(file);
 		if (fileCache?.frontmatter?.date) {
-			date = fileCache.frontmatter.date;
+			return fileCache.frontmatter.date;
 		}
+		
+		const date = new Date(file.stat.ctime);
+		return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+	}
 
-		// タグに基づいてファイル名を変更
-		let newfilename: string;
-		switch (selectedTag) {
-			case "note/topic":
-				newfilename = `📒${basefilename}`;
-				break;
-			case "note/idea":
-				newfilename = `🧠${date}_${basefilename}`;
-				break;
-			case "note/log":
-				newfilename = `📜${date}_${basefilename}`;
-				break;
-			case "note/report":
-				newfilename = `📰${date}_${basefilename}`;
-				break;
-			case "note/publish":
-				newfilename = `📘${basefilename}`;
-				break;
-			case "slide":
-				newfilename = `▶️${date}_${basefilename}`;
-				break;
-			default:
-				newfilename = basefilename;
-		}
-
-		// ファイル名が変更された場合のみリネーム
-		if (newfilename !== file.basename) {
+	private async moveAndRenameFile(file: any, newname: string, folder: string) {
+		const targetPath = folder ? `${folder}/${newname}.md` : `${newname}.md`;
+		
+		if (file.path !== targetPath) {
 			try {
-				await this.app.fileManager.renameFile(file, newfilename + '.md');
-			} catch (error) {
-				console.error('Rename error:', error);
-				new Notice('ファイル名の変更に失敗しました: ' + error.message);
-			}
-		}
-
-		// フォルダ移動
-		try {
-			let targetPath: string;
-			
-			if (selectedTag === "note/publish") {
-				targetPath = this.settings.publishFolderPath ? 
-					`${this.settings.publishFolderPath}/${newfilename}.md` : 
-					`${newfilename}.md`;
-			} else if (selectedTag === "slide") {
-				targetPath = this.settings.marpSlideFolderPath ? 
-					`${this.settings.marpSlideFolderPath}/${newfilename}.md` : 
-					`${newfilename}.md`;
-			} else {
-				targetPath = `${newfilename}.md`;
-			}
-			
-			// 現在のパスと異なる場合のみ移動
-			if (file.path !== targetPath) {
 				await this.app.fileManager.renameFile(file, targetPath);
+			} catch (error) {
+				console.error('File operation error:', error);
+				new Notice('ファイル操作に失敗しました: ' + error.message);
 			}
-		} catch (error) {
-			console.error('Move error:', error);
-			new Notice('ファイル移動に失敗しました: ' + error.message);
 		}
 	}
+
 
 	/**
 	 * Convert Obsidian Wiki links and Markdown links to relative path Markdown links
