@@ -109,6 +109,46 @@ export class MarpCommands {
 	}
 
 	/**
+	 * Marp Presenter Notesをテキストファイルとして出力する
+	 */
+	async executeMarpNotesCommand(_editor: Editor, view: MarkdownView) {
+		const file = view.file;
+		if (!file) return;
+
+		try {
+			// アクティブファイルの相対パス
+			const activeFilePath = normalizePath(file.path);
+
+			// エクスポート先フォルダの決定
+			const parentPath = file.parent?.path === '/' ? '' : (file.parent?.path || '');
+			const exportFolderPath = this.settings.exportFolderPath || parentPath;
+			
+			// 出力ファイルパス（.txtファイル）
+			const outputPath = exportFolderPath 
+				? `${exportFolderPath}/${file.basename}-notes.txt`
+				: `${file.basename}-notes.txt`;
+
+			// Marp notesコマンドを生成
+			const marpCommand = `marp --notes "${activeFilePath}" -o "${outputPath}"`;
+			console.log('Executing Marp notes command:', marpCommand);
+
+			new Notice('Marp Presenter Notesを出力中...');
+			
+			// コマンドを実行
+			const result = await this.terminalService.executeCommand(marpCommand);
+			
+			if (result.exitCode === 0) {
+				new Notice('Marp Presenter Notesの出力が完了しました');
+			} else {
+				new Notice(`Marp Presenter Notesの出力でエラーが発生しました: ${result.stderr}`);
+			}
+		} catch (error) {
+			console.error('Failed to execute Marp notes command:', error);
+			new Notice('Marp Presenter Notesの出力に失敗しました: ' + error.message);
+		}
+	}
+
+	/**
 	 * Marpサーバーを起動してSlidesフォルダ全体を対象にする
 	 */
 	async executeMarpServerCommand() {
@@ -443,6 +483,14 @@ export class MarpCommands {
 			name: 'Move Images to Marp Folder',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.moveImagesToMarpFolder(editor, view);
+			}
+		});
+
+		this.plugin.addCommand({
+			id: 'crystal-export-marp-notes',
+			name: 'Export Marp Presenter Notes',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.executeMarpNotesCommand(editor, view);
 			}
 		});
 	}

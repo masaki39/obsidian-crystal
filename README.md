@@ -89,6 +89,7 @@ Gemini APIを利用して、文章作成や翻訳を強力にサポートする�
 |---|---|---|
 | `Preview Marp Slide` | Marpプレビュー | 内部リンクを相対パスに変換後、Marpのプレビュー用コマンドをクリップボードにコピーする。 |
 | `Export Marp Slide` | Marpエクスポート | 内部リンクを相対パスに変換後、Marpのエクスポート（PPTX形式）用コマンドをクリップボードにコピーする。 |
+| `Export Marp Presenter Notes` | Marpノート出力 | Marp Presenter Notesをテキストファイルとして出力する。 |
 
 #### Anki
 
