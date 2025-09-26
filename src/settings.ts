@@ -40,7 +40,7 @@ export interface CrystalPluginSettings {
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	GeminiAPIKey: '',
-	GeminiModel: 'gemini-2.0-flash',
+	GeminiModel: 'gemini-flash-latest',
 	blueskyIdentifier: '',
 	blueskyPassword: '',
 	dailyNotesFolder: 'DailyNotes',
@@ -129,8 +129,12 @@ export class CrystalSettingTab extends PluginSettingTab {
 			.setName('Gemini Model')
 			.setDesc('Select the Gemini model to use')
 			.addDropdown(dropdown => dropdown
-				.addOption('gemini-2.0-flash', 'gemini-2.0-flash')
+				.addOption('gemini-flash-latest', 'gemini-flash-latest')
+				.addOption('gemini-flash-lite-latest', 'gemini-flash-lite-latest')
 				.addOption('gemini-2.5-flash', 'gemini-2.5-flash')
+				.addOption('gemini-2.5-flash-lite', 'gemini-2.5-flash-lite')
+				.addOption('gemini-2.0-flash', 'gemini-2.0-flash')
+				.addOption('gemini-2.0-flash-lite', 'gemini-2.0-flash-lite')
 				.setValue(this.plugin.settings.GeminiModel)
 				.onChange(async (value) => {
 					this.plugin.settings.GeminiModel = value;
