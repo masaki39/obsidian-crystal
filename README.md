@@ -1,6 +1,6 @@
 # Obsidian Crystal
 
-![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/masaki39/obsidian-crystal/total)
+![downloads](https://img.shields.io/github/downloads/masaki39/obsidian-crystal/main.js?logo=obsidian&label=downloads&color=%237c3aed)
 
 Obsidianの自作プラグインである。個人用に作成したが、誰でも使用可能だ。
 BRATでインストールできる。
