@@ -1,6 +1,8 @@
 # Obsidian Crystal
 
-![downloads](https://img.shields.io/github/downloads/masaki39/obsidian-crystal/main.js?logo=obsidian&label=downloads&color=%237c3aed)
+[![GitHub Release](https://img.shields.io/github/v/release/masaki39/obsidian-crystal?sort=semver&label=latest&color=%237c3aed)](https://github.com/masaki39/obsidian-crystal/releases/latest)
+[![Total Downloads](https://img.shields.io/github/downloads/masaki39/obsidian-crystal/main.js?logo=obsidian&label=total%20downloads&color=%237c3aed)](https://github.com/masaki39/obsidian-crystal/releases)
+[![Latest Downloads](https://img.shields.io/github/downloads/masaki39/obsidian-crystal/latest/main.js?logo=obsidian&label=latest%20downloads&color=%237c3aed)](https://github.com/masaki39/obsidian-crystal/releases/latest)
 
 Obsidianの自作プラグインである。個人用に作成したが、誰でも使用可能だ。
 BRATでインストールできる。
