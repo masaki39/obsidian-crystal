@@ -15,6 +15,7 @@ import { ShortcutService } from './src/shorcut-service';
 import { ClaudeService } from './src/claude-service';
 import { TabSwitcherService } from './src/tab-switcher';
 import { MacroCommands } from './src/macro';
+import { PdfHandler } from './src/pdf-handler';
 
 // Crystal Plugin for Obsidian
 
@@ -35,6 +36,7 @@ export default class CrystalPlugin extends Plugin {
 	private claudeService: ClaudeService;
 	private tabSwitcherService: TabSwitcherService;
 	private macroCommands: MacroCommands;
+	private pdfHandler: PdfHandler;
 
 	async onload() {
 		await this.loadSettings();
@@ -55,6 +57,7 @@ export default class CrystalPlugin extends Plugin {
 		this.claudeService = new ClaudeService(this.app, this);
 		this.tabSwitcherService = new TabSwitcherService(this.app, this);
 		this.macroCommands = new MacroCommands(this.marpCommands, this.editorCommands, this);
+		this.pdfHandler = new PdfHandler(this.app, this.terminalService, this.settings, this);
 
 		// Load Services
 		this.blueskyService.onload();
@@ -67,6 +70,7 @@ export default class CrystalPlugin extends Plugin {
 		this.tabSwitcherService.onload();
 		this.editorCommands.onload();
 		this.macroCommands.onload();
+		this.pdfHandler.onload();
 
 		// Always enable image paste and drop handler (processing depends on settings)
 		this.imagePasteAndDropHandler.enable();

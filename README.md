@@ -81,6 +81,21 @@ Gemini APIを利用して、文章作成や翻訳を強力にサポートする�
 | `Add Task to ToDo List` | ToDoリストにタスク追加 | 設定で指定したToDoリストファイルのInboxセクションにタスクを追加する。 |
 | `Insert MOC` | MOCを挿入 | 関連ノートなどをまとめるためのMOC（Map of Contents）テンプレートを挿入する。 |
 
+### 📄 PDF管理
+
+文献ノートのフロントマター`pdf`フィールドに記載されたPDFファイルを活用する。
+
+| コマンド | 機能 | 説明 |
+|---|---|---|
+| `Export PDF` | PDFエクスポート | フロントマターの`pdf`フィールドに指定されたPDFファイルをエクスポートフォルダにコピーする。 |
+| `Export PDF Images` | PDF画像抽出 | PDFから画像をPNG形式で抽出する。Popplerの`pdfimages`を使用。出力ファイル名: `pdf1-000.png`, `pdf2-000.png`など。 |
+| `Export PDF Text` | PDFテキスト抽出 | PDFからテキストを抽出する。Popplerの`pdftotext`を使用。出力ファイル名: `pdf1.txt`, `pdf2.txt`など。 |
+
+**必要な依存関係:**
+- [Poppler](https://poppler.freedesktop.org/)（`pdfimages`, `pdftotext`コマンド）
+  - macOS: `brew install poppler`
+  - Linux: `apt install poppler-utils` または `yum install poppler-utils`
+
 ### 連携機能
 
 #### プレゼンテーション（Marp）
@@ -119,14 +134,16 @@ Gemini APIを利用して、文章作成や翻訳を強力にサポートする�
 
 プラグイン設定画面では、本プラグインのほぼすべての機能に関する詳細な設定が可能。
 
-- **Gemini:** APIキー
+- **一般設定:** エクスポートフォルダパス（PDFやMarpで使用）
+- **Gemini:** APIキー、モデル選択
 - **デイリーノート:** フォルダパス、日付フォーマット、タスクの自動ソート、新規ノートの自動リンク
 - **クイック追加:** ToDoファイル名、Inbox名
 - **画像処理:** 自動WebP変換の有効化、圧縮品質、リサイズ設定
 - **pCloud連携:** 認証情報、公開フォルダID
-- **Marp/エクスポート:** エクスポート先のフォルダパス
+- **Marp:** スライドフォルダパス、テーマパス、添付ファイルフォルダパス
 - **Quartz連携:** 公開用フォルダパス、Quartzリポジトリのローカルパス、サイト名、GitHubユーザー名
 - **macOSショートカット:** 実行したいショートカット名（1行に1つ）
+- **ファイル整理ルール:** タグに基づくファイル整理の設定
 
 ## インストール
 
@@ -139,5 +156,6 @@ Gemini APIを利用して、文章作成や翻訳を強力にサポートする�
 ## 注意事項
 
 - デスクトップ版Obsidianでのみ動作する。
-- 多くの機能は、外部サービス（Gemini, pCloud, Anki, Marp CLI, macOS Shortcuts）の事前設定やインストールが必要である。
+- 多くの機能は、外部サービス（Gemini, pCloud, Anki, Marp CLI, Poppler, macOS Shortcuts）の事前設定やインストールが必要である。
+- PDF管理機能を使用する場合、Popplerのインストールが必須である。
 - 個人用途に最適化されているため、利用者の環境に応じた設定調整が必要な場合がある。

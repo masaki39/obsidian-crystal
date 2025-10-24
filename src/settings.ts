@@ -9,6 +9,7 @@ export interface FileOrganizationRule {
 }
 
 export interface CrystalPluginSettings {
+	exportFolderPath: string;
 	GeminiAPIKey: string;
 	GeminiModel: string;
 	blueskyIdentifier: string;
@@ -27,7 +28,6 @@ export interface CrystalPluginSettings {
 	pcloudPassword: string;
 	pcloudPublicFolderId: string;
 	marpSlideFolderPath: string;
-	exportFolderPath: string;
 	marpThemePath: string;
 	marpAttachmentFolderPath: string;
 	publishFolderPath: string;
@@ -39,6 +39,7 @@ export interface CrystalPluginSettings {
 }
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
+	exportFolderPath: '',
 	GeminiAPIKey: '',
 	GeminiModel: 'gemini-flash-latest',
 	blueskyIdentifier: '',
@@ -57,7 +58,6 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	pcloudPassword: '',
 	pcloudPublicFolderId: '',
 	marpSlideFolderPath: '',
-	exportFolderPath: '',
 	marpThemePath: '',
 	marpAttachmentFolderPath: '',
 	publishFolderPath: 'Publish',
@@ -107,7 +107,12 @@ export class CrystalSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		containerEl.createEl('h1', { text: 'Crystal Plugin Settings' });
-		
+
+		// General settings
+		containerEl.createEl('h3', { text: 'General Settings' });
+
+		this.textSetting(containerEl, 'Export Folder Path', 'Folder where this plugin exports files (used by PDF and Marp features)', 'exportFolderPath', 'Enter Export Folder Path');
+
 		// Gemini settings
 		containerEl.createEl('h3', { text: 'Gemini Editor Commands' });
 
@@ -265,10 +270,9 @@ export class CrystalSettingTab extends PluginSettingTab {
 			});
 
 		// Marp settings
-		containerEl.createEl('h3', { text: 'Marp & Export' });
+		containerEl.createEl('h3', { text: 'Marp' });
 
 		this.textSetting(containerEl, 'Marp Slide Folder Path (relative path)', 'Folder where slide files are organized', 'marpSlideFolderPath', 'e.g. Slides');
-		this.textSetting(containerEl, 'Export Folder Path', 'Folder where this plugin exports files', 'exportFolderPath', 'Enter Export Folder Path');
 		this.textSetting(containerEl, 'Marp Theme Path', 'Absolute or relative path to Marp theme CSS file (optional)', 'marpThemePath', 'Enter Marp Theme Path');
 		this.textSetting(containerEl, 'Marp Attachment Folder Path', 'Folder where Marp images are stored (relative path)', 'marpAttachmentFolderPath', 'e.g. Slides/attachments');
 
