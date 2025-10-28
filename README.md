@@ -46,6 +46,7 @@ Gemini APIを利用して、文章作成や翻訳を強力にサポートする�
 
 | コマンド | 機能 | 説明 |
 |---|---|---|
+| `Paste Multiple Images from File System` | ファイルシステムから複数画像をペースト | ファイル選択ダイアログから複数の画像を選択し、一括でVaultに保存してリンクを挿入する。WebP変換にも対応。 |
 | `Upload Clipboard Image to pCloud` | ｸﾘｯﾌﾟﾎﾞｰﾄﾞ画像をpCloudにｱｯﾌﾟﾛｰﾄﾞ | クリップボードにある画像をpCloudの公開フォルダにアップロードし、Markdownリンクをカーソル位置に挿入する。 |
 | `Upload Image File to pCloud` | 画像ファイルをpCloudにｱｯﾌﾟﾛｰﾄﾞ | ファイルを選択ダイアログから選び、pCloudにアップロードしてリンクを挿入する。 |
 | `Move Images to Marp Folder` | 画像をMarpフォルダに移動 | Vault内の画像ファイルをMarp用フォルダに移動し、リンクを更新する。プレゼンテーション作成時に便利。 |

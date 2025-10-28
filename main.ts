@@ -74,6 +74,7 @@ export default class CrystalPlugin extends Plugin {
 
 		// Always enable image paste and drop handler (processing depends on settings)
 		this.imagePasteAndDropHandler.enable();
+		this.imagePasteAndDropHandler.onload();
 
 
 		// pCloud Upload Command
