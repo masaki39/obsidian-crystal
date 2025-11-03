@@ -15,14 +15,18 @@ export class ClaudeService {
             return;
         }
 
-        const claude = this.app.vault.getFileByPath("CLAUDE.md");
-        if (!claude) {
-            return;
+        const targetFiles = ["CLAUDE.md", "AGENT.md"];
+
+        for (const filePath of targetFiles) {
+            const file = this.app.vault.getFileByPath(filePath);
+            if (!file) {
+                continue;
+            }
+
+            await this.app.fileManager.processFrontMatter(file, (fm) => {
+                fm.activeFile = activeFilePath;
+            });
         }
-            
-        await this.app.fileManager.processFrontMatter(claude, (fm) => {
-            fm.activeFile = activeFilePath;
-        });
     }
     async onload(){
 
