@@ -15,7 +15,7 @@ export class ClaudeService {
             return;
         }
 
-        const targetFiles = ["CLAUDE.md", "AGENT.md"];
+        const targetFiles = ["CLAUDE.md", "AGENTS.md"];
 
         for (const filePath of targetFiles) {
             const file = this.app.vault.getFileByPath(filePath);
