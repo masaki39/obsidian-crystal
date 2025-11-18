@@ -273,7 +273,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 		containerEl.createEl('h3', { text: 'Marp' });
 
 		this.textSetting(containerEl, 'Marp Slide Folder Path (relative path)', 'Folder where slide files are organized', 'marpSlideFolderPath', 'e.g. Slides');
-		this.textSetting(containerEl, 'Marp Theme Path', 'Absolute or relative path to Marp theme CSS file (optional)', 'marpThemePath', 'Enter Marp Theme Path');
+		this.textSetting(containerEl, 'Marp Theme Directory', 'Absolute or relative path to a directory passed to Marp CLI --theme-set (optional)', 'marpThemePath', 'e.g. Slides/themes');
 		this.textSetting(containerEl, 'Marp Attachment Folder Path', 'Folder where Marp images are stored (relative path)', 'marpAttachmentFolderPath', 'e.g. Slides/attachments');
 
 		// Quartz settings

@@ -18,6 +18,26 @@ export class MarpCommands {
 	}
 
 	/**
+	 * 設定済みのテーマディレクトリからMarp CLIの --theme-set オプションを生成
+	 */
+	private getThemeSetOption(): string {
+		const normalizedThemePath = this.normalizeSettingPath(this.settings.marpThemePath);
+		if (!normalizedThemePath) {
+			return '';
+		}
+
+		return ` --theme-set "${normalizedThemePath}"`;
+	}
+
+	/**
+	 * 設定に保存されたパス（相対/絶対）を正規化して返す
+	 */
+	private normalizeSettingPath(settingPath?: string): string | null {
+		const trimmed = settingPath?.trim();
+		return trimmed ? normalizePath(trimmed) : null;
+	}
+
+	/**
 	 * Marpプレビューコマンドを直接実行する
 	 */
 	async executeMarpPreviewCommand(_editor: Editor, view: MarkdownView) {
@@ -32,13 +52,10 @@ export class MarpCommands {
 			const parentPath = file.parent?.path === '/' ? '' : (file.parent?.path || '');
 			const outputPath = parentPath ? `${parentPath}/marp-preview.html` : 'marp-preview.html';
 
-			// テーマオプションの追加
-			const themeOption = this.settings.marpThemePath 
-				? ` --theme "${this.settings.marpThemePath}"` 
-				: '';
+			const themeOption = this.getThemeSetOption();
 
-			// Marpコマンドを生成
-			const marpCommand = `marp -p${themeOption} "${activeFilePath}" -o "${outputPath}"`;
+				// Marpコマンドを生成（-- 以降でMarkdownファイルを指定）
+				const marpCommand = `marp -p${themeOption} -o "${outputPath}" -- "${activeFilePath}"`;
 
 			new Notice('Marpプレビューを実行中...');
 			
@@ -76,14 +93,11 @@ export class MarpCommands {
 				? `${exportFolderPath}/${file.basename}.${format}`
 				: `${file.basename}.${format}`;
 
-			// テーマオプションの追加
-			const themeOption = this.settings.marpThemePath 
-				? ` --theme "${this.settings.marpThemePath}"` 
-				: '';
+			const themeOption = this.getThemeSetOption();
 
 			// Marpエクスポートコマンドを生成
 			const editableOption = (editable && format === 'pptx') ? ' --pptx-editable' : '';
-			const marpCommand = `marp --allow-local-files${editableOption}${themeOption} "${activeFilePath}" -o "${outputPath}"`;
+				const marpCommand = `marp --allow-local-files${editableOption}${themeOption} -o "${outputPath}" -- "${activeFilePath}"`;
 			console.log('Executing Marp command:', marpCommand);
 
 			const noticeMessage = (editable && format === 'pptx') 
@@ -159,13 +173,10 @@ export class MarpCommands {
 		}
 
 		try {
-			// テーマオプションの追加
-			const themeOption = this.settings.marpThemePath 
-				? ` --theme "${this.settings.marpThemePath}"` 
-				: '';
+			const themeOption = this.getThemeSetOption();
 
 			// Marpサーバーコマンドを生成
-			const marpCommand = `marp -s --allow-local-files${themeOption} "${this.settings.marpSlideFolderPath}"`;
+				const marpCommand = `marp -s --allow-local-files${themeOption} -- "${this.settings.marpSlideFolderPath}"`;
 
 			new Notice('Marpサーバーを起動中...');
 			
@@ -287,7 +298,7 @@ export class MarpCommands {
 
 		try {
 			// 設定からmarp用のattachmentフォルダパスを取得
-			const marpAttachmentFolder = this.settings.marpAttachmentFolderPath;
+			const marpAttachmentFolder = this.normalizeSettingPath(this.settings.marpAttachmentFolderPath);
 			if (!marpAttachmentFolder) {
 				new Notice('Marp Attachment Folder Path が設定されていません');
 				return;
