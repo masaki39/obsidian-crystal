@@ -140,6 +140,12 @@ export class CrystalSettingTab extends PluginSettingTab {
 				.addOption('gemini-2.5-flash-lite', 'gemini-2.5-flash-lite')
 				.addOption('gemini-2.0-flash', 'gemini-2.0-flash')
 				.addOption('gemini-2.0-flash-lite', 'gemini-2.0-flash-lite')
+				.addOption('gemma-3-27b-it', 'gemma-3-27b-it')
+				.addOption('gemma-3-12b-it', 'gemma-3-12b-it')
+				.addOption('gemma-3-4b-it', 'gemma-3-4b-it')
+				.addOption('gemma-3-1b-it', 'gemma-3-1b-it')
+				.addOption('gemma-3n-e4b-it', 'gemma-3n-e4b-it')
+				.addOption('gemma-3n-e2b-it', 'gemma-3n-e2b-it')
 				.setValue(this.plugin.settings.GeminiModel)
 				.onChange(async (value) => {
 					this.plugin.settings.GeminiModel = value;
