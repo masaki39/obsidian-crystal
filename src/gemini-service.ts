@@ -249,6 +249,97 @@ ${targetLinePureText}`;
 		await this.translateAdjacentText(editor, view, 'below');
 	}
 
+	private async promptRewriteInstruction(mode: 'replace' | 'append'): Promise<string | null> {
+		const title = mode === 'append' ? 'Geminiへの追記指示' : 'Geminiへの書き換え指示';
+		const placeholder =
+			mode === 'append'
+				? '例: 要約を3行で追加してください / 次の手順を書いてください'
+				: '例: 箇条書きでまとめてください / ですます調に直してください';
+		const buttonText = mode === 'append' ? '追記を生成' : '書き換え';
+		return promptForText(
+			this.app,
+			title,
+			placeholder,
+			buttonText,
+			'',
+			true
+		);
+	}
+
+	private async rewriteWithInstruction(
+		editor: Editor,
+		view: MarkdownView,
+		mode: 'replace' | 'append'
+	): Promise<void> {
+		if (!this.isAvailable()) {
+			new Notice('Gemini API Keyが設定されていません。設定からAPIキーを入力してください。');
+			return;
+		}
+
+		const instruction = await this.promptRewriteInstruction(mode);
+		if (!instruction || !instruction.trim()) {
+			new Notice('指示が入力されていません。');
+			return;
+		}
+
+		const selection = editor.getSelection();
+		const useSelection = !!selection && selection.trim().length > 0;
+		const targetText = useSelection ? selection : editor.getValue();
+
+		if (!targetText.trim()) {
+			new Notice('変換対象のテキストがありません。');
+			return;
+		}
+
+		const basePromptReplace = `以下の指示に従ってMarkdownテキストを書き換えてください。Markdownの構造やコードブロックはできるだけ維持してください。結果のみを出力し、説明文は不要です。
+
+指示:
+${instruction}
+
+テキスト:
+${targetText}`;
+
+		const basePromptAppend = `以下のテキストを参照し、指示に沿った「追記用のMarkdownテキスト」を生成してください。元のテキストを繰り返したり書き換えたりしないで、追加すべき内容だけを返してください。結果のみを出力し、説明文は不要です。
+
+指示:
+${instruction}
+
+テキスト:
+${targetText}`;
+
+		try {
+			new Notice('Geminiで書き換え中...');
+			const model = this.genAI!.getGenerativeModel({ model: this.getModelName() });
+			const prompt = mode === 'replace' ? basePromptReplace : basePromptAppend;
+
+			const result = await model.generateContent(prompt);
+			const response = await result.response;
+			const rewritten = response.text().trim();
+
+			if (!rewritten) {
+				new Notice('Geminiから結果が返りませんでした。');
+				return;
+			}
+
+			if (mode === 'replace') {
+				if (useSelection) {
+					editor.replaceSelection(rewritten);
+				} else {
+					editor.setValue(rewritten);
+				}
+				new Notice('書き換え完了（置換）。');
+			} else {
+				const needsBreak = editor.getValue().endsWith('\n') ? '' : '\n';
+				const appendText = `${needsBreak}${rewritten}\n`;
+				editor.replaceRange(appendText, { line: editor.lineCount(), ch: 0 });
+				new Notice('結果を末尾に追記しました。');
+			}
+		} catch (error) {
+			console.error('Error rewriting text:', error);
+			new Notice(`書き換えエラー: ${error.message}`);
+		}
+	}
+
 	async grammarCheckCurrentLine(editor: Editor, view: MarkdownView): Promise<void> {
 		if (!this.isAvailable()) {
 			new Notice('Gemini API Keyが設定されていません。設定からAPIキーを入力してください。');
@@ -375,6 +466,24 @@ ${front}`;
 			name: 'Translate Below Cursor Text',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.translateBelowCursorText(editor, view);
+			}
+		});
+
+		// Rewrite selected text or whole note (replace)
+		this.plugin.addCommand({
+			id: 'crystal-gemini-rewrite-replace',
+			name: 'Gemini Rewrite (Replace selection or whole note)',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.rewriteWithInstruction(editor, view, 'replace');
+			}
+		});
+
+		// Rewrite selected text or whole note (append result)
+		this.plugin.addCommand({
+			id: 'crystal-gemini-rewrite-append',
+			name: 'Gemini Rewrite (Append result at end)',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.rewriteWithInstruction(editor, view, 'append');
 			}
 		});
 	}

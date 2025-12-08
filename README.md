@@ -23,6 +23,8 @@ Gemini APIを利用して、文章作成や翻訳を強力にサポートする�
 | `Translate Above Cursor Text` | カーソル上翻訳 | カーソルがある行の、一つ上の行のテキストを翻訳し、カーソル位置に挿入する。 |
 | `Grammar Check Current Line` | 文法チェック | 現在のカーソル行の文章（日/英）をチェックし、より自然で正確な表現に校正する。 |
 | `Add Note to Anki Assisted by Gemini` | AI支援Anki追加 | 選択した英単語からGeminiが日本語訳を生成し、Ankiカード作成を支援する。 |
+| `Gemini Rewrite (Replace selection or whole note)` | 指示に沿って置換 | 入力した指示に従い、選択範囲またはノート全体をGeminiで書き換えて置換する。 |
+| `Gemini Rewrite (Append result at end)` | 指示に沿って追記 | 入力した指示に従い、選択範囲またはノート全体を参照して生成したMarkdown断片を末尾に追記する。 |
 
 ### 📅 デイリーノート管理
 

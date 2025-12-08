@@ -25,15 +25,17 @@ export function promptForText(app: App, title = 'テキストを入力してく�
 					input.style.height = '120px';
 					input.style.resize = 'vertical';
 					input.style.fontFamily = 'inherit';
+					input.placeholder = placeholder || '';
 				} else {
 					input = contentEl.createEl('input', {
 						type: 'text',
 						placeholder
 					}) as HTMLInputElement;
 					input.style.width = '100%';
+					input.placeholder = placeholder || '';
 				}
 				
-				input.value = defaultValue;
+				input.value = defaultValue ?? '';
 				input.style.marginBottom = '16px';
 				
 				const buttonContainer = contentEl.createDiv();
