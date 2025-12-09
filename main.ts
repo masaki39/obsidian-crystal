@@ -43,8 +43,8 @@ export default class CrystalPlugin extends Plugin {
 
 		// Initialize services
 		this.geminiService = new GeminiService(this.app, this, this.settings.GeminiAPIKey);
-		this.blueskyService = new BlueskyService(this.app, this, this.settings.blueskyIdentifier, this.settings.blueskyPassword);
 		this.dailyNotesManager = new DailyNotesManager(this.app, this.settings, this);
+		this.blueskyService = new BlueskyService(this.app, this, this.settings, this.dailyNotesManager);
 		this.pcloudService = new PCloudService(this.app, this.settings);
 		this.imagePasteAndDropHandler = new ImagePasteAndDropHandler(this.app, this.settings);
 		this.editorCommands = new EditorCommands(this.app, this.settings, this);
@@ -163,7 +163,7 @@ export default class CrystalPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 		this.geminiService.updateSettings(this.settings);
-		this.blueskyService.updateCredentials(this.settings.blueskyIdentifier, this.settings.blueskyPassword);
+		await this.blueskyService.updateSettings(this.settings);
 		this.dailyNotesManager.updateSettings(this.settings);
 		this.imagePasteAndDropHandler.updateSettings(this.settings);
 		this.editorCommands.updateSettings(this.settings);

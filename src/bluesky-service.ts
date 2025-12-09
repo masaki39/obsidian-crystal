@@ -1,6 +1,8 @@
 import { AtpAgent, RichText } from '@atproto/api';
-import { App, Notice, requestUrl, Plugin} from 'obsidian';
+import { App, Notice, requestUrl, Plugin } from 'obsidian';
 import { promptForText } from './utils';
+import { CrystalPluginSettings } from './settings';
+import { DailyNotesManager } from './daily-notes';
 
 interface UrlMetadata {
 	title: string;
@@ -12,16 +14,20 @@ export class BlueskyService {
 	private agent: AtpAgent | null = null;
 	private app: App;
     private plugin: Plugin;
+	private settings: CrystalPluginSettings;
+	private dailyNotesManager: DailyNotesManager;
 	private identifier: string;
 	private password: string;
 
-	constructor(app: App, plugin: Plugin, identifier?: string, password?: string) {
+	constructor(app: App, plugin: Plugin, settings: CrystalPluginSettings, dailyNotesManager: DailyNotesManager) {
 		this.app = app;
         this.plugin = plugin;
-		this.identifier = identifier || '';
-		this.password = password || '';
+		this.settings = settings;
+		this.dailyNotesManager = dailyNotesManager;
+		this.identifier = settings.blueskyIdentifier || '';
+		this.password = settings.blueskyPassword || '';
 		
-		if (identifier && password) {
+		if (this.identifier && this.password) {
 			this.initializeAgent();
 		}
 	}
@@ -52,12 +58,19 @@ export class BlueskyService {
 	async updateCredentials(identifier: string, password: string): Promise<void> {
 		this.identifier = identifier;
 		this.password = password;
+		this.settings.blueskyIdentifier = identifier;
+		this.settings.blueskyPassword = password;
 		
 		if (identifier && password) {
 			await this.initializeAgent();
 		} else {
 			this.agent = null;
 		}
+	}
+
+	async updateSettings(settings: CrystalPluginSettings): Promise<void> {
+		this.settings = settings;
+		await this.updateCredentials(settings.blueskyIdentifier, settings.blueskyPassword);
 	}
 
 	/**
@@ -309,9 +322,52 @@ export class BlueskyService {
 				record: postRecord,
 			});
 
+			await this.appendPostToDailyNote(text);
+
 		} catch (error) {
 			console.error('Error posting to Bluesky:', error);
 			throw new Error(`Bluesky投稿に失敗しました: ${error.message}`);
+		}
+	}
+
+	private async appendPostToDailyNote(text: string): Promise<void> {
+		if (!this.settings.blueskyAppendToDailyNote) {
+			return;
+		}
+		if (!this.dailyNotesManager) {
+			return;
+		}
+		try {
+			await this.dailyNotesManager.appendToTimeline(text, new Date(), 'blue');
+		} catch (error) {
+			console.error('Failed to append Bluesky post to daily note:', error);
+		}
+	}
+
+	/**
+	 * Blueskyへ投稿せず、デイリーノートのタイムラインにだけ書き込む
+	 */
+	async promptAndAppendToDailyNote(): Promise<void> {
+		try {
+			const text = await promptForText(
+				this.app,
+				'デイリーノートに追加',
+				'投稿内容を入力してください',
+				'追加',
+				'',
+				true
+			);
+
+			if (!text || !text.trim()) {
+				new Notice('内容が空のため、追加をキャンセルしました。');
+				return;
+			}
+
+			await this.dailyNotesManager.appendToTimeline(text);
+			new Notice('デイリーノートのタイムラインに追加しました。');
+		} catch (error) {
+			console.error('Error in promptAndAppendToDailyNote:', error);
+			new Notice(`追加エラー: ${error.message}`);
 		}
 	}
 
@@ -355,6 +411,14 @@ export class BlueskyService {
         name: 'Post to Bluesky',
         callback: () => {
             this.promptAndPost();
+        }
+    });
+
+    this.plugin.addCommand({
+        id: 'crystal-post-to-daily-note',
+        name: 'Post to Daily Note Timeline',
+        callback: () => {
+            this.promptAndAppendToDailyNote();
         }
     });
     }

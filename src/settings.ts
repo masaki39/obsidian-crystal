@@ -14,8 +14,10 @@ export interface CrystalPluginSettings {
 	GeminiModel: string;
 	blueskyIdentifier: string;
 	blueskyPassword: string;
+	blueskyAppendToDailyNote: boolean;
 	dailyNotesFolder: string;
 	dailyNoteDateFormat: string;
+	dailyNoteTimelineHeading: string;
 	dailyNoteAutoSort: boolean;
 	dailyNoteAutoLink: boolean;
 	todoFileName: string;
@@ -44,8 +46,10 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	GeminiModel: 'gemini-flash-latest',
 	blueskyIdentifier: '',
 	blueskyPassword: '',
+	blueskyAppendToDailyNote: false,
 	dailyNotesFolder: 'DailyNotes',
 	dailyNoteDateFormat: 'YYYY-MM-DD',
+	dailyNoteTimelineHeading: '# Time Line',
 	dailyNoteAutoSort: true,
 	dailyNoteAutoLink: true,
 	todoFileName: 'ToDo',
@@ -179,6 +183,9 @@ export class CrystalSettingTab extends PluginSettingTab {
 				text.inputEl.type = 'password';
 				return text;
 			});
+
+		this.toggleSetting(containerEl, 'Append Bluesky posts to Daily Note timeline', 'Add each post to today\'s daily note timeline section', 'blueskyAppendToDailyNote');
+		this.textSetting(containerEl, 'Daily Note timeline heading', 'Heading text that marks the timeline section (exact match)', 'dailyNoteTimelineHeading', '# Time Line');
 
 		// Daily notes settings
 		containerEl.createEl('h3', { text: 'Daily Notes' });

@@ -156,25 +156,140 @@ export class DailyNotesManager {
 
     private orderTaskList(taskList: string): string {
         const lines = taskList.split('\n');
-        const filteredLines = lines.filter(line => line.trim() !== '');
-        const orderedLines = filteredLines.sort((a, b) => {
-            const aIsDone = a.trim().startsWith('- [x]');
-            const aIsNotDone = a.trim().startsWith('- [ ]');
-            const bIsDone = b.trim().startsWith('- [x]');
-            const bIsNotDone = b.trim().startsWith('- [ ]');
-            
-            // 完了済みタスクが最優先
-            if (aIsDone && !bIsDone) return -1;
-            if (!aIsDone && bIsDone) return 1;
-            
-            // 未完了タスクが2番目の優先度
-            if (aIsNotDone && !bIsNotDone) return -1;
-            if (!aIsNotDone && bIsNotDone) return 1;
-            
-            // その他の行が最後（同じカテゴリ内では元の順序を保持）
-            return 0;
-        });
-        return orderedLines.join('\n') + '\n';
+        const orderedLines: string[] = [];
+        let buffer: string[] = [];
+        const endedWithNewline = taskList.endsWith('\n');
+
+        const flushBuffer = () => {
+            if (buffer.length === 0) {
+                return;
+            }
+            const nonEmpty = buffer.filter(line => line.trim() !== '');
+            const isTaskBlock = nonEmpty.length > 0 && nonEmpty.every(line => line.trim().match(/^- \[( |x)\]/));
+
+            if (isTaskBlock) {
+                const sortedTasks = nonEmpty.sort((a, b) => {
+                    const aIsDone = a.trim().startsWith('- [x]');
+                    const aIsNotDone = a.trim().startsWith('- [ ]');
+                    const bIsDone = b.trim().startsWith('- [x]');
+                    const bIsNotDone = b.trim().startsWith('- [ ]');
+                    
+                    // 完了済みタスクが最優先
+                    if (aIsDone && !bIsDone) return -1;
+                    if (!aIsDone && bIsDone) return 1;
+                    
+                    // 未完了タスクが2番目の優先度
+                    if (aIsNotDone && !bIsNotDone) return -1;
+                    if (!aIsNotDone && bIsNotDone) return 1;
+                    
+                    // その他の行が最後（同じカテゴリ内では元の順序を保持）
+                    return 0;
+                });
+                orderedLines.push(...sortedTasks);
+            } else {
+                orderedLines.push(...buffer);
+            }
+            buffer = [];
+        };
+
+        for (const line of lines) {
+            if (line.trim() === '') {
+                flushBuffer();
+                orderedLines.push(line);
+            } else {
+                buffer.push(line);
+            }
+        }
+        flushBuffer();
+
+        const joined = orderedLines.join('\n');
+        if (endedWithNewline && !joined.endsWith('\n')) {
+            return joined + '\n';
+        }
+        return joined;
+    }
+
+    private splitByTimeline(content: string, heading: string): { before: string; timeline: string } {
+        const lines = content.split('\n');
+        const idx = lines.findIndex(line => line.trim() === heading.trim());
+        if (idx === -1) {
+            return { before: content, timeline: '' };
+        }
+        const before = lines.slice(0, idx).join('\n');
+        const timeline = lines.slice(idx).join('\n');
+        return { before, timeline };
+    }
+
+    private recombineSections(before: string, timeline: string): string {
+        const beforeTrimmed = before.trimEnd();
+        const timelineTrimmed = timeline.trimEnd();
+
+        if (beforeTrimmed.length === 0 && timelineTrimmed.length === 0) {
+            return '';
+        }
+
+        if (timelineTrimmed.length === 0) {
+            return beforeTrimmed.endsWith('\n') ? beforeTrimmed : `${beforeTrimmed}\n`;
+        }
+
+        if (beforeTrimmed.length === 0) {
+            return timelineTrimmed.endsWith('\n') ? timelineTrimmed : `${timelineTrimmed}\n`;
+        }
+
+        return `${beforeTrimmed}\n\n${timelineTrimmed}\n`;
+    }
+
+    private formatTimelineBlock(text: string, time: string, color?: string): string[] {
+        const tag = color ? `[!timeline|${color}]` : '[!timeline]';
+        const blockLines = [`> ${tag} ${time}`];
+        const contentLines = text.split('\n').map(line => line.trimEnd());
+        for (const line of contentLines) {
+            blockLines.push(`> ${line}`);
+        }
+        return blockLines;
+    }
+
+    private async ensureDailyNoteFile(date: Date): Promise<TFile> {
+        const filePath = this.getDailyNoteFilePath(date);
+        let file = this.app.vault.getAbstractFileByPath(filePath);
+        
+        if (!file || !(file instanceof TFile)) {
+            const folder = this.settings.dailyNotesFolder || 'DailyNotes';
+            if (!this.app.vault.getAbstractFileByPath(folder)) {
+                await this.app.vault.createFolder(folder);
+            }
+            file = await this.app.vault.create(filePath, '');
+        }
+        return file as TFile;
+    }
+
+    async appendToTimeline(text: string, date: Date = new Date(), color?: string): Promise<void> {
+        try {
+            const file = await this.ensureDailyNoteFile(date);
+            const heading = this.settings.dailyNoteTimelineHeading || '# Time Line';
+            const content = await this.app.vault.read(file);
+            const timeStamp = moment(date).format('HH:mm');
+            const blockLines = this.formatTimelineBlock(text, timeStamp, color);
+            const { before, timeline } = this.splitByTimeline(content, heading);
+            const timelineLines = timeline ? timeline.split('\n') : [];
+
+            if (timelineLines.length === 0 || timelineLines[0].trim() !== heading.trim()) {
+                timelineLines.unshift(heading);
+            }
+
+            const needsBlankLine = timelineLines.length > 0 && timelineLines[timelineLines.length - 1].trim() !== '';
+            if (needsBlankLine) {
+                timelineLines.push('');
+            }
+
+            timelineLines.push(...blockLines);
+
+            const updatedTimeline = timelineLines.join('\n');
+            const newContent = this.recombineSections(before, updatedTimeline);
+            await this.app.vault.modify(file, newContent.endsWith('\n') ? newContent : newContent + '\n');
+        } catch (error) {
+            console.error('Error appending to timeline:', error);
+        }
     }
 
     private async rollOverYesterdayUndoTaskList(editor: any): Promise<void> {
@@ -252,9 +367,15 @@ export class DailyNotesManager {
             const dailyNotesFolder = this.settings.dailyNotesFolder || 'DailyNotes';
             if (fileFolder === dailyNotesFolder) {
                 this.app.vault.process(file, (content) => {
+                    if (!this.settings.dailyNoteAutoSort) {
+                        return content;
+                    }
+                    const heading = this.settings.dailyNoteTimelineHeading || '# Time Line';
                     const { frontmatter, content: parsedContent } = parseFrontmatter(content);
-                    const orderedContent = this.orderTaskList(parsedContent);
-                    const newContent = `${frontmatter}${orderedContent}`;
+                    const { before, timeline } = this.splitByTimeline(parsedContent, heading);
+                    const orderedBefore = this.orderTaskList(before);
+                    const body = this.recombineSections(orderedBefore, timeline);
+                    const newContent = `${frontmatter}${body}`;
                     return newContent;
                 });
             }
@@ -274,7 +395,13 @@ export class DailyNotesManager {
                     const fileLink = `[[${file.name.replace(/\.md$/, '')}]]`;
                     const line = `- ${timeStamp} ${fileLink}`;
                     this.app.vault.process(todayNote as TFile, (content) => {
-                        const newContent = `${content}\n${line}`;
+                        const heading = this.settings.dailyNoteTimelineHeading || '# Time Line';
+                        const { frontmatter, content: parsedContent } = parseFrontmatter(content);
+                        const { before, timeline } = this.splitByTimeline(parsedContent, heading);
+                        const beforeTrimmed = before.trimEnd();
+                        const updatedBefore = (beforeTrimmed.length > 0 ? `${beforeTrimmed}\n` : '') + line;
+                        const body = this.recombineSections(updatedBefore, timeline);
+                        const newContent = `${frontmatter}${body}`;
                         return newContent;
                     });
                 }));
@@ -291,9 +418,15 @@ export class DailyNotesManager {
                     // 正規表現の特殊文字をエスケープ
                     const escapedFileLink = fileLink.replace(/[[\](){}.*+?^$|\\]/g, '\\$&');
                     this.app.vault.process(todayNote as TFile, (content) => {
+                        const heading = this.settings.dailyNoteTimelineHeading || '# Time Line';
+                        const { frontmatter, content: parsedContent } = parseFrontmatter(content);
+                        const { before, timeline } = this.splitByTimeline(parsedContent, heading);
                         // 行全体をマッチして削除（改行も含む）
                         const regex = new RegExp(`^- \\d{2}:\\d{2} ${escapedFileLink}$`, 'gm');
-                        const newContent = content.replace(regex, '').replace(/\n\n+/g, '\n');
+                        const cleanedBefore = before.replace(regex, '').replace(/\n\n+/g, '\n').trimEnd();
+                        const cleanedTimeline = timeline.replace(regex, '').replace(/\n\n+/g, '\n').trimEnd();
+                        const body = this.recombineSections(cleanedBefore, cleanedTimeline);
+                        const newContent = `${frontmatter}${body}`;
                         return newContent;
                     });
                 }));
