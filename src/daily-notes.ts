@@ -3,6 +3,36 @@ import { CrystalPluginSettings } from './settings';
 import { parseFrontmatter } from './utils';
 const moment = require('moment');
 
+export function splitByTimeline(content: string, heading: string): { before: string; timeline: string } {
+    const lines = content.split('\n');
+    const idx = lines.findIndex(line => line.trim() === heading.trim());
+    if (idx === -1) {
+        return { before: content, timeline: '' };
+    }
+    const before = lines.slice(0, idx).join('\n');
+    const timeline = lines.slice(idx).join('\n');
+    return { before, timeline };
+}
+
+export function recombineSections(before: string, timeline: string): string {
+    const beforeTrimmed = before.trimEnd();
+    const timelineTrimmed = timeline.trimEnd();
+
+    if (beforeTrimmed.length === 0 && timelineTrimmed.length === 0) {
+        return '';
+    }
+
+    if (timelineTrimmed.length === 0) {
+        return beforeTrimmed.endsWith('\n') ? beforeTrimmed : `${beforeTrimmed}\n`;
+    }
+
+    if (beforeTrimmed.length === 0) {
+        return timelineTrimmed.endsWith('\n') ? timelineTrimmed : `${timelineTrimmed}\n`;
+    }
+
+    return `${beforeTrimmed}\n\n${timelineTrimmed}\n`;
+}
+
 export class DailyNotesManager {
     private app: App;
     private settings: CrystalPluginSettings;
@@ -164,28 +194,25 @@ export class DailyNotesManager {
             if (buffer.length === 0) {
                 return;
             }
-            const nonEmpty = buffer.filter(line => line.trim() !== '');
-            const isTaskBlock = nonEmpty.length > 0 && nonEmpty.every(line => line.trim().match(/^- \[( |x)\]/));
+            const isListBlock = buffer.every(line => line.trim().startsWith('- '));
 
-            if (isTaskBlock) {
-                const sortedTasks = nonEmpty.sort((a, b) => {
-                    const aIsDone = a.trim().startsWith('- [x]');
-                    const aIsNotDone = a.trim().startsWith('- [ ]');
-                    const bIsDone = b.trim().startsWith('- [x]');
-                    const bIsNotDone = b.trim().startsWith('- [ ]');
-                    
-                    // 完了済みタスクが最優先
-                    if (aIsDone && !bIsDone) return -1;
-                    if (!aIsDone && bIsDone) return 1;
-                    
-                    // 未完了タスクが2番目の優先度
-                    if (aIsNotDone && !bIsNotDone) return -1;
-                    if (!aIsNotDone && bIsNotDone) return 1;
-                    
-                    // その他の行が最後（同じカテゴリ内では元の順序を保持）
-                    return 0;
-                });
-                orderedLines.push(...sortedTasks);
+            if (isListBlock) {
+                const done: string[] = [];
+                const todo: string[] = [];
+                const otherBullets: string[] = [];
+
+                for (const line of buffer) {
+                    const trimmed = line.trim();
+                    if (/^- \[[xX]\]/.test(trimmed)) {
+                        done.push(line);
+                    } else if (/^- \[\s?\]/.test(trimmed)) {
+                        todo.push(line);
+                    } else {
+                        otherBullets.push(line);
+                    }
+                }
+
+                orderedLines.push(...done, ...todo, ...otherBullets);
             } else {
                 orderedLines.push(...buffer);
             }
@@ -207,36 +234,6 @@ export class DailyNotesManager {
             return joined + '\n';
         }
         return joined;
-    }
-
-    private splitByTimeline(content: string, heading: string): { before: string; timeline: string } {
-        const lines = content.split('\n');
-        const idx = lines.findIndex(line => line.trim() === heading.trim());
-        if (idx === -1) {
-            return { before: content, timeline: '' };
-        }
-        const before = lines.slice(0, idx).join('\n');
-        const timeline = lines.slice(idx).join('\n');
-        return { before, timeline };
-    }
-
-    private recombineSections(before: string, timeline: string): string {
-        const beforeTrimmed = before.trimEnd();
-        const timelineTrimmed = timeline.trimEnd();
-
-        if (beforeTrimmed.length === 0 && timelineTrimmed.length === 0) {
-            return '';
-        }
-
-        if (timelineTrimmed.length === 0) {
-            return beforeTrimmed.endsWith('\n') ? beforeTrimmed : `${beforeTrimmed}\n`;
-        }
-
-        if (beforeTrimmed.length === 0) {
-            return timelineTrimmed.endsWith('\n') ? timelineTrimmed : `${timelineTrimmed}\n`;
-        }
-
-        return `${beforeTrimmed}\n\n${timelineTrimmed}\n`;
     }
 
     private formatTimelineBlock(text: string, time: string, color?: string): string[] {
@@ -270,7 +267,7 @@ export class DailyNotesManager {
             const content = await this.app.vault.read(file);
             const timeStamp = moment(date).format('HH:mm');
             const blockLines = this.formatTimelineBlock(text, timeStamp, color);
-            const { before, timeline } = this.splitByTimeline(content, heading);
+            const { before, timeline } = splitByTimeline(content, heading);
             const timelineLines = timeline ? timeline.split('\n') : [];
 
             if (timelineLines.length === 0 || timelineLines[0].trim() !== heading.trim()) {
@@ -285,7 +282,7 @@ export class DailyNotesManager {
             timelineLines.push(...blockLines);
 
             const updatedTimeline = timelineLines.join('\n');
-            const newContent = this.recombineSections(before, updatedTimeline);
+            const newContent = recombineSections(before, updatedTimeline);
             await this.app.vault.modify(file, newContent.endsWith('\n') ? newContent : newContent + '\n');
         } catch (error) {
             console.error('Error appending to timeline:', error);
@@ -372,9 +369,9 @@ export class DailyNotesManager {
                     }
                     const heading = this.settings.dailyNoteTimelineHeading || '# Time Line';
                     const { frontmatter, content: parsedContent } = parseFrontmatter(content);
-                    const { before, timeline } = this.splitByTimeline(parsedContent, heading);
+                    const { before, timeline } = splitByTimeline(parsedContent, heading);
                     const orderedBefore = this.orderTaskList(before);
-                    const body = this.recombineSections(orderedBefore, timeline);
+                    const body = recombineSections(orderedBefore, timeline);
                     const newContent = `${frontmatter}${body}`;
                     return newContent;
                 });
@@ -397,10 +394,10 @@ export class DailyNotesManager {
                     this.app.vault.process(todayNote as TFile, (content) => {
                         const heading = this.settings.dailyNoteTimelineHeading || '# Time Line';
                         const { frontmatter, content: parsedContent } = parseFrontmatter(content);
-                        const { before, timeline } = this.splitByTimeline(parsedContent, heading);
+                        const { before, timeline } = splitByTimeline(parsedContent, heading);
                         const beforeTrimmed = before.trimEnd();
                         const updatedBefore = (beforeTrimmed.length > 0 ? `${beforeTrimmed}\n` : '') + line;
-                        const body = this.recombineSections(updatedBefore, timeline);
+                        const body = recombineSections(updatedBefore, timeline);
                         const newContent = `${frontmatter}${body}`;
                         return newContent;
                     });
@@ -420,12 +417,12 @@ export class DailyNotesManager {
                     this.app.vault.process(todayNote as TFile, (content) => {
                         const heading = this.settings.dailyNoteTimelineHeading || '# Time Line';
                         const { frontmatter, content: parsedContent } = parseFrontmatter(content);
-                        const { before, timeline } = this.splitByTimeline(parsedContent, heading);
+                        const { before, timeline } = splitByTimeline(parsedContent, heading);
                         // 行全体をマッチして削除（改行も含む）
                         const regex = new RegExp(`^- \\d{2}:\\d{2} ${escapedFileLink}$`, 'gm');
                         const cleanedBefore = before.replace(regex, '').replace(/\n\n+/g, '\n').trimEnd();
                         const cleanedTimeline = timeline.replace(regex, '').replace(/\n\n+/g, '\n').trimEnd();
-                        const body = this.recombineSections(cleanedBefore, cleanedTimeline);
+                        const body = recombineSections(cleanedBefore, cleanedTimeline);
                         const newContent = `${frontmatter}${body}`;
                         return newContent;
                     });

@@ -130,3 +130,32 @@ describe('DailyNotesManager appendToTimeline', () => {
 		);
 	});
 });
+
+describe('DailyNotesManager auto sort before timeline', () => {
+	it('orders list blocks as done → todo → other bullets', () => {
+		const { manager } = createManager();
+		const before = [
+			'- [ ] todo1',
+			'- [x] done1',
+			'- bullet1',
+			'- [ ] todo2',
+			'- [x] done2',
+			'- bullet2',
+			''
+		].join('\n');
+
+		const ordered = (manager as any).orderTaskList(before);
+
+		expect(ordered).toBe(
+			[
+				'- [x] done1',
+				'- [x] done2',
+				'- [ ] todo1',
+				'- [ ] todo2',
+				'- bullet1',
+				'- bullet2',
+				''
+			].join('\n')
+		);
+	});
+});

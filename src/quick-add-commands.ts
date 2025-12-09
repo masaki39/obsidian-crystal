@@ -1,6 +1,7 @@
 import { App, Notice, TFile, Editor, MarkdownView } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
-import { promptForText } from './utils';
+import { parseFrontmatter, promptForText } from './utils';
+import { splitByTimeline, recombineSections } from './daily-notes';
 
 export class QuickAddCommands {
 	private app: App;
@@ -29,6 +30,8 @@ export class QuickAddCommands {
 		const today = this.getTodayString();
 		
 		try {
+			const timelineHeading = this.settings.dailyNoteTimelineHeading || '# Time Line';
+
 			// デイリーノートのフォルダを設定から取得
 			const dailyNotesFolder = this.getDailyNotesFolder();
 			
@@ -42,9 +45,18 @@ export class QuickAddCommands {
 				new Notice(`デイリーノートを作成してタスクを追加しました: ${today}`);
 			} else {
 				// ファイルが存在する場合は一番下にタスクを追加
-				const content = await this.app.vault.read(dailyFile);
-				const newContent = `${content}\n- [ ] ${task}`;
-				await this.app.vault.modify(dailyFile, newContent);
+				await this.app.vault.process(dailyFile, (content) => {
+					const { frontmatter, content: body } = parseFrontmatter(content);
+					const { before, timeline } = splitByTimeline(body, timelineHeading);
+					const beforeTrimmed = before.trimEnd();
+					const taskLine = `- [ ] ${task}`;
+					const updatedBefore = beforeTrimmed.length > 0
+						? `${beforeTrimmed}\n${taskLine}`
+						: taskLine;
+					const newBody = recombineSections(updatedBefore, timeline);
+					const newContent = `${frontmatter}${newBody}`;
+					return newContent.endsWith('\n') ? newContent : `${newContent}\n`;
+				});
 				new Notice('デイリーノートにタスクを追加しました');
 			}
 		} catch (error) {
