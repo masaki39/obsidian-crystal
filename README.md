@@ -26,7 +26,7 @@ AI（Gemini）を活用した高度なテキスト処理、pCloudと連携した
 | `Gemini Rewrite (Replace selection or whole note)` | 指示に沿って置換 | 入力した指示に従い、選択範囲またはノート全体をGeminiで書き換えて置換する。 |
 | `Gemini Rewrite (Append result at end)` | 指示に沿って追記 | 入力した指示に従い、選択範囲またはノート全体を参照して生成したMarkdown断片を末尾に追記する。 |
 
-> ![note]
+> [!note]
 > AGENTS.mdとCLAUDE.mdが存在する場合、フロントマターの`activeFile`にアクティブファイルのパスをリアルタイムで反映する。
 
 ### 📅 デイリーノート管理
@@ -90,7 +90,7 @@ AI（Gemini）を活用した高度なテキスト処理、pCloudと連携した
 
 文献ノートのフロントマター`pdf`フィールドに記載されたPDFファイルパスを活用する。
 
-> ![caution]
+> [!caution]
 > [Simple Citations](https://github.com/masaki39/simple-citations)のoptional fields機能で`pdf`フィールドにPDFファイルパス出力しているという前提に基づく。
 
 | コマンド | 機能 | 説明 |
@@ -125,7 +125,7 @@ AI（Gemini）を活用した高度なテキスト処理、pCloudと連携した
 |---|---|---|
 | `Add Note to Anki` | Ankiノート追加 | 表面・裏面のテキストを入力して、Ankiに新しいノートを追加する。 |
 
-> ![caution]
+> [!caution]
 > ノートタイプ`基本`、デッキ`Default`にのみカードを追加する。
 
 **必要な依存関係**
