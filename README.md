@@ -14,7 +14,7 @@ AI（Gemini）を活用した高度なテキスト処理、pCloudと連携した
 
 ### 🤖 AI機能（Gemini連携）
 
-Gemini APIを利用して、文章作成や翻訳を強力にサポートする。
+[Gemini API](https://aistudio.google.com/api-keys)を利用して、文章作成や翻訳を強力にサポートする。
 
 | コマンド | 機能 | 説明 |
 |---|---|---|
@@ -25,6 +25,9 @@ Gemini APIを利用して、文章作成や翻訳を強力にサポートする�
 | `Add Note to Anki Assisted by Gemini` | AI支援Anki追加 | 選択した英単語からGeminiが日本語訳を生成し、Ankiカード作成を支援する。 |
 | `Gemini Rewrite (Replace selection or whole note)` | 指示に沿って置換 | 入力した指示に従い、選択範囲またはノート全体をGeminiで書き換えて置換する。 |
 | `Gemini Rewrite (Append result at end)` | 指示に沿って追記 | 入力した指示に従い、選択範囲またはノート全体を参照して生成したMarkdown断片を末尾に追記する。 |
+
+> ![note]
+> AGENTS.mdとCLAUDE.mdが存在する場合、フロントマターの`activeFile`にアクティブファイルのパスをリアルタイムで反映する。
 
 ### 📅 デイリーノート管理
 
@@ -39,8 +42,8 @@ Gemini APIを利用して、文章作成や翻訳を強力にサポートする�
 | `Roll Over Yesterday Undo Task List` | 前日の未完了タスクを引き継ぎ | アクティブファイルの日付を基準に前日のデイリーノートから未完了タスクを抽出し、現在のカーソル位置に挿入する。前日ファイルからは未完了タスクを削除する。 |
 
 **自動化機能（設定で有効化が必要）：**
-- **タスク自動ソート:** デイリーノート内のタスクが変更されると、完了済み`[x]`のタスクをリストの上に自動で移動させる。
-- **新規ノートの自動リンク:** 新しいノートを作成すると、その日のデイリーノートに自動でリンクが追記される。
+- **Auto Sort Tasks:** デイリーノート内のタスクが変更されると、完了済み`[x]`のタスクをリストの上に自動で移動させる。
+- **Auto Link Notes:** 新しいノートを作成すると、その日のデイリーノートに自動でリンクが追記される。
 
 ### 🖼️ 画像管理
 
@@ -54,8 +57,7 @@ Gemini APIを利用して、文章作成や翻訳を強力にサポートする�
 | `Move Images to Marp Folder` | 画像をMarpフォルダに移動 | Vault内の画像ファイルをMarp用フォルダに移動し、リンクを更新する。プレゼンテーション作成時に便利。 |
 
 **自動化機能（設定で有効化が必要）：**
-- **自動WebP変換とローカル保存:** クリップボードからのペーストやドラッグ＆ドロップで画像を貼り付けると、自動でWebP形式に変換し、Vault内の添付ファイルフォルダに保存してリンクを挿入する。GIFアニメはそのまま維持される。
-- **Marpフォルダ連携:** 画像を自動的にプレゼンテーション用フォルダに整理し、attachment設定を自動調整する。
+- **Auto Convert Images to WebP on Paste:** クリップボードからのペーストやドラッグ＆ドロップで画像を貼り付けると、自動でWebP形式に変換し、Vault内の添付ファイルフォルダに保存してリンクを挿入する。GIFアニメはそのまま維持される。
 
 ### ✍️ エディタ拡張
 
@@ -75,7 +77,7 @@ Gemini APIを利用して、文章作成や翻訳を強力にサポートする�
 | `Move Tab Left` | タブを左に移動 | 現在のアクティブタブを左隣のタブと交換して移動する。ピン留めタブにも対応。 |
 | `Move Tab Right` | タブを右に移動 | 現在のアクティブタブを右隣のタブと交換して移動する。ピン留めタブにも対応。 |
 
-### ✨ クイック追加
+### ✨ QuickAdd
 
 定型的なコンテンツやタスクを素早く追加する。
 
@@ -86,7 +88,10 @@ Gemini APIを利用して、文章作成や翻訳を強力にサポートする�
 
 ### 📄 PDF管理
 
-文献ノートのフロントマター`pdf`フィールドに記載されたPDFファイルを活用する。
+文献ノートのフロントマター`pdf`フィールドに記載されたPDFファイルパスを活用する。
+
+> ![caution]
+> [Simple Citations](https://github.com/masaki39/simple-citations)のoptional fields機能で`pdf`フィールドにPDFファイルパス出力しているという前提に基づく。
 
 | コマンド | 機能 | 説明 |
 |---|---|---|
@@ -111,11 +116,40 @@ Gemini APIを利用して、文章作成や翻訳を強力にサポートする�
 | `Export Marp Slide` | Marpエクスポート | 内部リンクを相対パスに変換後、Marpのエクスポート（PPTX形式）用コマンドをクリップボードにコピーする。 |
 | `Export Marp Presenter Notes` | Marpノート出力 | Marp Presenter Notesをテキストファイルとして出力する。 |
 
+**必要な依存関係:**
+- [Marp-cli](https://github.com/marp-team/marp-cli)
+
 #### Anki
 
 | コマンド | 機能 | 説明 |
 |---|---|---|
 | `Add Note to Anki` | Ankiノート追加 | 表面・裏面のテキストを入力して、Ankiに新しいノートを追加する。 |
+
+> ![caution]
+> ノートタイプ`基本`、デッキ`Default`にのみカードを追加する。
+
+**必要な依存関係**
+- [Anki](https://apps.ankiweb.net)
+  - [Anki Connect](https://github.com/amikey/anki-connect)
+
+AnkiにAnki Connectというアドオンを追加する。
+この時設定に`app://obsidian.md`を加えてObsidianからのアクセスを許可する。
+
+設定例：
+
+```json
+{
+    "apiKey": null,
+    "apiLogPath": null,
+    "ignoreOriginList": [],
+    "webBindAddress": "127.0.0.1",
+    "webBindPort": 8765,
+    "webCorsOriginList": [
+        "http://localhost",
+        "app://obsidian.md"
+    ]
+}
+```
 
 #### Quartz
 
@@ -140,7 +174,7 @@ Gemini APIを利用して、文章作成や翻訳を強力にサポートする�
 - **一般設定:** エクスポートフォルダパス（PDFやMarpで使用）
 - **Gemini:** APIキー、モデル選択
 - **デイリーノート:** フォルダパス、日付フォーマット、タスクの自動ソート、新規ノートの自動リンク
-- **クイック追加:** ToDoファイル名、Inbox名
+- **QuickAdd:** ToDoファイル名、Inbox名
 - **画像処理:** 自動WebP変換の有効化、圧縮品質、リサイズ設定
 - **pCloud連携:** 認証情報、公開フォルダID
 - **Marp:** スライドフォルダパス、テーマパス、添付ファイルフォルダパス

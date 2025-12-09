@@ -286,7 +286,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 		containerEl.createEl('h3', { text: 'Quartz' });
 
 		this.textSetting(containerEl, 'Publish Folder Path', 'Path to Publish Folder (relative path from Obsidian Vault root)', 'publishFolderPath', 'Enter Publish Folder Path');
-		this.textSetting(containerEl, 'Quartz Path', 'Path to Quartz (absolute path)', 'quartzPath', 'Enter Quartz Folder Path');
+		this.textSetting(containerEl, 'Path to Local Repository of Quartz', 'Path to Quartz (absolute path)', 'quartzPath', 'Enter Quartz Folder Path');
 		this.textSetting(containerEl, 'Quartz Site Name', 'Name of the Quartz site', 'quartzSiteName', 'Enter Quartz Site Name');
 		this.textSetting(containerEl, 'Github User Name', 'Github user name', 'githubUserName', 'Enter Github User Name');
 
