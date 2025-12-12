@@ -4,7 +4,7 @@
 
 このプラグインは、Obsidianでの作業効率を劇的に向上させるための、多岐にわたる機能を統合したオールインワン・プラグインである。
 
-> [!warning] 注意事項
+> [!warning]
 > - デスクトップ版Obsidianでのみ動作する。
 > - 多くの機能は、外部サービス（Gemini, pCloud, Anki, Marp CLI, Poppler, macOS Shortcuts）の事前設定やインストールが必要である。
 > - 個人用途に最適化されているため、利用者の環境に応じた設定調整が必要な場合がある。
@@ -34,8 +34,8 @@
 | `Gemini Rewrite (Replace selection or whole note)` | 指示に沿って置換 | 入力した指示に従い、選択範囲またはノート全体をGeminiで書き換えて置換する。 |
 | `Gemini Rewrite (Append result at end)` | 指示に沿って追記 | 入力した指示に従い、選択範囲またはノート全体を参照して生成したMarkdown断片を末尾に追記する。 |
 
-> [!note]
-> AGENTS.mdとCLAUDE.mdが存在する場合、フロントマターの`activeFile`にアクティブファイルのパスをリアルタイムで反映する。
+**自動化機能：**
+- AGENTS.mdとCLAUDE.mdが存在する場合、フロントマターの`activeFile`にアクティブファイルのパスをリアルタイムで反映する。
 
 ### 🦋 Bluesky
 
@@ -118,7 +118,7 @@ BlueSkyへの投稿をアシストする。
 
 文献ノートのフロントマター`pdf`フィールドに記載されたPDFファイルパスを活用する。
 
-> [!caution]
+> [!warning]
 > [Simple Citations](https://github.com/masaki39/simple-citations)のoptional fields機能で`pdf`フィールドにPDFファイルパス出力しているという前提に基づく。
 
 | コマンド | 機能 | 説明 |
