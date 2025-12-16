@@ -42,7 +42,7 @@ export default class CrystalPlugin extends Plugin {
 		await this.loadSettings();
 
 		// Initialize services
-		this.geminiService = new GeminiService(this.app, this, this.settings.GeminiAPIKey);
+		this.geminiService = new GeminiService(this.app, this, this.settings);
 		this.dailyNotesManager = new DailyNotesManager(this.app, this.settings, this);
 		this.blueskyService = new BlueskyService(this.app, this, this.settings, this.dailyNotesManager);
 		this.pcloudService = new PCloudService(this.app, this.settings);

@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { App, Editor, MarkdownView, Notice, TFile, Plugin } from 'obsidian';
-import { CrystalPluginSettings } from './settings';
+import { CrystalPluginSettings, DEFAULT_SETTINGS } from './settings';
 import { promptForText } from './utils';
 import { AnkiService } from './anki-service';
 
@@ -10,12 +10,10 @@ export class GeminiService {
 	private plugin: Plugin;
 	private settings: CrystalPluginSettings | null = null;
 
-	constructor(app: App, plugin: Plugin, apiKey?: string) {
+	constructor(app: App, plugin: Plugin, settings: CrystalPluginSettings) {
 		this.app = app;
 		this.plugin = plugin;
-		if (apiKey) {
-			this.genAI = new GoogleGenerativeAI(apiKey);
-		}
+		this.updateSettings(settings);
 	}
 
 	/**
@@ -48,7 +46,7 @@ export class GeminiService {
 	 * 設定からモデル名を取得する（設定がない場合はデフォルトモデルを返す）
 	 */
 	private getModelName(): string {
-		return this.settings?.GeminiModel || 'gemini-2.0-flash';
+		return this.settings?.GeminiModel || DEFAULT_SETTINGS.GeminiModel;
 	}
 
 	/**
