@@ -421,8 +421,7 @@ export class DailyNotesManager {
                         // 行全体をマッチして削除（改行も含む）
                         const regex = new RegExp(`^- \\d{2}:\\d{2} ${escapedFileLink}$`, 'gm');
                         const cleanedBefore = before.replace(regex, '').replace(/\n\n+/g, '\n').trimEnd();
-                        const cleanedTimeline = timeline.replace(regex, '').replace(/\n\n+/g, '\n').trimEnd();
-                        const body = recombineSections(cleanedBefore, cleanedTimeline);
+                        const body = recombineSections(cleanedBefore, timeline);
                         const newContent = `${frontmatter}${body}`;
                         return newContent;
                     });
