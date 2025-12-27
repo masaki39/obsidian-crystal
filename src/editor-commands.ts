@@ -1,5 +1,6 @@
 import { App, Editor, MarkdownView, Notice, SuggestModal, Plugin } from 'obsidian';
 import { CrystalPluginSettings, FileOrganizationRule } from './settings';
+import { parseFrontmatter } from './utils';
 import * as path from 'path';
 
 class RuleSuggestModal extends SuggestModal<FileOrganizationRule> {
@@ -429,6 +430,35 @@ export class EditorCommands {
     	return relativePath;
 	}
 
+	/**
+	 * Convert active file content into a bullet list
+	 */
+	async convertActiveFileToBulletList(editor: Editor, view: MarkdownView) {
+		if (!view.file) {
+			new Notice('ファイルが開かれていません');
+			return;
+		}
+
+		const rawContent = await this.app.vault.read(view.file);
+		const { frontmatter, content } = parseFrontmatter(rawContent);
+
+		const bulletLines = content
+			.split(/\r?\n/)
+			.map((line: string) => line.trim())
+			.filter((line: string) => line.length > 0)
+			.map((line: string) => {
+				const withoutHeading = line.replace(/^#+\s*/, '').trim();
+				if (withoutHeading.startsWith('-')) {
+					const item = withoutHeading.replace(/^\-\s*/, '').trim();
+					return item.length > 0 ? `- ${item}` : '- ';
+				}
+				return `- ${withoutHeading}`;
+			});
+
+		editor.setValue(`${frontmatter}${bulletLines.join('\n')}`);
+		new Notice('コンテンツをバレットリストに変換しました');
+	}
+
 	async onload() {
 		// Editor Commands
 		this.plugin.addCommand({
@@ -503,5 +533,13 @@ export class EditorCommands {
 				this.convertLinksToRelativePaths(editor, view);
 			}
 		});
+
+		this.plugin.addCommand({
+			id: 'crystal-convert-active-file-to-bullet-list',
+			name: 'Convert Active File to Bullet List',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.convertActiveFileToBulletList(editor, view);
+			}
+		});
 	}
-} 
+}
