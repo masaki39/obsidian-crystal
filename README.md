@@ -108,6 +108,7 @@ BlueSkyへの投稿をアシストする。
 | `Wrap Selection with Superscript` | 上付き文字 | 選択テキストを`<sup>`タグで囲む。すでにある場合は解除する。 |
 | `Increase Blockquote Level` | ブロッククォートレベル増加 | 選択した行のブロッククォート（`>`）レベルを1段階増加させる。 |
 | `Convert Links to Relative Paths` | リンクを相対パスに変換 | ファイル内のWikiリンクやMarkdownリンクを、すべて相対パス形式のMarkdownリンクに一括変換する。 |
+| `Convert Active File to Bullet List` | 本文をバレット化 | アクティブファイルの本文をバレットリストに変換する（フロントマターは保持）。 |
 | `Move Tab Left` | タブを左に移動 | 現在のアクティブタブを左隣のタブと交換して移動する。ピン留めタブにも対応。 |
 | `Move Tab Right` | タブを右に移動 | 現在のアクティブタブを右隣のタブと交換して移動する。ピン留めタブにも対応。 |
 | `Organize File with Tags` | タグでファイルを整理 | タグを選択し、ファイル名に絵文字プレフィックスや日付を追加、フロントマターを更新し、指定フォルダへ移動させる。 |
