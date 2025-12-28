@@ -38,6 +38,15 @@ export class PluginSettingTab {}
 export class Setting {}
 export class App {}
 
+export class ItemView {
+	leaf: any;
+	contentEl: any;
+	constructor(leaf?: any) {
+		this.leaf = leaf;
+		this.contentEl = document?.createElement?.('div') ?? {};
+	}
+}
+
 export class MarkdownView {
 	file: any;
 	constructor(file: any) {
@@ -48,5 +57,9 @@ export class MarkdownView {
 export class Editor {}
 
 export class TFile {}
+
+export const MarkdownRenderer = {
+	renderMarkdown: async () => {}
+};
 
 export const normalizePath = (input: string): string => input.replace(/\\/g, '/').replace(/\/\/+/g, '/');

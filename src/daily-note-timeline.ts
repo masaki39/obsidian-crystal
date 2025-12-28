@@ -3,6 +3,59 @@ import { CrystalPluginSettings } from './settings';
 
 export const DAILY_NOTE_TIMELINE_VIEW = 'daily-note-timeline-view';
 
+export type TimelineFilterMode = 'all' | 'tasks' | 'heading';
+
+export function filterTasksContent(content: string): string | null {
+    const lines = content.split('\n');
+    const taskLines = lines.filter(line => /^\s*[-*]\s+\[[ xX]\]\s+/.test(line));
+    return taskLines.length > 0 ? taskLines.join('\n') : null;
+}
+
+export function extractHeadingSectionFromContent(content: string, headingText: string): string | null {
+    const targetText = headingText.replace(/^#+\s*/, '').trim();
+    if (!targetText) {
+        return null;
+    }
+    const lines = content.split('\n');
+    let startIndex = -1;
+    let level = 1;
+    for (let i = 0; i < lines.length; i += 1) {
+        const match = lines[i].match(/^(#+)\s+(.*)$/);
+        if (!match) {
+            continue;
+        }
+        const [, hashes, text] = match;
+        if (text.trim() === targetText) {
+            startIndex = i;
+            level = hashes.length;
+            break;
+        }
+    }
+    if (startIndex === -1) {
+        return null;
+    }
+    const sectionLines: string[] = [];
+    for (let i = startIndex + 1; i < lines.length; i += 1) {
+        const line = lines[i];
+        const headingMatch = line.match(/^(#+)\s/);
+        if (headingMatch && headingMatch[1].length <= level) {
+            break;
+        }
+        sectionLines.push(line);
+    }
+    return sectionLines.length > 0 ? sectionLines.join('\n') : null;
+}
+
+export function filterTimelineContent(content: string, mode: TimelineFilterMode, headingText: string): string | null {
+    if (mode === 'tasks') {
+        return filterTasksContent(content);
+    }
+    if (mode === 'heading') {
+        return extractHeadingSectionFromContent(content, headingText);
+    }
+    return content;
+}
+
 export class DailyNoteTimelineView extends ItemView {
     private settings: CrystalPluginSettings;
     private scrollerEl: HTMLDivElement | null = null;
@@ -25,8 +78,9 @@ export class DailyNoteTimelineView extends ItemView {
     private currentMonthDate: Date | null = null;
     private readonly pageSize = 5;
     private readonly maxRendered = 30;
-    private activeFilter: 'all' | 'tasks' | 'heading' = 'all';
+    private activeFilter: TimelineFilterMode = 'all';
     private headingFilterText = '';
+    private filteredContentCache = new Map<string, string | null>();
 
     constructor(leaf: WorkspaceLeaf, settings: CrystalPluginSettings) {
         super(leaf);
@@ -53,7 +107,19 @@ export class DailyNoteTimelineView extends ItemView {
     async onOpen(): Promise<void> {
         this.contentEl.empty();
         this.contentEl.addClass('daily-note-timeline-root');
+        this.buildHeader();
+        this.buildScroller();
+        this.buildCalendar();
+        this.buildCalendarToggle();
 
+        this.registerEvent(this.app.vault.on('create', file => this.onVaultChange(file)));
+        this.registerEvent(this.app.vault.on('modify', file => this.onVaultChange(file)));
+        this.registerEvent(this.app.vault.on('delete', file => this.onVaultChange(file)));
+
+        await this.refresh();
+    }
+
+    private buildHeader() {
         const headerEl = this.contentEl.createDiv('daily-note-timeline-header');
         headerEl.createEl('div', { text: 'Daily Note Timeline', cls: 'daily-note-timeline-title' });
         const headerControls = headerEl.createDiv('daily-note-timeline-controls');
@@ -69,12 +135,14 @@ export class DailyNoteTimelineView extends ItemView {
         });
         this.filterHeadingInputEl.value = this.headingFilterText;
         this.registerDomEvent(this.filterSelectEl, 'change', () => {
-            this.activeFilter = (this.filterSelectEl?.value as 'all' | 'tasks' | 'heading') ?? 'all';
+            this.activeFilter = (this.filterSelectEl?.value as TimelineFilterMode) ?? 'all';
             this.updateFilterUi();
+            this.filteredContentCache.clear();
             void this.refresh({ preserveScroll: true, alignTop: true });
         });
         this.registerDomEvent(this.filterHeadingInputEl, 'input', () => {
             this.headingFilterText = this.filterHeadingInputEl?.value ?? '';
+            this.filteredContentCache.clear();
             if (this.activeFilter === 'heading') {
                 void this.refresh({ preserveScroll: true, alignTop: true });
             }
@@ -85,11 +153,15 @@ export class DailyNoteTimelineView extends ItemView {
             cls: 'daily-note-timeline-today'
         });
         this.registerDomEvent(headerTodayButton, 'click', () => this.scrollToToday());
+    }
 
+    private buildScroller() {
         this.scrollerEl = this.contentEl.createDiv('daily-note-timeline-scroll');
         this.listEl = this.scrollerEl.createDiv('daily-note-timeline-list');
         this.registerDomEvent(this.scrollerEl, 'scroll', () => this.onScroll());
+    }
 
+    private buildCalendar() {
         this.calendarEl = this.contentEl.createDiv('daily-note-timeline-calendar');
         this.calendarEl.addClass('is-hidden');
         const calendarHeader = this.calendarEl.createDiv('daily-note-timeline-calendar-header');
@@ -102,18 +174,14 @@ export class DailyNoteTimelineView extends ItemView {
         this.registerDomEvent(todayButton, 'click', () => this.scrollToToday());
         this.registerDomEvent(nextButton, 'click', () => this.shiftCalendarMonth(1));
         this.calendarGridEl = this.calendarEl.createDiv('daily-note-timeline-calendar-grid');
+    }
 
+    private buildCalendarToggle() {
         this.toggleButtonEl = this.contentEl.createEl('button', {
             cls: 'daily-note-timeline-calendar-toggle',
             text: 'Calendar'
         });
         this.registerDomEvent(this.toggleButtonEl, 'click', () => this.toggleCalendar());
-
-        this.registerEvent(this.app.vault.on('create', file => this.onVaultChange(file)));
-        this.registerEvent(this.app.vault.on('modify', file => this.onVaultChange(file)));
-        this.registerEvent(this.app.vault.on('delete', file => this.onVaultChange(file)));
-
-        await this.refresh();
     }
 
     async onClose(): Promise<void> {
@@ -128,6 +196,7 @@ export class DailyNoteTimelineView extends ItemView {
         if (!file.path.startsWith(`${dailyNotesFolder}/`)) {
             return;
         }
+        this.filteredContentCache.clear();
         this.scheduleRefresh({ preserveScroll: true });
     }
 
@@ -234,6 +303,7 @@ export class DailyNoteTimelineView extends ItemView {
         const alignTop = options.alignTop ?? false;
         const anchorKey = preserveScroll ? this.getTopVisibleDateKey() : null;
         const anchorOffset = preserveScroll && !alignTop ? this.getTopVisibleOffset() : null;
+        this.filteredContentCache.clear();
         this.noteFiles = this.collectDailyNoteFiles();
         this.listEl.empty();
         this.startIndex = 0;
@@ -262,14 +332,8 @@ export class DailyNoteTimelineView extends ItemView {
                 const start = Math.max(0, targetIndex - this.pageSize);
                 const end = Math.min(this.noteFiles.length - 1, targetIndex + this.pageSize);
                 await this.renderRange(start, end);
-                const targetKey = this.getDateKeyFromFile(this.noteFiles[targetIndex]);
-                if (targetKey) {
-                    const offset = alignTop ? this.getListTopOffset() : (anchorOffset ?? 0);
-                    this.scrollToDateKey(targetKey, offset);
-                    this.scheduleScrollCorrection(targetKey, offset);
-                } else {
-                    this.scrollToIndex(targetIndex);
-                }
+                const offset = alignTop ? this.getListTopOffset() : (anchorOffset ?? 0);
+                this.scrollToTargetIndex(targetIndex, offset);
                 await this.ensureScrollable();
                 return;
             }
@@ -278,14 +342,8 @@ export class DailyNoteTimelineView extends ItemView {
         const { start, end, targetIndex } = this.getInitialRange(this.noteFiles);
         await this.renderRange(start, end);
         if (targetIndex !== -1) {
-            const targetKey = this.getDateKeyFromFile(this.noteFiles[targetIndex]);
-            if (targetKey) {
-                const offset = this.getListTopOffset();
-                this.scrollToDateKey(targetKey, offset);
-                this.scheduleScrollCorrection(targetKey, offset);
-            } else {
-                this.scrollToIndex(targetIndex);
-            }
+            const offset = this.getListTopOffset();
+            this.scrollToTargetIndex(targetIndex, offset);
         } else {
             this.scheduleTopVisibleUpdate();
         }
@@ -296,8 +354,7 @@ export class DailyNoteTimelineView extends ItemView {
         if (!this.listEl) {
             return;
         }
-        const content = await this.app.vault.cachedRead(file);
-        const filtered = this.applyFilter(content);
+        const filtered = await this.getFilteredContent(file);
         if (filtered === null) {
             return;
         }
@@ -342,54 +399,7 @@ export class DailyNoteTimelineView extends ItemView {
     }
 
     private applyFilter(content: string): string | null {
-        if (this.activeFilter === 'tasks') {
-            const lines = content.split('\n');
-            const taskLines = lines.filter(line => /^\s*[-*]\s+\[[ xX]\]\s+/.test(line));
-            return taskLines.length > 0 ? taskLines.join('\n') : null;
-        }
-        if (this.activeFilter === 'heading') {
-            const headingText = this.headingFilterText.trim();
-            if (!headingText) {
-                return null;
-            }
-            return this.extractHeadingSection(content, headingText);
-        }
-        return content;
-    }
-
-    private extractHeadingSection(content: string, headingText: string): string | null {
-        const targetText = headingText.replace(/^#+\s*/, '').trim();
-        if (!targetText) {
-            return null;
-        }
-        const lines = content.split('\n');
-        let startIndex = -1;
-        let level = 1;
-        for (let i = 0; i < lines.length; i += 1) {
-            const match = lines[i].match(/^(#+)\s+(.*)$/);
-            if (!match) {
-                continue;
-            }
-            const [, hashes, text] = match;
-            if (text.trim() === targetText) {
-                startIndex = i;
-                level = hashes.length;
-                break;
-            }
-        }
-        if (startIndex === -1) {
-            return null;
-        }
-        const sectionLines: string[] = [];
-        for (let i = startIndex + 1; i < lines.length; i += 1) {
-            const line = lines[i];
-            const headingMatch = line.match(/^(#+)\s/);
-            if (headingMatch && headingMatch[1].length <= level) {
-                break;
-            }
-            sectionLines.push(line);
-        }
-        return sectionLines.length > 0 ? sectionLines.join('\n') : null;
+        return filterTimelineContent(content, this.activeFilter, this.headingFilterText.trim());
     }
 
     private updateFilterUi() {
@@ -453,14 +463,8 @@ export class DailyNoteTimelineView extends ItemView {
         const start = Math.max(0, targetIndex - this.pageSize);
         const end = Math.min(this.noteFiles.length - 1, targetIndex + this.pageSize);
         await this.renderRange(start, end);
-        const targetKey = this.getDateKeyFromFile(this.noteFiles[targetIndex]);
-        if (targetKey) {
-            const offset = this.getListTopOffset();
-            this.scrollToDateKey(targetKey, offset);
-            this.scheduleScrollCorrection(targetKey, offset);
-        } else {
-            this.scrollToIndex(targetIndex);
-        }
+        const offset = this.getListTopOffset();
+        this.scrollToTargetIndex(targetIndex, offset);
     }
 
     private async renderRange(start: number, end: number): Promise<void> {
@@ -827,33 +831,8 @@ export class DailyNoteTimelineView extends ItemView {
         const start = Math.max(0, targetIndex - this.pageSize);
         const end = Math.min(this.noteFiles.length - 1, targetIndex + this.pageSize);
         await this.renderRange(start, end);
-        const targetKey = this.getDateKeyFromFile(this.noteFiles[targetIndex]);
-        if (targetKey) {
-            const offset = this.getListTopOffset();
-            this.scrollToDateKey(targetKey, offset);
-            this.scheduleScrollCorrection(targetKey, offset);
-        } else {
-            this.scrollToIndex(targetIndex);
-        }
-    }
-
-    private findNearestIndex(dateKey: string): number {
-        const targetDate = this.getDateFromKey(dateKey);
-        let bestIndex = -1;
-        let bestDiff = Number.POSITIVE_INFINITY;
-        for (let i = 0; i < this.noteFiles.length; i += 1) {
-            const fileDateKey = this.getDateKeyFromFile(this.noteFiles[i]);
-            if (!fileDateKey) {
-                continue;
-            }
-            const fileDate = this.getDateFromKey(fileDateKey);
-            const diff = Math.abs(fileDate.getTime() - targetDate.getTime());
-            if (diff < bestDiff) {
-                bestDiff = diff;
-                bestIndex = i;
-            }
-        }
-        return bestIndex;
+        const offset = this.getListTopOffset();
+        this.scrollToTargetIndex(targetIndex, offset);
     }
 
     private findIndexByDateKey(dateKey: string): number {
@@ -886,8 +865,28 @@ export class DailyNoteTimelineView extends ItemView {
     }
 
     private async hasFilteredContent(file: TFile): Promise<boolean> {
+        return await this.getFilteredContent(file) !== null;
+    }
+
+    private async getFilteredContent(file: TFile): Promise<string | null> {
+        const cached = this.filteredContentCache.get(file.path);
+        if (cached !== undefined) {
+            return cached;
+        }
         const content = await this.app.vault.cachedRead(file);
-        return this.applyFilter(content) !== null;
+        const filtered = this.applyFilter(content);
+        this.filteredContentCache.set(file.path, filtered);
+        return filtered;
+    }
+
+    private scrollToTargetIndex(targetIndex: number, offset: number) {
+        const targetKey = this.getDateKeyFromFile(this.noteFiles[targetIndex]);
+        if (targetKey) {
+            this.scrollToDateKey(targetKey, offset);
+            this.scheduleScrollCorrection(targetKey, offset);
+        } else {
+            this.scrollToIndex(targetIndex);
+        }
     }
 
     private getAnchorOffset(anchor: HTMLElement | null | undefined): number | null {
