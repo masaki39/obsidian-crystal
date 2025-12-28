@@ -50,9 +50,9 @@ export class QuickAddCommands {
 					const { before, timeline } = splitByTimeline(body, timelineHeading);
 					const beforeTrimmed = before.trimEnd();
 					const taskLine = `- [ ] ${task}`;
-					const updatedBefore = beforeTrimmed.length > 0
-						? `${beforeTrimmed}\n${taskLine}`
-						: taskLine;
+					const updatedBefore = this.settings.dailyNoteNewestFirst
+						? (beforeTrimmed.length > 0 ? `${taskLine}\n${beforeTrimmed}` : taskLine)
+						: (beforeTrimmed.length > 0 ? `${beforeTrimmed}\n${taskLine}` : taskLine);
 					const newBody = recombineSections(updatedBefore, timeline);
 					const newContent = `${frontmatter}${newBody}`;
 					return newContent.endsWith('\n') ? newContent : `${newContent}\n`;

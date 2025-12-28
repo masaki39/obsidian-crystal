@@ -189,6 +189,7 @@ export class DailyNotesManager {
         const orderedLines: string[] = [];
         let buffer: string[] = [];
         const endedWithNewline = taskList.endsWith('\n');
+        const newestFirst = this.settings.dailyNoteNewestFirst;
 
         const flushBuffer = () => {
             if (buffer.length === 0) {
@@ -212,7 +213,11 @@ export class DailyNotesManager {
                     }
                 }
 
-                orderedLines.push(...done, ...todo, ...otherBullets);
+                if (newestFirst) {
+                    orderedLines.push(...todo, ...done, ...otherBullets);
+                } else {
+                    orderedLines.push(...done, ...todo, ...otherBullets);
+                }
             } else {
                 orderedLines.push(...buffer);
             }
@@ -269,17 +274,35 @@ export class DailyNotesManager {
             const blockLines = this.formatTimelineBlock(text, timeStamp, color);
             const { before, timeline } = splitByTimeline(content, heading);
             const timelineLines = timeline ? timeline.split('\n') : [];
+            const newestFirst = this.settings.dailyNoteNewestFirst;
 
             if (timelineLines.length === 0 || timelineLines[0].trim() !== heading.trim()) {
                 timelineLines.unshift(heading);
             }
 
-            const needsBlankLine = timelineLines.length > 0 && timelineLines[timelineLines.length - 1].trim() !== '';
-            if (needsBlankLine) {
-                timelineLines.push('');
+            if (newestFirst) {
+                if (timelineLines.length === 1) {
+                    timelineLines.push('');
+                }
+                let insertIndex = 1;
+                if (timelineLines[1] === '') {
+                    insertIndex = 2;
+                } else {
+                    timelineLines.splice(1, 0, '');
+                    insertIndex = 2;
+                }
+                timelineLines.splice(insertIndex, 0, ...blockLines);
+                const afterIndex = insertIndex + blockLines.length;
+                if (afterIndex < timelineLines.length && timelineLines[afterIndex].trim() !== '') {
+                    timelineLines.splice(afterIndex, 0, '');
+                }
+            } else {
+                const needsBlankLine = timelineLines.length > 0 && timelineLines[timelineLines.length - 1].trim() !== '';
+                if (needsBlankLine) {
+                    timelineLines.push('');
+                }
+                timelineLines.push(...blockLines);
             }
-
-            timelineLines.push(...blockLines);
 
             const updatedTimeline = timelineLines.join('\n');
             const newContent = recombineSections(before, updatedTimeline);
@@ -392,15 +415,17 @@ export class DailyNotesManager {
                     const fileLink = `[[${file.name.replace(/\.md$/, '')}]]`;
                     const line = `- ${timeStamp} ${fileLink}`;
                     this.app.vault.process(todayNote as TFile, (content) => {
-                        const heading = this.settings.dailyNoteTimelineHeading || '# Time Line';
-                        const { frontmatter, content: parsedContent } = parseFrontmatter(content);
-                        const { before, timeline } = splitByTimeline(parsedContent, heading);
-                        const beforeTrimmed = before.trimEnd();
-                        const updatedBefore = (beforeTrimmed.length > 0 ? `${beforeTrimmed}\n` : '') + line;
-                        const body = recombineSections(updatedBefore, timeline);
-                        const newContent = `${frontmatter}${body}`;
-                        return newContent;
-                    });
+                    const heading = this.settings.dailyNoteTimelineHeading || '# Time Line';
+                    const { frontmatter, content: parsedContent } = parseFrontmatter(content);
+                    const { before, timeline } = splitByTimeline(parsedContent, heading);
+                    const beforeTrimmed = before.trimEnd();
+                    const updatedBefore = this.settings.dailyNoteNewestFirst
+                        ? (beforeTrimmed.length > 0 ? `${line}\n${beforeTrimmed}` : line)
+                        : (beforeTrimmed.length > 0 ? `${beforeTrimmed}\n${line}` : line);
+                    const body = recombineSections(updatedBefore, timeline);
+                    const newContent = `${frontmatter}${body}`;
+                    return newContent;
+                });
                 }));
 
                 this.plugin.registerEvent(this.app.vault.on('delete', file => {

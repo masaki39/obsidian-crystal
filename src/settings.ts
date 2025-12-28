@@ -20,6 +20,7 @@ export interface CrystalPluginSettings {
 	dailyNoteTimelineHeading: string;
 	dailyNoteAutoSort: boolean;
 	dailyNoteAutoLink: boolean;
+	dailyNoteNewestFirst: boolean;
 	todoFileName: string;
 	inboxName: string;
 	webpQuality: number;
@@ -52,6 +53,7 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	dailyNoteTimelineHeading: '# Time Line',
 	dailyNoteAutoSort: true,
 	dailyNoteAutoLink: true,
+	dailyNoteNewestFirst: false,
 	todoFileName: 'ToDo',
 	inboxName: 'Inbox',
 	webpQuality: 0.85,
@@ -194,6 +196,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 		this.textSetting(containerEl, 'Date Format', 'Date format for daily note file names (e.g., YYYY-MM-DD)', 'dailyNoteDateFormat', 'YYYY-MM-DD');
 		this.toggleSetting(containerEl, 'Auto Sort Tasks', 'Sort tasks in daily notes automatically', 'dailyNoteAutoSort');
 		this.toggleSetting(containerEl, 'Auto Link Notes', 'Add link to today\'s daily note when create any note', 'dailyNoteAutoLink');
+		this.toggleSetting(containerEl, 'Newest First (Daily Notes)', 'Place new daily note entries at the top (tasks, links, timeline)', 'dailyNoteNewestFirst');
 
 		// quick add settings
 		containerEl.createEl('h3', { text: 'Quick Add' });

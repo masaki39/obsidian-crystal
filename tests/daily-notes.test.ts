@@ -129,6 +129,41 @@ describe('DailyNotesManager appendToTimeline', () => {
 			].join('\n')
 		);
 	});
+
+	it('prepends timeline block when newest first is enabled', async () => {
+		const { manager, vault } = createManager({ dailyNoteNewestFirst: true });
+		const filePath = 'DailyNotes/2024-01-04.md';
+		const initial = [
+			'# Tasks',
+			'- [ ] a',
+			'',
+			'# Time Line',
+			'',
+			'> [!timeline] 12:34',
+			'> old',
+			''
+		].join('\n');
+		await vault.create(filePath, initial);
+
+		await manager.appendToTimeline('new entry', new Date('2024-01-04T00:00:00Z'));
+
+		const final = vault.files.get(filePath);
+		expect(final).toBe(
+			[
+				'# Tasks',
+				'- [ ] a',
+				'',
+				'# Time Line',
+				'',
+				'> [!timeline] 12:34',
+				'> new entry',
+				'',
+				'> [!timeline] 12:34',
+				'> old',
+				''
+			].join('\n')
+		);
+	});
 });
 
 describe('DailyNotesManager auto sort before timeline', () => {
@@ -152,6 +187,33 @@ describe('DailyNotesManager auto sort before timeline', () => {
 				'- [x] done2',
 				'- [ ] todo1',
 				'- [ ] todo2',
+				'- bullet1',
+				'- bullet2',
+				''
+			].join('\n')
+		);
+	});
+
+	it('orders list blocks as todo → done → other bullets when newest first', () => {
+		const { manager } = createManager({ dailyNoteNewestFirst: true });
+		const before = [
+			'- [ ] todo1',
+			'- [x] done1',
+			'- bullet1',
+			'- [ ] todo2',
+			'- [x] done2',
+			'- bullet2',
+			''
+		].join('\n');
+
+		const ordered = (manager as any).orderTaskList(before);
+
+		expect(ordered).toBe(
+			[
+				'- [ ] todo1',
+				'- [ ] todo2',
+				'- [x] done1',
+				'- [x] done2',
 				'- bullet1',
 				'- bullet2',
 				''
