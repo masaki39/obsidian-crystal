@@ -7,6 +7,7 @@ export class DailyNoteTimelineView extends ItemView {
     private settings: CrystalPluginSettings;
     private scrollerEl: HTMLDivElement | null = null;
     private listEl: HTMLDivElement | null = null;
+    private filterSelectEl: HTMLSelectElement | null = null;
     private calendarEl: HTMLDivElement | null = null;
     private calendarGridEl: HTMLDivElement | null = null;
     private calendarTitleEl: HTMLDivElement | null = null;
@@ -23,6 +24,7 @@ export class DailyNoteTimelineView extends ItemView {
     private currentMonthDate: Date | null = null;
     private readonly pageSize = 5;
     private readonly maxRendered = 30;
+    private activeFilter: 'all' | 'tasks' = 'all';
 
     constructor(leaf: WorkspaceLeaf, settings: CrystalPluginSettings) {
         super(leaf);
@@ -52,6 +54,20 @@ export class DailyNoteTimelineView extends ItemView {
 
         const headerEl = this.contentEl.createDiv('daily-note-timeline-header');
         headerEl.createEl('div', { text: 'Daily Note Timeline', cls: 'daily-note-timeline-title' });
+        const headerControls = headerEl.createDiv('daily-note-timeline-controls');
+        this.filterSelectEl = headerControls.createEl('select', { cls: 'daily-note-timeline-filter' });
+        this.filterSelectEl.add(new Option('All', 'all'));
+        this.filterSelectEl.add(new Option('Tasks', 'tasks'));
+        this.filterSelectEl.value = this.activeFilter;
+        this.registerDomEvent(this.filterSelectEl, 'change', () => {
+            this.activeFilter = (this.filterSelectEl?.value as 'all' | 'tasks') ?? 'all';
+            void this.refresh();
+        });
+        const headerTodayButton = headerEl.createEl('button', {
+            text: 'Today',
+            cls: 'daily-note-timeline-today'
+        });
+        this.registerDomEvent(headerTodayButton, 'click', () => this.scrollToToday());
 
         this.scrollerEl = this.contentEl.createDiv('daily-note-timeline-scroll');
         this.listEl = this.scrollerEl.createDiv('daily-note-timeline-list');
@@ -257,8 +273,18 @@ export class DailyNoteTimelineView extends ItemView {
         }
 
         const content = await this.app.vault.cachedRead(file);
-        await MarkdownRenderer.renderMarkdown(content, bodyEl, file.path, this);
+        const filtered = this.applyFilter(content);
+        await MarkdownRenderer.renderMarkdown(filtered, bodyEl, file.path, this);
         this.attachLinkHandler(bodyEl, file.path);
+    }
+
+    private applyFilter(content: string): string {
+        if (this.activeFilter === 'tasks') {
+            const lines = content.split('\n');
+            const taskLines = lines.filter(line => /^\s*[-*]\s+\[[ xX]\]\s+/.test(line));
+            return taskLines.length > 0 ? taskLines.join('\n') : '_No tasks._';
+        }
+        return content;
     }
 
     private attachLinkHandler(container: HTMLElement, sourcePath: string) {
@@ -490,9 +516,14 @@ export class DailyNoteTimelineView extends ItemView {
 
         this.calendarGridEl.empty();
         const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        for (const dayName of weekdays) {
+        for (const [index, dayName] of weekdays.entries()) {
             const dayEl = this.calendarGridEl.createDiv('daily-note-timeline-calendar-weekday');
             dayEl.textContent = dayName;
+            if (index === 0) {
+                dayEl.addClass('is-sun');
+            } else if (index === 6) {
+                dayEl.addClass('is-sat');
+            }
         }
 
         const year = baseDate.getFullYear();

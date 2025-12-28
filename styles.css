@@ -136,6 +136,25 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
     font-weight: 600;
 }
 
+.daily-note-timeline-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.daily-note-timeline-filter {
+    appearance: none;
+    padding: 4px 28px 4px 10px;
+    border-radius: 6px;
+    background-color: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+        linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+    background-position: calc(100% - 14px) 55%, calc(100% - 8px) 55%;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+}
+
 .daily-note-timeline-scroll {
     overflow: auto;
     height: 100%;
@@ -231,6 +250,18 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
 .daily-note-timeline-calendar-weekday {
     color: var(--text-muted);
     font-weight: 600;
+}
+
+.daily-note-timeline-calendar-weekday.is-sun {
+    color: var(--text-error);
+}
+
+.daily-note-timeline-calendar-weekday.is-sat {
+    color: var(--text-accent);
+}
+
+.daily-note-timeline-today {
+    padding: 4px 10px;
 }
 
 .daily-note-timeline-calendar-empty {
