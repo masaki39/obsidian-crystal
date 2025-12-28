@@ -121,6 +121,7 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
     display: flex;
     flex-direction: column;
     height: 100%;
+    position: relative;
 }
 
 .daily-note-timeline-header {
@@ -135,14 +136,14 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
     font-weight: 600;
 }
 
-.daily-note-timeline-today {
-    padding: 4px 10px;
-}
-
 .daily-note-timeline-scroll {
     overflow: auto;
     height: 100%;
     padding: 12px;
+}
+
+.daily-note-timeline-calendar-open .daily-note-timeline-scroll {
+    padding-bottom: 240px;
 }
 
 .daily-note-timeline-list {
@@ -172,6 +173,80 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
 
 .daily-note-timeline-item-open {
     padding: 2px 8px;
+}
+
+.daily-note-timeline-calendar-toggle {
+    position: absolute;
+    right: 16px;
+    bottom: 32px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    z-index: 5;
+}
+
+.daily-note-timeline-calendar {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 60px;
+    height: 280px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    z-index: 4;
+}
+
+.daily-note-timeline-calendar.is-hidden {
+    display: none;
+}
+
+.daily-note-timeline-calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.daily-note-timeline-calendar-nav {
+    display: flex;
+    gap: 6px;
+}
+
+.daily-note-timeline-calendar-nav-button {
+    padding: 2px 8px;
+}
+
+.daily-note-timeline-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-auto-rows: 26px;
+    gap: 6px;
+    text-align: center;
+    font-size: 12px;
+}
+
+.daily-note-timeline-calendar-weekday {
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.daily-note-timeline-calendar-empty {
+    height: 26px;
+}
+
+.daily-note-timeline-calendar-day {
+    height: 28px;
+    line-height: 28px;
+    border-radius: 6px;
+}
+
+.daily-note-timeline-calendar-day.is-active {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    font-weight: 600;
 }
 
 .daily-note-timeline-item-body > :first-child {

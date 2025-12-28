@@ -7,11 +7,20 @@ export class DailyNoteTimelineView extends ItemView {
     private settings: CrystalPluginSettings;
     private scrollerEl: HTMLDivElement | null = null;
     private listEl: HTMLDivElement | null = null;
+    private calendarEl: HTMLDivElement | null = null;
+    private calendarGridEl: HTMLDivElement | null = null;
+    private calendarTitleEl: HTMLDivElement | null = null;
+    private toggleButtonEl: HTMLButtonElement | null = null;
+    private isCalendarVisible = false;
     private noteFiles: TFile[] = [];
     private startIndex = 0;
     private endIndex = -1;
     private isLoading = false;
     private refreshTimer: number | null = null;
+    private topVisibleRaf: number | null = null;
+    private currentTopDateKey: string | null = null;
+    private currentMonthKey: string | null = null;
+    private currentMonthDate: Date | null = null;
     private readonly pageSize = 5;
     private readonly maxRendered = 30;
 
@@ -43,15 +52,29 @@ export class DailyNoteTimelineView extends ItemView {
 
         const headerEl = this.contentEl.createDiv('daily-note-timeline-header');
         headerEl.createEl('div', { text: 'Daily Note Timeline', cls: 'daily-note-timeline-title' });
-        const todayButton = headerEl.createEl('button', {
-            text: 'Today',
-            cls: 'daily-note-timeline-today'
-        });
-        this.registerDomEvent(todayButton, 'click', () => this.scrollToToday());
 
         this.scrollerEl = this.contentEl.createDiv('daily-note-timeline-scroll');
         this.listEl = this.scrollerEl.createDiv('daily-note-timeline-list');
         this.registerDomEvent(this.scrollerEl, 'scroll', () => this.onScroll());
+
+        this.calendarEl = this.contentEl.createDiv('daily-note-timeline-calendar');
+        this.calendarEl.addClass('is-hidden');
+        const calendarHeader = this.calendarEl.createDiv('daily-note-timeline-calendar-header');
+        this.calendarTitleEl = calendarHeader.createDiv('daily-note-timeline-calendar-title');
+        const calendarNav = calendarHeader.createDiv('daily-note-timeline-calendar-nav');
+        const prevButton = calendarNav.createEl('button', { text: '<', cls: 'daily-note-timeline-calendar-nav-button' });
+        const todayButton = calendarNav.createEl('button', { text: 'today', cls: 'daily-note-timeline-calendar-nav-button' });
+        const nextButton = calendarNav.createEl('button', { text: '>', cls: 'daily-note-timeline-calendar-nav-button' });
+        this.registerDomEvent(prevButton, 'click', () => this.shiftCalendarMonth(-1));
+        this.registerDomEvent(todayButton, 'click', () => this.scrollToToday());
+        this.registerDomEvent(nextButton, 'click', () => this.shiftCalendarMonth(1));
+        this.calendarGridEl = this.calendarEl.createDiv('daily-note-timeline-calendar-grid');
+
+        this.toggleButtonEl = this.contentEl.createEl('button', {
+            cls: 'daily-note-timeline-calendar-toggle',
+            text: 'Calendar'
+        });
+        this.registerDomEvent(this.toggleButtonEl, 'click', () => this.toggleCalendar());
 
         this.registerEvent(this.app.vault.on('create', file => this.onVaultChange(file)));
         this.registerEvent(this.app.vault.on('modify', file => this.onVaultChange(file)));
@@ -93,6 +116,13 @@ export class DailyNoteTimelineView extends ItemView {
             .replace('DD', date.getDate().toString().padStart(2, '0'));
     }
 
+    private toISODateKey(date: Date): string {
+        const year = date.getFullYear().toString();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
     private extractDateFromFileName(fileName: string): Date | null {
         const format = this.settings.dailyNoteDateFormat || 'YYYY-MM-DD';
         const regexPattern = format
@@ -110,6 +140,16 @@ export class DailyNoteTimelineView extends ItemView {
             return null;
         }
         return date;
+    }
+
+    private getDateKeyFromFile(file: TFile): string | null {
+        const date = this.extractDateFromFileName(file.basename);
+        return date ? this.toISODateKey(date) : null;
+    }
+
+    private getDateFromKey(key: string): Date {
+        const [year, month, day] = key.split('-').map(value => parseInt(value, 10));
+        return new Date(year, month - 1, day);
     }
 
     private collectDailyNoteFiles(): TFile[] {
@@ -168,14 +208,11 @@ export class DailyNoteTimelineView extends ItemView {
         }
 
         const { start, end, targetIndex } = this.getInitialRange(this.noteFiles);
-        this.startIndex = start;
-        this.endIndex = end;
-
-        for (let i = start; i <= end; i += 1) {
-            await this.renderNote(this.noteFiles[i], 'append');
-        }
+        await this.renderRange(start, end);
         if (targetIndex !== -1) {
             this.scrollToIndex(targetIndex);
+        } else {
+            this.scheduleTopVisibleUpdate();
         }
     }
 
@@ -185,6 +222,10 @@ export class DailyNoteTimelineView extends ItemView {
         }
         const noteEl = document.createElement('div');
         noteEl.className = 'daily-note-timeline-item';
+        const dateKey = this.getDateKeyFromFile(file);
+        if (dateKey) {
+            noteEl.dataset.date = dateKey;
+        }
 
         const titleRowEl = document.createElement('div');
         titleRowEl.className = 'daily-note-timeline-item-header';
@@ -273,13 +314,20 @@ export class DailyNoteTimelineView extends ItemView {
 
         const start = Math.max(0, targetIndex - this.pageSize);
         const end = Math.min(this.noteFiles.length - 1, targetIndex + this.pageSize);
+        await this.renderRange(start, end);
+        this.scrollToIndex(targetIndex);
+    }
+
+    private async renderRange(start: number, end: number): Promise<void> {
+        if (!this.listEl) {
+            return;
+        }
+        this.listEl.empty();
         this.startIndex = start;
         this.endIndex = end;
-
         for (let i = start; i <= end; i += 1) {
             await this.renderNote(this.noteFiles[i], 'append');
         }
-        this.scrollToIndex(targetIndex);
     }
 
     private scrollToIndex(targetIndex: number) {
@@ -298,6 +346,7 @@ export class DailyNoteTimelineView extends ItemView {
             const headerEl = this.contentEl.querySelector('.daily-note-timeline-header') as HTMLElement | null;
             const headerOffset = headerEl ? headerEl.offsetHeight : 0;
             this.scrollerEl.scrollTop = Math.max(0, targetEl.offsetTop - headerOffset);
+            this.scheduleTopVisibleUpdate();
         });
     }
 
@@ -315,6 +364,7 @@ export class DailyNoteTimelineView extends ItemView {
         if (remaining < threshold) {
             await this.loadNext();
         }
+        this.scheduleTopVisibleUpdate();
     }
 
     private async loadPrevious(): Promise<void> {
@@ -380,6 +430,172 @@ export class DailyNoteTimelineView extends ItemView {
             this.listEl.lastElementChild?.remove();
         }
         this.endIndex = Math.max(this.startIndex - 1, this.endIndex - removeCount);
+    }
+
+    private scheduleTopVisibleUpdate() {
+        if (this.topVisibleRaf !== null) {
+            return;
+        }
+        this.topVisibleRaf = window.requestAnimationFrame(() => {
+            this.topVisibleRaf = null;
+            this.updateTopVisibleDate();
+        });
+    }
+
+    private updateTopVisibleDate() {
+        if (!this.scrollerEl || !this.listEl) {
+            return;
+        }
+        const scrollRect = this.scrollerEl.getBoundingClientRect();
+        let topDateKey: string | null = null;
+        for (const child of Array.from(this.listEl.children)) {
+            const element = child as HTMLElement;
+            const rect = element.getBoundingClientRect();
+            if (rect.bottom > scrollRect.top + 1) {
+                topDateKey = element.dataset.date ?? null;
+                break;
+            }
+        }
+        if (!topDateKey) {
+            topDateKey = this.toISODateKey(new Date());
+        }
+
+        if (topDateKey === this.currentTopDateKey) {
+            return;
+        }
+        this.currentTopDateKey = topDateKey;
+        this.updateCalendarForDate(topDateKey);
+    }
+
+    private updateCalendarForDate(dateKey: string) {
+        const date = this.getDateFromKey(dateKey);
+        const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+        if (monthKey !== this.currentMonthKey) {
+            this.currentMonthKey = monthKey;
+            this.currentMonthDate = new Date(date.getFullYear(), date.getMonth(), 1);
+            this.renderCalendar(this.currentMonthDate, dateKey);
+            return;
+        }
+        this.updateCalendarHighlight(dateKey);
+    }
+
+    private renderCalendar(baseDate: Date, activeKey: string) {
+        if (!this.calendarEl || !this.calendarGridEl) {
+            return;
+        }
+        if (this.calendarTitleEl) {
+            const monthLabel = `${baseDate.getFullYear()}-${(baseDate.getMonth() + 1).toString().padStart(2, '0')}`;
+            this.calendarTitleEl.textContent = monthLabel;
+        }
+
+        this.calendarGridEl.empty();
+        const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        for (const dayName of weekdays) {
+            const dayEl = this.calendarGridEl.createDiv('daily-note-timeline-calendar-weekday');
+            dayEl.textContent = dayName;
+        }
+
+        const year = baseDate.getFullYear();
+        const month = baseDate.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const startWeekday = firstDay.getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        for (let i = 0; i < startWeekday; i += 1) {
+            this.calendarGridEl.createDiv('daily-note-timeline-calendar-empty');
+        }
+
+        for (let day = 1; day <= daysInMonth; day += 1) {
+            const date = new Date(year, month, day);
+            const key = this.toISODateKey(date);
+            const dayEl = this.calendarGridEl.createDiv('daily-note-timeline-calendar-day');
+            dayEl.textContent = day.toString();
+            dayEl.dataset.date = key;
+            if (key === activeKey) {
+                dayEl.addClass('is-active');
+            }
+            this.registerDomEvent(dayEl, 'click', () => this.jumpToDateKey(key));
+        }
+
+        const usedCells = startWeekday + daysInMonth;
+        const trailingCells = (7 - (usedCells % 7)) % 7;
+        const totalCells = usedCells + trailingCells;
+        const remainingToSixRows = Math.max(0, 42 - totalCells);
+        for (let i = 0; i < trailingCells + remainingToSixRows; i += 1) {
+            this.calendarGridEl.createDiv('daily-note-timeline-calendar-empty');
+        }
+    }
+
+    private updateCalendarHighlight(activeKey: string) {
+        if (!this.calendarGridEl) {
+            return;
+        }
+        const activeEl = this.calendarGridEl.querySelector('.daily-note-timeline-calendar-day.is-active');
+        if (activeEl) {
+            activeEl.classList.remove('is-active');
+        }
+        const targetEl = this.calendarGridEl.querySelector(`[data-date="${activeKey}"]`);
+        if (targetEl) {
+            targetEl.classList.add('is-active');
+        }
+    }
+
+    private toggleCalendar() {
+        if (!this.calendarEl) {
+            return;
+        }
+        this.isCalendarVisible = !this.isCalendarVisible;
+        this.calendarEl.toggleClass('is-hidden', !this.isCalendarVisible);
+        this.contentEl.toggleClass('daily-note-timeline-calendar-open', this.isCalendarVisible);
+        if (this.currentTopDateKey) {
+            this.updateCalendarForDate(this.currentTopDateKey);
+        } else {
+            const todayKey = this.toISODateKey(new Date());
+            this.updateCalendarForDate(todayKey);
+        }
+    }
+
+    private shiftCalendarMonth(offset: number) {
+        const base = this.currentMonthDate ?? new Date();
+        const next = new Date(base.getFullYear(), base.getMonth() + offset, 1);
+        this.currentMonthDate = next;
+        this.currentMonthKey = `${next.getFullYear()}-${(next.getMonth() + 1).toString().padStart(2, '0')}`;
+        const activeKey = this.currentTopDateKey ?? this.toISODateKey(new Date());
+        this.renderCalendar(next, activeKey);
+    }
+
+    private async jumpToDateKey(dateKey: string) {
+        this.noteFiles = this.noteFiles.length > 0 ? this.noteFiles : this.collectDailyNoteFiles();
+        if (this.noteFiles.length === 0) {
+            return;
+        }
+        const targetIndex = this.findNearestIndex(dateKey);
+        if (targetIndex === -1) {
+            return;
+        }
+        const start = Math.max(0, targetIndex - this.pageSize);
+        const end = Math.min(this.noteFiles.length - 1, targetIndex + this.pageSize);
+        await this.renderRange(start, end);
+        this.scrollToIndex(targetIndex);
+    }
+
+    private findNearestIndex(dateKey: string): number {
+        const targetDate = this.getDateFromKey(dateKey);
+        let bestIndex = -1;
+        let bestDiff = Number.POSITIVE_INFINITY;
+        for (let i = 0; i < this.noteFiles.length; i += 1) {
+            const fileDateKey = this.getDateKeyFromFile(this.noteFiles[i]);
+            if (!fileDateKey) {
+                continue;
+            }
+            const fileDate = this.getDateFromKey(fileDateKey);
+            const diff = Math.abs(fileDate.getTime() - targetDate.getTime());
+            if (diff < bestDiff) {
+                bestDiff = diff;
+                bestIndex = i;
+            }
+        }
+        return bestIndex;
     }
 
     private getAnchorOffset(anchor: HTMLElement | null | undefined): number | null {
