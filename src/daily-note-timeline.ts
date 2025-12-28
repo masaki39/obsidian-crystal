@@ -101,16 +101,28 @@ export class DailyNoteTimelineView extends ItemView {
 
     setSettings(settings: CrystalPluginSettings) {
         this.settings = settings;
+        if (this.headingFilterText.trim().length === 0) {
+            this.headingFilterText = this.settings.dailyNoteTimelineFilterHeadingDefault?.trim() ?? '';
+            if (this.filterHeadingInputEl) {
+                this.filterHeadingInputEl.value = this.headingFilterText;
+            }
+        }
         this.scheduleRefresh({ preserveScroll: false });
     }
 
     async onOpen(): Promise<void> {
         this.contentEl.empty();
         this.contentEl.addClass('daily-note-timeline-root');
+        this.activeFilter = this.settings.dailyNoteTimelineDefaultFilter ?? 'all';
+        if (this.headingFilterText.trim().length === 0) {
+            this.headingFilterText = this.settings.dailyNoteTimelineFilterHeadingDefault?.trim() ?? '';
+        }
         this.buildHeader();
         this.buildScroller();
         this.buildCalendar();
         this.buildCalendarToggle();
+        this.isCalendarVisible = this.settings.dailyNoteTimelineCalendarDefaultOpen ?? false;
+        this.applyCalendarVisibility();
 
         this.registerEvent(this.app.vault.on('create', file => this.onVaultChange(file)));
         this.registerEvent(this.app.vault.on('modify', file => this.onVaultChange(file)));
@@ -121,7 +133,7 @@ export class DailyNoteTimelineView extends ItemView {
 
     private buildHeader() {
         const headerEl = this.contentEl.createDiv('daily-note-timeline-header');
-        headerEl.createEl('div', { text: 'Daily Note Timeline', cls: 'daily-note-timeline-title' });
+        headerEl.createEl('div', { cls: 'daily-note-timeline-title' });
         const headerControls = headerEl.createDiv('daily-note-timeline-controls');
         this.filterSelectEl = headerControls.createEl('select', { cls: 'daily-note-timeline-filter' });
         this.filterSelectEl.add(new Option('All', 'all'));
@@ -182,6 +194,14 @@ export class DailyNoteTimelineView extends ItemView {
             text: 'Calendar'
         });
         this.registerDomEvent(this.toggleButtonEl, 'click', () => this.toggleCalendar());
+    }
+
+    private applyCalendarVisibility() {
+        if (!this.calendarEl) {
+            return;
+        }
+        this.calendarEl.toggleClass('is-hidden', !this.isCalendarVisible);
+        this.contentEl.toggleClass('daily-note-timeline-calendar-open', this.isCalendarVisible);
     }
 
     async onClose(): Promise<void> {
@@ -800,8 +820,7 @@ export class DailyNoteTimelineView extends ItemView {
             return;
         }
         this.isCalendarVisible = !this.isCalendarVisible;
-        this.calendarEl.toggleClass('is-hidden', !this.isCalendarVisible);
-        this.contentEl.toggleClass('daily-note-timeline-calendar-open', this.isCalendarVisible);
+        this.applyCalendarVisibility();
         if (this.currentTopDateKey) {
             this.updateCalendarForDate(this.currentTopDateKey);
         } else {

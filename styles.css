@@ -130,6 +130,7 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
     justify-content: space-between;
     padding: 8px 12px;
     border-bottom: 1px solid var(--background-modifier-border);
+    gap: 8px;
 }
 
 .daily-note-timeline-title {
@@ -140,6 +141,7 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
     display: flex;
     align-items: center;
     gap: 8px;
+    margin-right: auto;
 }
 
 .daily-note-timeline-filter {
