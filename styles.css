@@ -155,6 +155,18 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
     background-repeat: no-repeat;
 }
 
+.daily-note-timeline-filter-heading {
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--background-modifier-border);
+    background-color: var(--background-primary);
+    width: 160px;
+}
+
+.daily-note-timeline-filter-heading.is-hidden {
+    display: none;
+}
+
 .daily-note-timeline-scroll {
     overflow: auto;
     height: 100%;
