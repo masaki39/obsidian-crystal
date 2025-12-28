@@ -116,3 +116,69 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
 [data-callout-metadata="pink"] {
     --timeline-dot-color: var(--color-pink);
 }
+
+.daily-note-timeline-root {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.daily-note-timeline-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.daily-note-timeline-title {
+    font-weight: 600;
+}
+
+.daily-note-timeline-today {
+    padding: 4px 10px;
+}
+
+.daily-note-timeline-scroll {
+    overflow: auto;
+    height: 100%;
+    padding: 12px;
+}
+
+.daily-note-timeline-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.daily-note-timeline-item {
+    padding: 12px 14px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 10px;
+    background: var(--background-primary);
+}
+
+.daily-note-timeline-item-title {
+    font-weight: 600;
+}
+
+.daily-note-timeline-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.daily-note-timeline-item-open {
+    padding: 2px 8px;
+}
+
+.daily-note-timeline-item-body > :first-child {
+    margin-top: 0;
+}
+
+.daily-note-timeline-empty {
+    padding: 12px;
+    color: var(--text-muted);
+}
