@@ -190,7 +190,10 @@ export default class CrystalPlugin extends Plugin {
 		const { workspace } = this.app;
 		let leaf = workspace.getLeavesOfType(DAILY_NOTE_TIMELINE_VIEW)[0];
 		if (!leaf) {
-			leaf = workspace.getRightLeaf(false);
+			leaf = workspace.getRightLeaf(false) ?? workspace.getLeaf('tab');
+		}
+		if (!leaf) {
+			return;
 		}
 		await leaf.setViewState({ type: DAILY_NOTE_TIMELINE_VIEW, active: true });
 		workspace.revealLeaf(leaf);
