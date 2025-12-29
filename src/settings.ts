@@ -193,6 +193,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 			});
 
 		this.toggleSetting(containerEl, 'Append Bluesky posts to Daily Note timeline', 'Add each post to today\'s daily note timeline section', 'blueskyAppendToDailyNote');
+		this.textSetting(containerEl, 'Daily Note timeline heading', 'Heading text that marks the timeline section (exact match)', 'dailyNoteTimelineHeading', '# Time Line');
 
 		// Daily notes settings
 		containerEl.createEl('h3', { text: 'Daily Notes' });

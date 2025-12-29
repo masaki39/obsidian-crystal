@@ -297,14 +297,6 @@ export class DailyNoteTimelineView extends ItemView {
         }, 300);
     }
 
-    private formatDate(date: Date): string {
-        const format = this.settings.dailyNoteDateFormat || 'YYYY-MM-DD';
-        return format
-            .replace('YYYY', date.getFullYear().toString())
-            .replace('MM', (date.getMonth() + 1).toString().padStart(2, '0'))
-            .replace('DD', date.getDate().toString().padStart(2, '0'));
-    }
-
     private toISODateKey(date: Date): string {
         const year = date.getFullYear().toString();
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
