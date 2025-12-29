@@ -301,6 +301,11 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
     height: 28px;
     line-height: 28px;
     border-radius: 6px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.daily-note-timeline-calendar-day:hover {
+    background: var(--background-modifier-hover);
 }
 
 .daily-note-timeline-calendar-day.is-active {
