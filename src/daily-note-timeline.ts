@@ -155,6 +155,11 @@ export class DailyNoteTimelineView extends ItemView {
         this.registerEvent(this.app.vault.on('create', file => this.onVaultChange(file)));
         this.registerEvent(this.app.vault.on('modify', file => this.onVaultChange(file)));
         this.registerEvent(this.app.vault.on('delete', file => this.onVaultChange(file)));
+        this.registerEvent(this.app.workspace.on('active-leaf-change', leaf => {
+            if (leaf === this.leaf && this.pendingRefresh) {
+                void this.handleViewActivated();
+            }
+        }));
 
         await this.refresh();
     }
@@ -263,7 +268,13 @@ export class DailyNoteTimelineView extends ItemView {
     }
 
     private isViewActive(): boolean {
-        return !(this.leaf?.isDeferred ?? false);
+        if (this.leaf?.isDeferred ?? false) {
+            return false;
+        }
+        if (!this.contentEl?.isConnected) {
+            return false;
+        }
+        return this.contentEl.offsetParent !== null || this.contentEl.getClientRects().length > 0;
     }
 
     private formatDate(date: Date): string {
