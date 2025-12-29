@@ -5,18 +5,15 @@ export const DAILY_NOTE_TIMELINE_VIEW = 'daily-note-timeline-view';
 
 export type TimelineFilterMode = 'all' | 'tasks' | 'heading';
 
-export function filterTasksContent(content: string): string | null {
-    const lines = content.split('\n');
-    const taskLines = lines.filter(line => /^\s*[-*]\s+\[[ xX]\]\s+/.test(line));
-    return taskLines.length > 0 ? taskLines.join('\n') : null;
-}
+const TASK_LINE_REGEX = /^\s*[-*]\s+\[[ xX]\]\s+/;
 
-export function extractHeadingSectionFromContent(content: string, headingText: string): string | null {
+type HeadingSectionRange = { start: number; end: number };
+
+function findHeadingSectionRange(lines: string[], headingText: string): HeadingSectionRange | null {
     const targetText = headingText.replace(/^#+\s*/, '').trim();
     if (!targetText) {
         return null;
     }
-    const lines = content.split('\n');
     let startIndex = -1;
     let level = 1;
     for (let i = 0; i < lines.length; i += 1) {
@@ -34,15 +31,34 @@ export function extractHeadingSectionFromContent(content: string, headingText: s
     if (startIndex === -1) {
         return null;
     }
-    const sectionLines: string[] = [];
+    let endIndex = lines.length;
     for (let i = startIndex + 1; i < lines.length; i += 1) {
-        const line = lines[i];
-        const headingMatch = line.match(/^(#+)\s/);
+        const headingMatch = lines[i].match(/^(#+)\s/);
         if (headingMatch && headingMatch[1].length <= level) {
+            endIndex = i;
             break;
         }
-        sectionLines.push(line);
     }
+    return { start: startIndex + 1, end: endIndex };
+}
+
+function isTaskLine(line: string): boolean {
+    return TASK_LINE_REGEX.test(line);
+}
+
+export function filterTasksContent(content: string): string | null {
+    const lines = content.split('\n');
+    const taskLines = lines.filter(line => isTaskLine(line));
+    return taskLines.length > 0 ? taskLines.join('\n') : null;
+}
+
+export function extractHeadingSectionFromContent(content: string, headingText: string): string | null {
+    const lines = content.split('\n');
+    const range = findHeadingSectionRange(lines, headingText);
+    if (!range) {
+        return null;
+    }
+    const sectionLines = lines.slice(range.start, range.end);
     return sectionLines.length > 0 ? sectionLines.join('\n') : null;
 }
 
@@ -401,6 +417,7 @@ export class DailyNoteTimelineView extends ItemView {
         }
 
         await MarkdownRenderer.renderMarkdown(filtered, bodyEl, file.path, this);
+        await this.attachTaskToggleHandler(bodyEl, file);
         this.attachLinkHandler(bodyEl, file.path);
     }
 
@@ -444,6 +461,77 @@ export class DailyNoteTimelineView extends ItemView {
             event.preventDefault();
             this.app.workspace.openLinkText(href, sourcePath, openInNewLeaf);
         });
+    }
+
+    private getTaskLineIndicesForFilter(content: string): number[] {
+        const lines = content.split('\n');
+        if (this.activeFilter === 'heading') {
+            const range = findHeadingSectionRange(lines, this.headingFilterText.trim());
+            if (!range) {
+                return [];
+            }
+            const indices: number[] = [];
+            for (let i = range.start; i < range.end; i += 1) {
+                if (isTaskLine(lines[i])) {
+                    indices.push(i);
+                }
+            }
+            return indices;
+        }
+
+        const indices: number[] = [];
+        for (let i = 0; i < lines.length; i += 1) {
+            if (isTaskLine(lines[i])) {
+                if (this.activeFilter === 'tasks' || this.activeFilter === 'all') {
+                    indices.push(i);
+                }
+            }
+        }
+        return indices;
+    }
+
+    private async attachTaskToggleHandler(container: HTMLElement, file: TFile): Promise<void> {
+        const checkboxes = Array.from(container.querySelectorAll('input[type="checkbox"]')) as HTMLInputElement[];
+        if (checkboxes.length === 0) {
+            return;
+        }
+
+        const content = await this.app.vault.cachedRead(file);
+        const taskLineIndices = this.getTaskLineIndicesForFilter(content);
+        const mappedCount = Math.min(taskLineIndices.length, checkboxes.length);
+        for (let i = 0; i < mappedCount; i += 1) {
+            checkboxes[i].dataset.crystalTaskLine = String(taskLineIndices[i]);
+        }
+
+        this.registerDomEvent(container, 'change', async (event: Event) => {
+            const target = event.target as HTMLInputElement | null;
+            if (!target || target.type !== 'checkbox') {
+                return;
+            }
+            const lineAttr = target.dataset.crystalTaskLine ?? target.closest('[data-line]')?.getAttribute('data-line');
+            const lineIndex = lineAttr !== null && lineAttr !== undefined ? Number(lineAttr) : Number.NaN;
+            if (!Number.isFinite(lineIndex)) {
+                return;
+            }
+            await this.updateTaskLine(file, lineIndex, target.checked);
+        });
+    }
+
+    private async updateTaskLine(file: TFile, lineIndex: number, checked: boolean): Promise<void> {
+        await this.app.vault.process(file, (content) => {
+            const lines = content.split('\n');
+            if (lineIndex < 0 || lineIndex >= lines.length) {
+                return content;
+            }
+            const line = lines[lineIndex];
+            const updated = line.replace(/^(\s*[-*]\s+\[)([ xX])(\])/, `$1${checked ? 'x' : ' '}$3`);
+            if (updated === line) {
+                return content;
+            }
+            lines[lineIndex] = updated;
+            return lines.join('\n');
+        });
+        this.filteredContentCache.delete(file.path);
     }
 
     private async scrollToToday(): Promise<void> {
