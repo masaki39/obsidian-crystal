@@ -813,7 +813,7 @@ export class DailyNoteTimelineView extends ItemView {
         });
     }
 
-    private getTopVisibleDateKey(): string | null {
+    private getTopVisibleElement(): { element: HTMLElement; rect: DOMRect; scrollTop: number } | null {
         if (!this.scrollerEl || !this.listEl) {
             return null;
         }
@@ -822,40 +822,33 @@ export class DailyNoteTimelineView extends ItemView {
             const element = child as HTMLElement;
             const rect = element.getBoundingClientRect();
             if (rect.bottom > scrollRect.top + 1) {
-                return element.dataset.date ?? null;
+                return { element, rect, scrollTop: scrollRect.top };
             }
         }
         return null;
+    }
+
+    private getTopVisibleDateKey(): string | null {
+        const top = this.getTopVisibleElement();
+        if (!top) {
+            return null;
+        }
+        return top.element.dataset.date ?? null;
     }
 
     private getTopVisibleOffset(): number | null {
-        if (!this.scrollerEl || !this.listEl) {
+        const top = this.getTopVisibleElement();
+        if (!top) {
             return null;
         }
-        const scrollRect = this.scrollerEl.getBoundingClientRect();
-        for (const child of Array.from(this.listEl.children)) {
-            const element = child as HTMLElement;
-            const rect = element.getBoundingClientRect();
-            if (rect.bottom > scrollRect.top + 1) {
-                return rect.top - scrollRect.top;
-            }
-        }
-        return null;
+        return top.rect.top - top.scrollTop;
     }
 
     private updateTopVisibleDate() {
-        if (!this.scrollerEl || !this.listEl) {
-            return;
-        }
-        const scrollRect = this.scrollerEl.getBoundingClientRect();
         let topDateKey: string | null = null;
-        for (const child of Array.from(this.listEl.children)) {
-            const element = child as HTMLElement;
-            const rect = element.getBoundingClientRect();
-            if (rect.bottom > scrollRect.top + 1) {
-                topDateKey = element.dataset.date ?? null;
-                break;
-            }
+        const top = this.getTopVisibleElement();
+        if (top) {
+            topDateKey = top.element.dataset.date ?? null;
         }
         if (!topDateKey) {
             topDateKey = this.toISODateKey(new Date());
