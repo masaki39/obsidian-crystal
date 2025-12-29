@@ -176,7 +176,7 @@ export class DailyNoteTimelineView extends ItemView {
             }
         });
         this.updateFilterUi();
-        const headerTodayButton = headerEl.createEl('button', {
+        const headerTodayButton = headerControls.createEl('button', {
             text: 'Today',
             cls: 'daily-note-timeline-today'
         });
