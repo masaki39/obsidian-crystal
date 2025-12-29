@@ -173,7 +173,7 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
 .daily-note-timeline-scroll {
     overflow: auto;
     height: 100%;
-    padding: 12px;
+    padding: 8px;
 }
 
 .daily-note-timeline-calendar-open .daily-note-timeline-scroll {
@@ -202,7 +202,7 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
 .daily-note-timeline-item {
     position: relative;
     z-index: 1;
-    padding: 12px 14px;
+    padding: 10px 12px;
     border: 1px solid var(--background-modifier-border);
     border-radius: 10px;
     background: var(--background-primary);
@@ -221,7 +221,7 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .daily-note-timeline-item-open {
@@ -241,7 +241,7 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
     position: absolute;
     left: 12px;
     right: 12px;
-    bottom: 60px;
+    bottom: 24px;
     height: 280px;
     padding: 12px;
     border-radius: 12px;

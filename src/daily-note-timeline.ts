@@ -290,29 +290,9 @@ export class DailyNoteTimelineView extends ItemView {
         return withDates.map(entry => entry.file);
     }
 
-    private getInitialRange(files: TFile[]): { start: number; end: number; targetIndex: number } {
-        if (files.length === 0) {
-            return { start: 0, end: -1, targetIndex: -1 };
-        }
-        const activeFile = this.app.workspace.getActiveFile();
-        let targetIndex = files.length - 1;
-
-        if (activeFile) {
-            const formatted = this.formatDate(new Date());
-            const activeIndex = files.findIndex(file => file.basename === activeFile.basename);
-            if (activeIndex !== -1) {
-                targetIndex = activeIndex;
-            } else {
-                const todayIndex = files.findIndex(file => file.basename === formatted);
-                if (todayIndex !== -1) {
-                    targetIndex = todayIndex;
-                }
-            }
-        }
-
-        const start = Math.max(0, targetIndex - this.pageSize);
-        const end = Math.min(files.length - 1, targetIndex + this.pageSize);
-        return { start, end, targetIndex };
+    private async getInitialTargetIndex(): Promise<number> {
+        const todayKey = this.toISODateKey(new Date());
+        return await this.findNearestIndexWithContent(todayKey);
     }
 
     private async refresh(options: { preserveScroll?: boolean; alignTop?: boolean } = {}): Promise<void> {
@@ -359,7 +339,13 @@ export class DailyNoteTimelineView extends ItemView {
             }
         }
 
-        const { start, end, targetIndex } = this.getInitialRange(this.noteFiles);
+        const targetIndex = await this.getInitialTargetIndex();
+        if (targetIndex === -1) {
+            this.scheduleTopVisibleUpdate();
+            return;
+        }
+        const start = Math.max(0, targetIndex - this.pageSize);
+        const end = Math.min(this.noteFiles.length - 1, targetIndex + this.pageSize);
         await this.renderRange(start, end);
         if (targetIndex !== -1) {
             const offset = this.getListTopOffset();
@@ -474,8 +460,7 @@ export class DailyNoteTimelineView extends ItemView {
             return;
         }
 
-        const todayKey = this.toISODateKey(new Date());
-        const targetIndex = await this.findNearestIndexWithContent(todayKey);
+        const targetIndex = await this.getInitialTargetIndex();
         if (targetIndex === -1) {
             return;
         }
