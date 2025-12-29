@@ -414,19 +414,18 @@ export class DailyNoteTimelineView extends ItemView {
         const titleRowEl = document.createElement('div');
         titleRowEl.className = 'daily-note-timeline-item-header';
 
-        const titleEl = document.createElement('div');
+        const titleEl = document.createElement('a');
         titleEl.className = 'daily-note-timeline-item-title';
         titleEl.textContent = file.basename;
-
-        const openButton = document.createElement('button');
-        openButton.className = 'daily-note-timeline-item-open';
-        openButton.textContent = 'Open';
-        this.registerDomEvent(openButton, 'click', async () => {
-            await this.app.workspace.getLeaf().openFile(file);
+        titleEl.href = file.path;
+        titleEl.setAttribute('data-href', file.path);
+        this.registerDomEvent(titleEl, 'click', async (event: MouseEvent) => {
+            event.preventDefault();
+            const openInNewLeaf = event.metaKey || event.ctrlKey;
+            await this.app.workspace.getLeaf(openInNewLeaf).openFile(file);
         });
 
         titleRowEl.appendChild(titleEl);
-        titleRowEl.appendChild(openButton);
 
         const bodyEl = document.createElement('div');
         bodyEl.className = 'daily-note-timeline-item-body';

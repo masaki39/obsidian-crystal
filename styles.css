@@ -205,18 +205,20 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
 
 .daily-note-timeline-item-title {
     font-weight: 600;
+    text-decoration: none;
+    color: var(--text-accent);
 }
 
 .daily-note-timeline-item-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 8px;
     margin-bottom: 6px;
 }
 
-.daily-note-timeline-item-open {
-    padding: 2px 8px;
+.daily-note-timeline-item-title:hover {
+    text-decoration: underline;
 }
 
 .daily-note-timeline-calendar-toggle {
