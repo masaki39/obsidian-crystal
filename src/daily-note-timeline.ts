@@ -743,12 +743,19 @@ export class DailyNoteTimelineView extends ItemView {
             return;
         }
         this.isLoading = true;
-        const newStart = Math.max(0, this.startIndex - this.pageSize);
+        let newStart = this.startIndex;
+        let renderedCount = 0;
+        const targetCount = this.pageSize;
         const anchor = this.listEl.firstElementChild as HTMLElement | null;
         const anchorOffset = this.getAnchorOffset(anchor);
 
-        for (let i = this.startIndex - 1; i >= newStart; i -= 1) {
+        for (let i = this.startIndex - 1; i >= 0 && renderedCount < targetCount; i -= 1) {
+            newStart = i;
+            if (!await this.hasFilteredContent(this.noteFiles[i])) {
+                continue;
+            }
             await this.renderNote(this.noteFiles[i], 'prepend');
+            renderedCount += 1;
         }
 
         this.startIndex = newStart;
@@ -762,10 +769,17 @@ export class DailyNoteTimelineView extends ItemView {
             return;
         }
         this.isLoading = true;
-        const newEnd = Math.min(this.noteFiles.length - 1, this.endIndex + this.pageSize);
+        let newEnd = this.endIndex;
+        let renderedCount = 0;
+        const targetCount = this.pageSize;
 
-        for (let i = this.endIndex + 1; i <= newEnd; i += 1) {
+        for (let i = this.endIndex + 1; i < this.noteFiles.length && renderedCount < targetCount; i += 1) {
+            newEnd = i;
+            if (!await this.hasFilteredContent(this.noteFiles[i])) {
+                continue;
+            }
             await this.renderNote(this.noteFiles[i], 'append');
+            renderedCount += 1;
         }
 
         this.endIndex = newEnd;
