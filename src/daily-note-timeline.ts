@@ -99,10 +99,13 @@ export class DailyNoteTimelineView extends ItemView {
     private filteredContentCache = new Map<string, string | null>();
     private readonly debugFlag = 'CRYSTAL_TIMELINE_DEBUG';
     private pendingRefresh = false;
+    private onSettingsChange: (() => Promise<void>) | null = null;
+    private settingsSaveTimer: number | null = null;
 
-    constructor(leaf: WorkspaceLeaf, settings: CrystalPluginSettings) {
+    constructor(leaf: WorkspaceLeaf, settings: CrystalPluginSettings, onSettingsChange?: () => Promise<void>) {
         super(leaf);
         this.settings = settings;
+        this.onSettingsChange = onSettingsChange ?? null;
     }
 
     public async handleViewActivated(): Promise<void> {
@@ -135,7 +138,7 @@ export class DailyNoteTimelineView extends ItemView {
                 this.filterHeadingInputEl.value = this.headingFilterText;
             }
         }
-        this.scheduleRefresh({ preserveScroll: false });
+        this.scheduleRefresh({ preserveScroll: true });
     }
 
     async onOpen(): Promise<void> {
@@ -181,12 +184,16 @@ export class DailyNoteTimelineView extends ItemView {
         this.filterHeadingInputEl.value = this.headingFilterText;
         this.registerDomEvent(this.filterSelectEl, 'change', () => {
             this.activeFilter = (this.filterSelectEl?.value as TimelineFilterMode) ?? 'all';
+            this.settings.dailyNoteTimelineDefaultFilter = this.activeFilter;
+            this.queueSettingsSave();
             this.updateFilterUi();
             this.filteredContentCache.clear();
             void this.refresh({ preserveScroll: true, alignTop: true });
         });
         this.registerDomEvent(this.filterHeadingInputEl, 'input', () => {
             this.headingFilterText = this.filterHeadingInputEl?.value ?? '';
+            this.settings.dailyNoteTimelineFilterHeadingDefault = this.headingFilterText;
+            this.queueSettingsSave();
             this.filteredContentCache.clear();
             if (this.activeFilter === 'heading') {
                 void this.refresh({ preserveScroll: true, alignTop: true });
@@ -275,6 +282,19 @@ export class DailyNoteTimelineView extends ItemView {
             return false;
         }
         return this.contentEl.offsetParent !== null || this.contentEl.getClientRects().length > 0;
+    }
+
+    private queueSettingsSave() {
+        if (!this.onSettingsChange) {
+            return;
+        }
+        if (this.settingsSaveTimer !== null) {
+            window.clearTimeout(this.settingsSaveTimer);
+        }
+        this.settingsSaveTimer = window.setTimeout(() => {
+            this.settingsSaveTimer = null;
+            void this.onSettingsChange?.();
+        }, 300);
     }
 
     private formatDate(date: Date): string {
@@ -939,6 +959,8 @@ export class DailyNoteTimelineView extends ItemView {
             return;
         }
         this.isCalendarVisible = !this.isCalendarVisible;
+        this.settings.dailyNoteTimelineCalendarDefaultOpen = this.isCalendarVisible;
+        this.queueSettingsSave();
         this.applyCalendarVisibility();
         if (this.currentTopDateKey) {
             this.updateCalendarForDate(this.currentTopDateKey);

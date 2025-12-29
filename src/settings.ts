@@ -193,7 +193,6 @@ export class CrystalSettingTab extends PluginSettingTab {
 			});
 
 		this.toggleSetting(containerEl, 'Append Bluesky posts to Daily Note timeline', 'Add each post to today\'s daily note timeline section', 'blueskyAppendToDailyNote');
-		this.textSetting(containerEl, 'Daily Note timeline heading', 'Heading text that marks the timeline section (exact match)', 'dailyNoteTimelineHeading', '# Time Line');
 
 		// Daily notes settings
 		containerEl.createEl('h3', { text: 'Daily Notes' });
@@ -203,25 +202,6 @@ export class CrystalSettingTab extends PluginSettingTab {
 		this.toggleSetting(containerEl, 'Auto Sort Tasks', 'Sort tasks in daily notes automatically', 'dailyNoteAutoSort');
 		this.toggleSetting(containerEl, 'Auto Link Notes', 'Add link to today\'s daily note when create any note', 'dailyNoteAutoLink');
 		this.toggleSetting(containerEl, 'Newest First (Daily Notes)', 'Place new daily note entries at the top (tasks, links, timeline)', 'dailyNoteNewestFirst');
-
-		// Daily notes timeline settings
-		containerEl.createEl('h3', { text: 'Daily Notes Timeline' });
-
-		new Setting(containerEl)
-			.setName('Default Filter')
-			.setDesc('Default filter for Daily Note Timeline view')
-			.addDropdown(dropdown => dropdown
-				.addOption('all', 'All')
-				.addOption('tasks', 'Tasks')
-				.addOption('heading', 'Heading')
-				.setValue(this.plugin.settings.dailyNoteTimelineDefaultFilter)
-				.onChange(async (value) => {
-					this.plugin.settings.dailyNoteTimelineDefaultFilter = value as 'all' | 'tasks' | 'heading';
-					await this.plugin.saveSettings();
-				}));
-
-		this.textSetting(containerEl, 'Filter Heading Default', 'Default heading text for timeline filter (optional)', 'dailyNoteTimelineFilterHeadingDefault', '');
-		this.toggleSetting(containerEl, 'Calendar Default Open', 'Show calendar by default in timeline view', 'dailyNoteTimelineCalendarDefaultOpen');
 
 		// quick add settings
 		containerEl.createEl('h3', { text: 'Quick Add' });

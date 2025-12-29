@@ -60,7 +60,7 @@ export default class CrystalPlugin extends Plugin {
 		this.macroCommands = new MacroCommands(this.marpCommands, this.editorCommands, this);
 		this.pdfHandler = new PdfHandler(this.app, this.terminalService, this.settings, this);
 
-		this.registerView(DAILY_NOTE_TIMELINE_VIEW, (leaf) => new DailyNoteTimelineView(leaf, this.settings));
+		this.registerView(DAILY_NOTE_TIMELINE_VIEW, (leaf) => new DailyNoteTimelineView(leaf, this.settings, () => this.saveSettings()));
 
 		// Load Services
 		this.blueskyService.onload();
