@@ -3,7 +3,7 @@ import { CrystalPluginSettings, DEFAULT_SETTINGS, CrystalSettingTab } from './sr
 import { GeminiService } from './src/gemini-service';
 import { BlueskyService } from './src/bluesky-service';
 import { DailyNotesManager } from './src/daily-notes';
-import { DailyNoteTimelineView, DAILY_NOTE_TIMELINE_VIEW } from './src/daily-note-timeline';
+import { DailyNotesTimelineModule } from './src/daily-notes-timeline';
 import { PCloudService } from './src/pcloud-service';
 import { ImagePasteAndDropHandler } from './src/clipboard-paste-handler';
 import { EditorCommands } from './src/editor-commands';
@@ -38,6 +38,7 @@ export default class CrystalPlugin extends Plugin {
 	private tabSwitcherService: TabSwitcherService;
 	private macroCommands: MacroCommands;
 	private pdfHandler: PdfHandler;
+	private dailyNotesTimelineModule: DailyNotesTimelineModule;
 
 	async onload() {
 		await this.loadSettings();
@@ -60,7 +61,8 @@ export default class CrystalPlugin extends Plugin {
 		this.macroCommands = new MacroCommands(this.marpCommands, this.editorCommands, this);
 		this.pdfHandler = new PdfHandler(this.app, this.terminalService, this.settings, this);
 
-		this.registerView(DAILY_NOTE_TIMELINE_VIEW, (leaf) => new DailyNoteTimelineView(leaf, this.settings, () => this.saveSettings()));
+		this.dailyNotesTimelineModule = new DailyNotesTimelineModule(this, this.settings, () => this.saveSettings());
+		this.dailyNotesTimelineModule.onload();
 
 		// Load Services
 		this.blueskyService.onload();
@@ -131,15 +133,6 @@ export default class CrystalPlugin extends Plugin {
 			}
 		});
 
-		// Daily note timeline view
-		this.addCommand({
-			id: 'crystal-open-daily-note-timeline',
-			name: 'Open Daily Note Timeline',
-			callback: () => {
-				this.activateDailyNoteTimelineView();
-			}
-		});
-
 		// Anki Commands
 		this.addCommand({
 			id: 'crystal-add-note-to-anki',
@@ -180,36 +173,10 @@ export default class CrystalPlugin extends Plugin {
 		this.imagePasteAndDropHandler.updateSettings(this.settings);
 		this.editorCommands.updateSettings(this.settings);
 		this.quickAddCommands.updateSettings(this.settings);
-		this.updateDailyNoteTimelineViews();
+		this.dailyNotesTimelineModule.updateSettings(this.settings);
 		
 		// Handler is always enabled, processing behavior depends on autoWebpPaste setting
 		// No need to enable/disable the handler itself
 	}
 
-	private async activateDailyNoteTimelineView() {
-		const { workspace } = this.app;
-		let leaf = workspace.getLeavesOfType(DAILY_NOTE_TIMELINE_VIEW)[0];
-		if (!leaf) {
-			leaf = workspace.getRightLeaf(false) ?? workspace.getLeaf('tab');
-		}
-		if (!leaf) {
-			return;
-		}
-		await leaf.setViewState({ type: DAILY_NOTE_TIMELINE_VIEW, active: true });
-		workspace.revealLeaf(leaf);
-		const view = leaf.view;
-		if (view instanceof DailyNoteTimelineView) {
-			void view.handleViewActivated();
-		}
-	}
-
-	private updateDailyNoteTimelineViews() {
-		const leaves = this.app.workspace.getLeavesOfType(DAILY_NOTE_TIMELINE_VIEW);
-		for (const leaf of leaves) {
-			const view = leaf.view;
-			if (view instanceof DailyNoteTimelineView) {
-				view.setSettings(this.settings);
-			}
-		}
-	}
 }

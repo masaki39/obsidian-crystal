@@ -118,6 +118,7 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
     --timeline-dot-color: var(--color-pink);
 }
 
+/* Daily Note Timeline view styles */
 .daily-note-timeline-root {
     display: flex;
     flex-direction: column;
@@ -322,3 +323,4 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
     padding: 12px;
     color: var(--text-muted);
 }
+/* End Daily Note Timeline view styles */

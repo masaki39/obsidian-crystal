@@ -1,4 +1,4 @@
-import { extractHeadingSectionFromContent, filterTasksContent, filterTimelineContent } from '../src/daily-note-timeline';
+import { extractHeadingSectionFromContent, filterTasksContent, filterTimelineContent } from '../src/daily-notes-timeline/filters';
 
 describe('daily note timeline filters', () => {
     test('filterTasksContent returns task lines only', () => {
