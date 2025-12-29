@@ -197,6 +197,10 @@ export default class CrystalPlugin extends Plugin {
 		}
 		await leaf.setViewState({ type: DAILY_NOTE_TIMELINE_VIEW, active: true });
 		workspace.revealLeaf(leaf);
+		const view = leaf.view;
+		if (view instanceof DailyNoteTimelineView) {
+			void view.handleViewActivated();
+		}
 	}
 
 	private updateDailyNoteTimelineViews() {

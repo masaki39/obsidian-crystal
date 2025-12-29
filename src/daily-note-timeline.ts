@@ -97,10 +97,22 @@ export class DailyNoteTimelineView extends ItemView {
     private activeFilter: TimelineFilterMode = 'all';
     private headingFilterText = '';
     private filteredContentCache = new Map<string, string | null>();
+    private readonly debugFlag = 'CRYSTAL_TIMELINE_DEBUG';
+    private pendingRefresh = false;
 
     constructor(leaf: WorkspaceLeaf, settings: CrystalPluginSettings) {
         super(leaf);
         this.settings = settings;
+    }
+
+    public async handleViewActivated(): Promise<void> {
+        this.debugLog('activate');
+        if (this.pendingRefresh) {
+            this.pendingRefresh = false;
+            await this.refresh({ preserveScroll: true });
+            return;
+        }
+        await this.refresh({ preserveScroll: false });
     }
 
     getViewType(): string {
@@ -242,8 +254,16 @@ export class DailyNoteTimelineView extends ItemView {
         }
         this.refreshTimer = window.setTimeout(() => {
             this.refreshTimer = null;
+            if (!this.isViewActive()) {
+                this.pendingRefresh = true;
+                return;
+            }
             void this.refresh(options);
         }, 200);
+    }
+
+    private isViewActive(): boolean {
+        return !(this.leaf?.isDeferred ?? false);
     }
 
     private formatDate(date: Date): string {
@@ -319,6 +339,7 @@ export class DailyNoteTimelineView extends ItemView {
         const alignTop = options.alignTop ?? false;
         const anchorKey = preserveScroll ? this.getTopVisibleDateKey() : null;
         const anchorOffset = preserveScroll && !alignTop ? this.getTopVisibleOffset() : null;
+        this.debugLog('refresh:start', { preserveScroll, alignTop, anchorKey, anchorOffset });
         this.filteredContentCache.clear();
         this.noteFiles = this.collectDailyNoteFiles();
         this.listEl.empty();
@@ -349,6 +370,7 @@ export class DailyNoteTimelineView extends ItemView {
                 const end = Math.min(this.noteFiles.length - 1, targetIndex + this.pageSize);
                 await this.renderRange(start, end);
                 const offset = alignTop ? this.getListTopOffset() : (anchorOffset ?? 0);
+                this.debugLog('refresh:scroll-preserve', { targetIndex, start, end, offset });
                 this.scrollToTargetIndex(targetIndex, offset);
                 await this.ensureScrollable();
                 return;
@@ -356,6 +378,7 @@ export class DailyNoteTimelineView extends ItemView {
         }
 
         const targetIndex = await this.getInitialTargetIndex();
+        this.debugLog('refresh:initial-target', { targetIndex, noteCount: this.noteFiles.length });
         if (targetIndex === -1) {
             this.scheduleTopVisibleUpdate();
             return;
@@ -365,6 +388,7 @@ export class DailyNoteTimelineView extends ItemView {
         await this.renderRange(start, end);
         if (targetIndex !== -1) {
             const offset = this.getListTopOffset();
+            this.debugLog('refresh:scroll-initial', { targetIndex, start, end, offset });
             this.scrollToTargetIndex(targetIndex, offset);
         } else {
             this.scheduleTopVisibleUpdate();
@@ -538,6 +562,7 @@ export class DailyNoteTimelineView extends ItemView {
         if (!this.listEl) {
             return;
         }
+        this.debugLog('scrollToToday:start');
         this.noteFiles = this.collectDailyNoteFiles();
         this.listEl.empty();
         this.startIndex = 0;
@@ -557,6 +582,7 @@ export class DailyNoteTimelineView extends ItemView {
         const end = Math.min(this.noteFiles.length - 1, targetIndex + this.pageSize);
         await this.renderRange(start, end);
         const offset = this.getListTopOffset();
+        this.debugLog('scrollToToday:scroll', { targetIndex, start, end, offset });
         this.scrollToTargetIndex(targetIndex, offset);
     }
 
@@ -605,6 +631,7 @@ export class DailyNoteTimelineView extends ItemView {
         if (!targetEl) {
             return;
         }
+        this.debugLog('scrollToIndex', { targetIndex, relativeIndex, startIndex: this.startIndex });
         requestAnimationFrame(() => {
             if (!this.scrollerEl) {
                 return;
@@ -623,6 +650,7 @@ export class DailyNoteTimelineView extends ItemView {
         if (!targetEl) {
             return;
         }
+        this.debugLog('scrollToDateKey', { dateKey, offset });
         requestAnimationFrame(() => {
             if (!this.scrollerEl) {
                 return;
@@ -648,6 +676,14 @@ export class DailyNoteTimelineView extends ItemView {
         const scrollerRect = this.scrollerEl.getBoundingClientRect();
         const targetRect = targetEl.getBoundingClientRect();
         const delta = targetRect.top - scrollerRect.top - offset;
+        this.debugLog('scrollElementToOffset', {
+            offset,
+            delta,
+            scrollerTop: scrollerRect.top,
+            scrollerHeight: scrollerRect.height,
+            targetTop: targetRect.top,
+            targetHeight: targetRect.height
+        });
         if (delta !== 0) {
             this.scrollerEl.scrollTop += delta;
         }
@@ -973,6 +1009,7 @@ export class DailyNoteTimelineView extends ItemView {
 
     private scrollToTargetIndex(targetIndex: number, offset: number) {
         const targetKey = this.getDateKeyFromFile(this.noteFiles[targetIndex]);
+        this.debugLog('scrollToTargetIndex', { targetIndex, targetKey, offset });
         if (targetKey) {
             this.scrollToDateKey(targetKey, offset);
             this.scheduleScrollCorrection(targetKey, offset);
@@ -1001,5 +1038,16 @@ export class DailyNoteTimelineView extends ItemView {
         if (delta !== 0) {
             this.scrollerEl.scrollTop += delta;
         }
+    }
+
+    private debugLog(message: string, details?: Record<string, unknown>) {
+        if (!(window as any)?.[this.debugFlag]) {
+            return;
+        }
+        if (details && Object.keys(details).length > 0) {
+            console.log('[crystal.timeline]', message, details);
+            return;
+        }
+        console.log('[crystal.timeline]', message);
     }
 }
