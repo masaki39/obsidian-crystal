@@ -93,7 +93,7 @@ export class DailyNoteTimelineView extends ItemView {
     private currentMonthKey: string | null = null;
     private currentMonthDate: Date | null = null;
     private readonly pageSize = 5;
-    private readonly maxRendered = 30;
+    private readonly maxRendered = 20;
     private activeFilter: TimelineFilterMode = 'all';
     private headingFilterText = '';
     private filteredContentCache = new Map<string, string | null>();
