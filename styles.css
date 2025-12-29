@@ -223,7 +223,7 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
 
 .daily-note-timeline-calendar-toggle {
     position: absolute;
-    right: 16px;
+    right: 24px;
     bottom: 32px;
     padding: 8px 12px;
     border-radius: 999px;
@@ -232,11 +232,11 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
 
 .daily-note-timeline-calendar {
     position: absolute;
-    right: 12px;
+    right: 21px;
     left: auto;
     bottom: 24px;
     height: 280px;
-    width: calc(100% - 24px);
+    width: calc(100% - 42px);
     max-width: 350px;
     padding: 12px;
     border-radius: 12px;

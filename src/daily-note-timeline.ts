@@ -1,4 +1,4 @@
-import { ItemView, MarkdownRenderer, TFile, WorkspaceLeaf } from 'obsidian';
+import { ItemView, MarkdownRenderer, setIcon, TFile, WorkspaceLeaf } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
 
 export const DAILY_NOTE_TIMELINE_VIEW = 'daily-note-timeline-view';
@@ -230,9 +230,9 @@ export class DailyNoteTimelineView extends ItemView {
 
     private buildCalendarToggle() {
         this.toggleButtonEl = this.contentEl.createEl('button', {
-            cls: 'daily-note-timeline-calendar-toggle',
-            text: 'Calendar'
+            cls: 'daily-note-timeline-calendar-toggle'
         });
+        setIcon(this.toggleButtonEl, 'calendar');
         this.registerDomEvent(this.toggleButtonEl, 'click', () => this.toggleCalendar());
     }
 
