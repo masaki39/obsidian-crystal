@@ -25,6 +25,9 @@ export function buildTimelineHeader(options: HeaderOptions): HeaderElements {
     const filterSelectEl = headerControls.createEl('select', { cls: 'daily-note-timeline-filter' });
     filterSelectEl.add(new Option('All', 'all'));
     filterSelectEl.add(new Option('Tasks', 'tasks'));
+    filterSelectEl.add(new Option('Lists', 'lists'));
+    filterSelectEl.add(new Option('Links', 'links'));
+    filterSelectEl.add(new Option('Callouts', 'callouts'));
     filterSelectEl.add(new Option('Heading', 'heading'));
     filterSelectEl.value = options.activeFilter;
     const filterHeadingInputEl = headerControls.createEl('input', {

@@ -295,7 +295,7 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
 }
 
 .daily-note-timeline-calendar-weekday.is-sat {
-    color: var(--text-accent);
+    color: var(--color-blue);
 }
 
 .daily-note-timeline-today {
