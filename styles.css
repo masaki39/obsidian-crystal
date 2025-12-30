@@ -327,6 +327,10 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
     margin-top: 0;
 }
 
+.daily-note-timeline-item-body {
+    user-select: text;
+}
+
 .daily-note-timeline-empty {
     padding: 12px;
     color: var(--text-muted);
