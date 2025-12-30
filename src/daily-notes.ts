@@ -197,6 +197,13 @@ export class DailyNotesManager {
             new Notice('Daily Notes plugin is disabled.');
             return null;
         }
+        const filePath = this.getDailyNoteFilePath(date);
+        if (filePath) {
+            const existing = this.app.vault.getAbstractFileByPath(filePath);
+            if (existing instanceof TFile) {
+                return existing;
+            }
+        }
         return await createDailyNote(moment(date));
     }
 
