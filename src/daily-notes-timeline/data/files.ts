@@ -14,7 +14,13 @@ export function getDateKeyFromFile(file: TFile, config: DailyNotesConfig): strin
 export function collectDailyNoteFiles(app: App, config: DailyNotesConfig): TFile[] {
     const folder = config.folder;
     const files = app.vault.getFiles().filter(file => {
-        return file.extension === 'md' && file.path.startsWith(`${folder}/`);
+        if (file.extension !== 'md') {
+            return false;
+        }
+        if (folder.trim().length === 0) {
+            return !file.path.includes('/');
+        }
+        return file.path.startsWith(`${folder}/`);
     });
     const withDates = files
         .map(file => ({

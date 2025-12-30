@@ -15,8 +15,6 @@ export interface CrystalPluginSettings {
 	blueskyIdentifier: string;
 	blueskyPassword: string;
 	blueskyAppendToDailyNote: boolean;
-	dailyNotesFolder: string;
-	dailyNoteDateFormat: string;
 	dailyNoteTimelineHeading: string;
 	dailyNoteTimelineFilterHeadingDefault: string;
 	dailyNoteTimelineDefaultFilter: 'all' | 'tasks' | 'heading';
@@ -51,8 +49,6 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	blueskyIdentifier: '',
 	blueskyPassword: '',
 	blueskyAppendToDailyNote: false,
-	dailyNotesFolder: 'DailyNotes',
-	dailyNoteDateFormat: 'YYYY-MM-DD',
 	dailyNoteTimelineHeading: '# Time Line',
 	dailyNoteTimelineFilterHeadingDefault: '',
 	dailyNoteTimelineDefaultFilter: 'all',
@@ -198,8 +194,6 @@ export class CrystalSettingTab extends PluginSettingTab {
 		// Daily notes settings
 		containerEl.createEl('h3', { text: 'Daily Notes' });
 
-		this.textSetting(containerEl, 'Daily Notes Folder', 'Folder where daily notes are stored', 'dailyNotesFolder', 'Enter Folder Path');
-		this.textSetting(containerEl, 'Date Format', 'Date format for daily note file names (e.g., YYYY-MM-DD)', 'dailyNoteDateFormat', 'YYYY-MM-DD');
 		this.toggleSetting(containerEl, 'Auto Sort Tasks', 'Sort tasks in daily notes automatically', 'dailyNoteAutoSort');
 		this.toggleSetting(containerEl, 'Auto Link Notes', 'Add link to today\'s daily note when create any note', 'dailyNoteAutoLink');
 		this.toggleSetting(containerEl, 'Newest First (Daily Notes)', 'Place new daily note entries at the top (tasks, links, timeline)', 'dailyNoteNewestFirst');

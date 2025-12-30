@@ -1,6 +1,13 @@
-import { App, Plugin, TFile, MarkdownView } from 'obsidian';
+import { App, Plugin, TFile, MarkdownView, Notice } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
 import { parseFrontmatter } from './utils';
+import {
+    appHasDailyNotesPluginLoaded,
+    createDailyNote,
+    DEFAULT_DAILY_NOTE_FORMAT,
+    getDailyNoteSettings,
+    getDateFromFile
+} from 'obsidian-daily-notes-interface';
 const moment = require('moment');
 
 export function splitByTimeline(content: string, heading: string): { before: string; timeline: string } {
@@ -49,59 +56,15 @@ export class DailyNotesManager {
     }
 
     /**
-     * 日付文字列をフォーマットする
-     */
-    private formatDate(date: Date): string {
-        const format = this.settings.dailyNoteDateFormat || 'YYYY-MM-DD';
-        
-        // 基本的なフォーマット対応
-        return format
-            .replace('YYYY', date.getFullYear().toString())
-            .replace('MM', (date.getMonth() + 1).toString().padStart(2, '0'))
-            .replace('DD', date.getDate().toString().padStart(2, '0'));
-    }
-
-    /**
-     * ファイル名から日付を抽出する
-     */
-    private extractDateFromFileName(fileName: string): Date | null {
-        const format = this.settings.dailyNoteDateFormat || 'YYYY-MM-DD';
-        
-        // 日付フォーマットを正規表現に変換
-        let regexPattern = format
-            .replace('YYYY', '(\\d{4})')
-            .replace('MM', '(\\d{2})')
-            .replace('DD', '(\\d{2})');
-        
-        const regex = new RegExp(regexPattern);
-        const match = fileName.match(regex);
-        
-        if (match) {
-            const [, year, month, day] = match;
-            const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-            
-            // 有効な日付かチェック
-            if (!isNaN(date.getTime())) {
-                return date;
-            }
-        }
-        
-        return null;
-    }
-
-    /**
      * 現在アクティブなファイルから基準日付を取得する
      */
     private getBaseDateFromActiveFile(): Date {
         const activeFile = this.app.workspace.getActiveFile();
         
         if (activeFile) {
-            // ファイル名から拡張子を除去
-            const fileNameWithoutExt = activeFile.name.replace(/\.md$/, '');
-            const extractedDate = this.extractDateFromFileName(fileNameWithoutExt);
-            
-            if (extractedDate) {
-                return extractedDate;
+            const date = getDateFromFile(activeFile, 'day');
+            if (date) {
+                return date.toDate();
             }
         }
         
@@ -110,35 +73,13 @@ export class DailyNotesManager {
     }
 
     /**
-     * 指定された日付のデイリーノートファイルパスを取得する
-     */
-    private getDailyNoteFilePath(date: Date): string {
-        const fileName = this.formatDate(date);
-        const folder = this.settings.dailyNotesFolder || 'DailyNotes';
-        return `${folder}/${fileName}.md`;
-    }
-
-    /**
      * 指定された日付のデイリーノートを開くか作成する
      */
     async openOrCreateDailyNote(date: Date): Promise<void> {
-        const filePath = this.getDailyNoteFilePath(date);
-        
         try {
-            // ファイルが存在するかチェック
-            let file = this.app.vault.getAbstractFileByPath(filePath);
-            
-            if (!file || !(file instanceof TFile)) {
-                // ファイルが存在しない場合、フォルダーを作成して新しいファイルを作成
-                const folder = this.settings.dailyNotesFolder || 'DailyNotes';
-                
-                // フォルダーが存在しない場合は作成
-                if (!this.app.vault.getAbstractFileByPath(folder)) {
-                    await this.app.vault.createFolder(folder);
-                }
-                
-                // 空のデイリーノートを作成
-                file = await this.app.vault.create(filePath, '');
+            const file = await this.ensureDailyNoteFile(date);
+            if (!file) {
+                return;
             }
 
             const view = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -251,23 +192,20 @@ export class DailyNotesManager {
         return blockLines;
     }
 
-    private async ensureDailyNoteFile(date: Date): Promise<TFile> {
-        const filePath = this.getDailyNoteFilePath(date);
-        let file = this.app.vault.getAbstractFileByPath(filePath);
-        
-        if (!file || !(file instanceof TFile)) {
-            const folder = this.settings.dailyNotesFolder || 'DailyNotes';
-            if (!this.app.vault.getAbstractFileByPath(folder)) {
-                await this.app.vault.createFolder(folder);
-            }
-            file = await this.app.vault.create(filePath, '');
+    private async ensureDailyNoteFile(date: Date): Promise<TFile | null> {
+        if (!appHasDailyNotesPluginLoaded()) {
+            new Notice('Daily Notes plugin is disabled.');
+            return null;
         }
-        return file as TFile;
+        return await createDailyNote(moment(date));
     }
 
     async appendToTimeline(text: string, date: Date = new Date(), color?: string): Promise<void> {
         try {
             const file = await this.ensureDailyNoteFile(date);
+            if (!file) {
+                return;
+            }
             const heading = this.settings.dailyNoteTimelineHeading || '# Time Line';
             const content = await this.app.vault.read(file);
             const timeStamp = moment(date).format('HH:mm');
@@ -318,6 +256,9 @@ export class DailyNotesManager {
         yesterday.setDate(yesterday.getDate() - 1);
         
         const yesterdayFilePath = this.getDailyNoteFilePath(yesterday);
+        if (!yesterdayFilePath) {
+            return;
+        }
         const yesterdayFile = this.app.vault.getAbstractFileByPath(yesterdayFilePath);
         
         if (!yesterdayFile || !(yesterdayFile instanceof TFile)) {
@@ -383,22 +324,21 @@ export class DailyNotesManager {
             if (!(file instanceof TFile)) {
                 return;
             }
-            const fileFolder = file.path.split('/').slice(0, -1).join('/');
-            const dailyNotesFolder = this.settings.dailyNotesFolder || 'DailyNotes';
-            if (fileFolder === dailyNotesFolder) {
-                this.app.vault.process(file, (content) => {
-                    if (!this.settings.dailyNoteAutoSort) {
-                        return content;
-                    }
-                    const heading = this.settings.dailyNoteTimelineHeading || '# Time Line';
-                    const { frontmatter, content: parsedContent } = parseFrontmatter(content);
-                    const { before, timeline } = splitByTimeline(parsedContent, heading);
-                    const orderedBefore = this.orderTaskList(before);
-                    const body = recombineSections(orderedBefore, timeline);
-                    const newContent = `${frontmatter}${body}`;
-                    return newContent;
-                });
+            if (!this.isDailyNoteFile(file)) {
+                return;
             }
+            this.app.vault.process(file, (content) => {
+                if (!this.settings.dailyNoteAutoSort) {
+                    return content;
+                }
+                const heading = this.settings.dailyNoteTimelineHeading || '# Time Line';
+                const { frontmatter, content: parsedContent } = parseFrontmatter(content);
+                const { before, timeline } = splitByTimeline(parsedContent, heading);
+                const orderedBefore = this.orderTaskList(before);
+                const body = recombineSections(orderedBefore, timeline);
+                const newContent = `${frontmatter}${body}`;
+                return newContent;
+            });
         }));
 
         if (this.settings.dailyNoteAutoLink) {
@@ -407,7 +347,8 @@ export class DailyNotesManager {
                     if (!(file instanceof TFile) || file.extension !== 'md') {
                         return;
                     }
-                    const todayNote = this.app.vault.getAbstractFileByPath(this.getDailyNoteFilePath(new Date()));
+                    const todayNotePath = this.getDailyNoteFilePath(new Date());
+                    const todayNote = todayNotePath ? this.app.vault.getAbstractFileByPath(todayNotePath) : null;
                     if (!todayNote) {
                         return;
                     }
@@ -432,7 +373,8 @@ export class DailyNotesManager {
                     if (!(file instanceof TFile) || file.extension !== 'md') {
                         return;
                     }
-                    const todayNote = this.app.vault.getAbstractFileByPath(this.getDailyNoteFilePath(new Date()));
+                    const todayNotePath = this.getDailyNoteFilePath(new Date());
+                    const todayNote = todayNotePath ? this.app.vault.getAbstractFileByPath(todayNotePath) : null;
                     if (!todayNote) {
                         return;
                     }
@@ -454,4 +396,27 @@ export class DailyNotesManager {
             });
         }
     }
-} 
+
+    private getDailyNoteFilePath(date: Date): string | null {
+        const config = this.getDailyNotesConfig();
+        if (!config) {
+            return null;
+        }
+        const fileName = moment(date).format(config.format);
+        return config.folder ? `${config.folder}/${fileName}.md` : `${fileName}.md`;
+    }
+
+    private getDailyNotesConfig(): { folder: string; format: string } | null {
+        if (!appHasDailyNotesPluginLoaded()) {
+            return null;
+        }
+        const settings = getDailyNoteSettings();
+        const folder = settings?.folder?.trim() ?? '';
+        const format = settings?.format?.trim() || DEFAULT_DAILY_NOTE_FORMAT;
+        return { folder, format };
+    }
+
+    private isDailyNoteFile(file: TFile): boolean {
+        return getDateFromFile(file, 'day') !== null;
+    }
+}

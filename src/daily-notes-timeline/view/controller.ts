@@ -113,7 +113,7 @@ export class DailyNotesTimelineController {
         if (!config) {
             return;
         }
-        if (!file.path.startsWith(`${config.folder}/`)) {
+        if (!this.isInDailyNotesFolder(file.path, config.folder)) {
             return;
         }
         this.filteredContentCache.clear();
@@ -570,14 +570,17 @@ export class DailyNotesTimelineController {
             return null;
         }
         const settings = getDailyNoteSettings();
-        const folder = settings?.folder?.trim();
-        if (!folder) {
-            this.dailyNotesConfig = null;
-            return null;
-        }
+        const folder = settings?.folder?.trim() ?? '';
         const format = settings?.format?.trim() || DEFAULT_DAILY_NOTE_FORMAT;
         this.dailyNotesConfig = { folder, format };
         return this.dailyNotesConfig;
+    }
+
+    private isInDailyNotesFolder(filePath: string, folder: string): boolean {
+        if (folder.trim().length === 0) {
+            return !filePath.includes('/');
+        }
+        return filePath.startsWith(`${folder}/`);
     }
 
     // Notice removed: view already shows "No daily notes found."

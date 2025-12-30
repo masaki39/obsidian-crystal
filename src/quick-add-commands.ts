@@ -2,6 +2,13 @@ import { App, Notice, TFile, Editor, MarkdownView } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
 import { parseFrontmatter, promptForText } from './utils';
 import { splitByTimeline, recombineSections } from './daily-notes';
+import {
+	appHasDailyNotesPluginLoaded,
+	createDailyNote,
+	DEFAULT_DAILY_NOTE_FORMAT,
+	getDailyNoteSettings
+} from 'obsidian-daily-notes-interface';
+const moment = require('moment');
 
 export class QuickAddCommands {
 	private app: App;
@@ -26,39 +33,37 @@ export class QuickAddCommands {
 			return;
 		}
 
-		// 今日の日付を取得
-		const today = this.getTodayString();
-		
 		try {
+			const config = this.getDailyNotesConfig();
+			if (!config) {
+				return;
+			}
+			const today = moment();
+			const todayKey = today.format(config.format);
 			const timelineHeading = this.settings.dailyNoteTimelineHeading || '# Time Line';
 
-			// デイリーノートのフォルダを設定から取得
-			const dailyNotesFolder = this.getDailyNotesFolder();
-			
 			// デイリーノートフォルダ内で今日の日付のファイルを探す
-			let dailyFile = this.findFileInFolder(today, dailyNotesFolder);
+			let dailyFile = this.findDailyNoteFile(todayKey, config.folder);
 			
 			if (!dailyFile) {
-				// ファイルが存在しない場合は作成
-				const filePath = dailyNotesFolder ? `${dailyNotesFolder}/${today}.md` : `${today}.md`;
-				dailyFile = await this.app.vault.create(filePath, `- [ ] ${task}`);
-				new Notice(`デイリーノートを作成してタスクを追加しました: ${today}`);
-			} else {
-				// ファイルが存在する場合は一番下にタスクを追加
-				await this.app.vault.process(dailyFile, (content) => {
-					const { frontmatter, content: body } = parseFrontmatter(content);
-					const { before, timeline } = splitByTimeline(body, timelineHeading);
-					const beforeTrimmed = before.trimEnd();
-					const taskLine = `- [ ] ${task}`;
-					const updatedBefore = this.settings.dailyNoteNewestFirst
-						? (beforeTrimmed.length > 0 ? `${taskLine}\n${beforeTrimmed}` : taskLine)
-						: (beforeTrimmed.length > 0 ? `${beforeTrimmed}\n${taskLine}` : taskLine);
-					const newBody = recombineSections(updatedBefore, timeline);
-					const newContent = `${frontmatter}${newBody}`;
-					return newContent.endsWith('\n') ? newContent : `${newContent}\n`;
-				});
-				new Notice('デイリーノートにタスクを追加しました');
+				dailyFile = await createDailyNote(today);
+				new Notice(`デイリーノートを作成してタスクを追加しました: ${todayKey}`);
 			}
+
+			// ファイルが存在する場合は一番下にタスクを追加
+			await this.app.vault.process(dailyFile, (content) => {
+				const { frontmatter, content: body } = parseFrontmatter(content);
+				const { before, timeline } = splitByTimeline(body, timelineHeading);
+				const beforeTrimmed = before.trimEnd();
+				const taskLine = `- [ ] ${task}`;
+				const updatedBefore = this.settings.dailyNoteNewestFirst
+					? (beforeTrimmed.length > 0 ? `${taskLine}\n${beforeTrimmed}` : taskLine)
+					: (beforeTrimmed.length > 0 ? `${beforeTrimmed}\n${taskLine}` : taskLine);
+				const newBody = recombineSections(updatedBefore, timeline);
+				const newContent = `${frontmatter}${newBody}`;
+				return newContent.endsWith('\n') ? newContent : `${newContent}\n`;
+			});
+			new Notice('デイリーノートにタスクを追加しました');
 		} catch (error) {
 			new Notice('タスクの追加に失敗しました: ' + error.message);
 			console.error('Add task to daily note error:', error);
@@ -113,41 +118,24 @@ export class QuickAddCommands {
 	/**
 	 * Get daily notes folder from settings
 	 */
-	private getDailyNotesFolder(): string {
-		// プラグイン設定から取得
-		if (this.settings.dailyNotesFolder && this.settings.dailyNotesFolder.trim() !== '') {
-			return this.settings.dailyNotesFolder;
-		}
-
-		// デフォルトフォルダ
-		return 'DailyNotes';
-	}
-
-	/**
-	 * Get today's date string in format specified in settings
-	 */
-	private getTodayString(): string {
-		const now = new Date();
-		const format = this.settings.dailyNoteDateFormat || 'YYYY-MM-DD';
-		
-		// 基本的なフォーマット対応
-		const year = now.getFullYear();
-		const month = (now.getMonth() + 1).toString().padStart(2, '0');
-		const day = now.getDate().toString().padStart(2, '0');
-		
-		return format
-			.replace('YYYY', year.toString())
-			.replace('MM', month)
-			.replace('DD', day);
-	}
-
 	/**
 	 * Find file in specific folder
 	 */
-	private findFileInFolder(fileName: string, folderName: string): TFile | null {
-		const files = this.app.vault.getMarkdownFiles();
+	private findDailyNoteFile(fileName: string, folderName: string): TFile | null {
 		const targetPath = folderName ? `${folderName}/${fileName}.md` : `${fileName}.md`;
-		return files.find(file => file.path === targetPath) || null;
+		const file = this.app.vault.getAbstractFileByPath(targetPath);
+		return file instanceof TFile ? file : null;
+	}
+
+	private getDailyNotesConfig(): { folder: string; format: string } | null {
+		if (!appHasDailyNotesPluginLoaded()) {
+			new Notice('Daily Notes plugin is disabled.');
+			return null;
+		}
+		const settings = getDailyNoteSettings();
+		const folder = settings?.folder?.trim() ?? '';
+		const format = settings?.format?.trim() || DEFAULT_DAILY_NOTE_FORMAT;
+		return { folder, format };
 	}
 
 	async insertMOC(editor: Editor, view: MarkdownView){
