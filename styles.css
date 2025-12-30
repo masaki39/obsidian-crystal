@@ -167,6 +167,14 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
     width: 160px;
 }
 
+.daily-note-timeline-search {
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--background-modifier-border);
+    background-color: var(--background-primary);
+    width: 200px;
+}
+
 .daily-note-timeline-filter-heading.is-hidden {
     display: none;
 }
@@ -322,5 +330,12 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
 .daily-note-timeline-empty {
     padding: 12px;
     color: var(--text-muted);
+}
+
+.daily-note-timeline-highlight {
+    background: rgba(var(--interactive-accent-rgb), 0.3);
+    color: inherit;
+    padding: 0 2px;
+    border-radius: 3px;
 }
 /* End Daily Note Timeline view styles */

@@ -3,6 +3,7 @@ import { createNoteElements } from './render';
 import { attachTimelineLinkHandler } from './links';
 import { attachTaskToggleHandler } from './tasks';
 import { TimelineFilterMode } from '../filters';
+import { highlightMatches } from './highlight';
 
 type RenderNoteOptions = {
     listEl: HTMLDivElement;
@@ -14,6 +15,7 @@ type RenderNoteOptions = {
     onToggleTask: (file: TFile, lineIndex: number, checked: boolean) => Promise<void>;
     activeFilter: TimelineFilterMode;
     headingFilterText: string;
+    searchQuery: string;
     markdownComponent: any;
     resolveFilteredContent: (file: TFile) => Promise<string | null>;
     resolveLinkSourcePath: (file: TFile) => string;
@@ -57,4 +59,5 @@ export async function renderNote(options: RenderNoteOptions): Promise<void> {
         options.resolveLinkSourcePath(options.file),
         options.onOpenLink
     );
+    highlightMatches(bodyEl, options.searchQuery);
 }

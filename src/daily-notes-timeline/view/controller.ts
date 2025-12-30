@@ -40,6 +40,7 @@ export class DailyNotesTimelineController {
     private listEl: HTMLDivElement | null = null;
     private filterSelectEl: HTMLSelectElement | null = null;
     private filterHeadingInputEl: HTMLInputElement | null = null;
+    private searchInputEl: HTMLInputElement | null = null;
     private calendar: TimelineCalendar | null = null;
     private noteFiles: TFile[] = [];
     private startIndex = 0;
@@ -52,6 +53,7 @@ export class DailyNotesTimelineController {
     private readonly maxRendered = 20;
     private activeFilter: TimelineFilterMode = 'all';
     private headingFilterText = '';
+    private searchQuery = '';
     private filteredContentCache = new Map<string, string | null>();
     private settingsSaveTimer: number | null = null;
     private debugLog: (message: string, details?: Record<string, unknown>) => void;
@@ -132,6 +134,7 @@ export class DailyNotesTimelineController {
             registerDomEvent: this.registerDomEvent,
             activeFilter: this.activeFilter,
             headingFilterText: this.headingFilterText,
+            searchQuery: this.searchQuery,
             onFilterChange: (mode) => {
                 this.activeFilter = mode;
                 this.settings.dailyNoteTimelineDefaultFilter = this.activeFilter;
@@ -149,12 +152,17 @@ export class DailyNotesTimelineController {
                     void this.refresh({ preserveScroll: true, alignTop: true });
                 }
             },
+            onSearchInput: (value) => {
+                this.searchQuery = value.trim();
+                void this.refresh({ preserveScroll: true, alignTop: true });
+            },
             onToday: () => {
                 void this.scrollToToday();
             }
         });
         this.filterSelectEl = elements.filterSelectEl;
         this.filterHeadingInputEl = elements.filterHeadingInputEl;
+        this.searchInputEl = elements.searchInputEl;
         this.updateFilterUi();
     }
 
@@ -278,6 +286,7 @@ export class DailyNotesTimelineController {
             },
             activeFilter: this.activeFilter,
             headingFilterText: this.headingFilterText,
+            searchQuery: this.searchQuery,
             markdownComponent: this.markdownComponent,
             resolveFilteredContent: (targetFile) => this.getFilteredContent(targetFile),
             resolveLinkSourcePath: (targetFile) => targetFile.path,
@@ -292,12 +301,24 @@ export class DailyNotesTimelineController {
     private async getFilteredContent(file: TFile): Promise<string | null> {
         const cached = this.filteredContentCache.get(file.path);
         if (cached !== undefined) {
-            return cached;
+            return this.applySearch(cached);
         }
         const content = await this.app.vault.cachedRead(file);
         const filtered = this.applyFilter(content);
         this.filteredContentCache.set(file.path, filtered);
-        return filtered;
+        return this.applySearch(filtered);
+    }
+
+    private applySearch(content: string | null): string | null {
+        if (content === null) {
+            return null;
+        }
+        if (this.searchQuery.length === 0) {
+            return content;
+        }
+        const haystack = content.toLowerCase();
+        const needle = this.searchQuery.toLowerCase();
+        return haystack.includes(needle) ? content : null;
     }
 
     private async updateTaskLine(file: TFile, lineIndex: number, checked: boolean): Promise<void> {

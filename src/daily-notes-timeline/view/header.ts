@@ -5,14 +5,17 @@ type HeaderOptions = {
     registerDomEvent: (el: HTMLElement, type: string, callback: (event: Event) => any) => void;
     activeFilter: TimelineFilterMode;
     headingFilterText: string;
+    searchQuery: string;
     onFilterChange: (mode: TimelineFilterMode) => void;
     onHeadingInput: (value: string) => void;
+    onSearchInput: (value: string) => void;
     onToday: () => void;
 };
 
 export type HeaderElements = {
     filterSelectEl: HTMLSelectElement;
     filterHeadingInputEl: HTMLInputElement;
+    searchInputEl: HTMLInputElement;
 };
 
 export function buildTimelineHeader(options: HeaderOptions): HeaderElements {
@@ -30,12 +33,21 @@ export function buildTimelineHeader(options: HeaderOptions): HeaderElements {
         placeholder: '# Time Line'
     });
     filterHeadingInputEl.value = options.headingFilterText;
+    const searchInputEl = headerControls.createEl('input', {
+        cls: 'daily-note-timeline-search',
+        type: 'text',
+        placeholder: 'Search'
+    });
+    searchInputEl.value = options.searchQuery;
 
     options.registerDomEvent(filterSelectEl, 'change', () => {
         options.onFilterChange((filterSelectEl.value as TimelineFilterMode) ?? 'all');
     });
     options.registerDomEvent(filterHeadingInputEl, 'input', () => {
         options.onHeadingInput(filterHeadingInputEl.value ?? '');
+    });
+    options.registerDomEvent(searchInputEl, 'input', () => {
+        options.onSearchInput(searchInputEl.value ?? '');
     });
 
     const headerTodayButton = headerControls.createEl('button', {
@@ -44,5 +56,5 @@ export function buildTimelineHeader(options: HeaderOptions): HeaderElements {
     });
     options.registerDomEvent(headerTodayButton, 'click', () => options.onToday());
 
-    return { filterSelectEl, filterHeadingInputEl };
+    return { filterSelectEl, filterHeadingInputEl, searchInputEl };
 }
