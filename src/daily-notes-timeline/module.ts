@@ -35,17 +35,20 @@ export class DailyNotesTimelineModule {
     private async activateView() {
         const { workspace } = this.plugin.app;
         let leaf = workspace.getLeavesOfType(DAILY_NOTES_TIMELINE_VIEW)[0];
+        const isNewLeaf = !leaf;
         if (!leaf) {
-            leaf = workspace.getRightLeaf(false) ?? workspace.getLeaf('tab');
+            leaf = workspace.getLeaf('tab');
         }
         if (!leaf) {
             return;
         }
         await leaf.setViewState({ type: DAILY_NOTES_TIMELINE_VIEW, active: true });
         workspace.revealLeaf(leaf);
-        const view = leaf.view;
-        if (view instanceof DailyNotesTimelineView) {
-            void view.handleViewActivated();
+        if (isNewLeaf) {
+            const view = leaf.view;
+            if (view instanceof DailyNotesTimelineView) {
+                void view.handleViewActivated();
+            }
         }
     }
 
