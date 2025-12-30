@@ -13,7 +13,7 @@ type HeaderOptions = {
 };
 
 export type HeaderElements = {
-    filterSelectEl: HTMLSelectElement;
+    filterTabButtons: HTMLButtonElement[];
     filterHeadingInputEl: HTMLInputElement;
     searchInputEl: HTMLInputElement;
 };
@@ -22,30 +22,48 @@ export function buildTimelineHeader(options: HeaderOptions): HeaderElements {
     const headerEl = options.contentEl.createDiv('daily-note-timeline-header');
     headerEl.createEl('div', { cls: 'daily-note-timeline-title' });
     const headerControls = headerEl.createDiv('daily-note-timeline-controls');
-    const filterSelectEl = headerControls.createEl('select', { cls: 'daily-note-timeline-filter' });
-    filterSelectEl.add(new Option('All', 'all'));
-    filterSelectEl.add(new Option('Tasks', 'tasks'));
-    filterSelectEl.add(new Option('Lists', 'lists'));
-    filterSelectEl.add(new Option('Links', 'links'));
-    filterSelectEl.add(new Option('Callouts', 'callouts'));
-    filterSelectEl.add(new Option('Heading', 'heading'));
-    filterSelectEl.value = options.activeFilter;
-    const filterHeadingInputEl = headerControls.createEl('input', {
-        cls: 'daily-note-timeline-filter-heading',
-        type: 'text',
-        placeholder: '# Time Line'
-    });
-    filterHeadingInputEl.value = options.headingFilterText;
-    const searchInputEl = headerControls.createEl('input', {
+    const headerTopRow = headerControls.createDiv('daily-note-timeline-header-row');
+    const headerBottomRow = headerControls.createDiv('daily-note-timeline-header-row');
+
+    const searchInputEl = headerTopRow.createEl('input', {
         cls: 'daily-note-timeline-search',
         type: 'text',
         placeholder: 'Search'
     });
     searchInputEl.value = options.searchQuery;
 
-    options.registerDomEvent(filterSelectEl, 'change', () => {
-        options.onFilterChange((filterSelectEl.value as TimelineFilterMode) ?? 'all');
+    const headerTodayButton = headerTopRow.createEl('button', {
+        text: 'Today',
+        cls: 'daily-note-timeline-today'
     });
+
+    const filterTabsEl = headerBottomRow.createDiv('daily-note-timeline-filter-tabs');
+    const filterTabButtons: HTMLButtonElement[] = [];
+    const filters: Array<{ label: string; mode: TimelineFilterMode }> = [
+        { label: 'All', mode: 'all' },
+        { label: 'Tasks', mode: 'tasks' },
+        { label: 'Lists', mode: 'lists' },
+        { label: 'Links', mode: 'links' },
+        { label: 'Callouts', mode: 'callouts' },
+        { label: 'Heading', mode: 'heading' }
+    ];
+    for (const filter of filters) {
+        const button = filterTabsEl.createEl('button', {
+            text: filter.label,
+            cls: 'daily-note-timeline-filter-tab'
+        });
+        button.dataset.filter = filter.mode;
+        filterTabButtons.push(button);
+        options.registerDomEvent(button, 'click', () => options.onFilterChange(filter.mode));
+    }
+
+    const filterHeadingInputEl = headerBottomRow.createEl('input', {
+        cls: 'daily-note-timeline-filter-heading',
+        type: 'text',
+        placeholder: '# Time Line'
+    });
+    filterHeadingInputEl.value = options.headingFilterText;
+
     options.registerDomEvent(filterHeadingInputEl, 'input', () => {
         options.onHeadingInput(filterHeadingInputEl.value ?? '');
     });
@@ -53,11 +71,7 @@ export function buildTimelineHeader(options: HeaderOptions): HeaderElements {
         options.onSearchInput(searchInputEl.value ?? '');
     });
 
-    const headerTodayButton = headerControls.createEl('button', {
-        text: 'Today',
-        cls: 'daily-note-timeline-today'
-    });
     options.registerDomEvent(headerTodayButton, 'click', () => options.onToday());
 
-    return { filterSelectEl, filterHeadingInputEl, searchInputEl };
+    return { filterTabButtons, filterHeadingInputEl, searchInputEl };
 }

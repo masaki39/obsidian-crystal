@@ -38,7 +38,7 @@ export class DailyNotesTimelineController {
     private isLeafDeferred: (() => boolean) | null = null;
     private scrollerEl: HTMLDivElement | null = null;
     private listEl: HTMLDivElement | null = null;
-    private filterSelectEl: HTMLSelectElement | null = null;
+    private filterTabButtons: HTMLButtonElement[] = [];
     private filterHeadingInputEl: HTMLInputElement | null = null;
     private searchInputEl: HTMLInputElement | null = null;
     private calendar: TimelineCalendar | null = null;
@@ -160,7 +160,7 @@ export class DailyNotesTimelineController {
                 void this.scrollToToday();
             }
         });
-        this.filterSelectEl = elements.filterSelectEl;
+        this.filterTabButtons = elements.filterTabButtons;
         this.filterHeadingInputEl = elements.filterHeadingInputEl;
         this.searchInputEl = elements.searchInputEl;
         this.updateFilterUi();
@@ -231,6 +231,10 @@ export class DailyNotesTimelineController {
             return;
         }
         this.filterHeadingInputEl.toggleClass('is-hidden', this.activeFilter !== 'heading');
+        for (const button of this.filterTabButtons) {
+            const mode = (button.dataset.filter as TimelineFilterMode) ?? 'all';
+            button.toggleClass('is-active', mode === this.activeFilter);
+        }
     }
 
     private collectDailyNoteFiles(): TFile[] {
