@@ -11,11 +11,14 @@ function isExcludedNode(node: Node | null): boolean {
 }
 
 export function highlightMatches(container: HTMLElement, query: string) {
-    const trimmed = query.trim();
-    if (trimmed.length === 0) {
+    const terms = query
+        .trim()
+        .split(/\s+/)
+        .filter(term => term.length > 0);
+    if (terms.length === 0) {
         return;
     }
-    const pattern = escapeRegExp(trimmed);
+    const pattern = terms.map(term => escapeRegExp(term)).join('|');
     const regex = new RegExp(pattern, 'gi');
     const testRegex = new RegExp(pattern, 'i');
     const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {

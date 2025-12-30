@@ -317,12 +317,16 @@ export class DailyNotesTimelineController {
         if (content === null) {
             return null;
         }
-        if (this.searchQuery.length === 0) {
+        const terms = this.searchQuery
+            .trim()
+            .split(/\s+/)
+            .filter(term => term.length > 0);
+        if (terms.length === 0) {
             return content;
         }
         const haystack = content.toLowerCase();
-        const needle = this.searchQuery.toLowerCase();
-        return haystack.includes(needle) ? content : null;
+        const matchesAll = terms.every(term => haystack.includes(term.toLowerCase()));
+        return matchesAll ? content : null;
     }
 
     private async updateTaskLine(file: TFile, lineIndex: number, checked: boolean): Promise<void> {
