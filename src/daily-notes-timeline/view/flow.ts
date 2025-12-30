@@ -58,13 +58,7 @@ export async function refreshTimeline(
         if (anchorIndex !== -1 && await ctx.hasFilteredContent(noteFiles[anchorIndex])) {
             targetIndex = anchorIndex;
         } else {
-            const todayKey = toISODateKey(new Date());
-            const todayIndex = ctx.findIndexByDateKey(todayKey);
-            if (todayIndex !== -1 && await ctx.hasFilteredContent(noteFiles[todayIndex])) {
-                targetIndex = todayIndex;
-            } else {
-                targetIndex = await ctx.findNearestIndexWithContent(anchorKey);
-            }
+            targetIndex = await ctx.findNearestIndexWithContent(anchorKey);
         }
         if (targetIndex !== -1) {
             const start = Math.max(0, targetIndex - ctx.getPageSize());
