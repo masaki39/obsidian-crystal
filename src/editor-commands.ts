@@ -444,16 +444,24 @@ export class EditorCommands {
 
 		const bulletLines = content
 			.split(/\r?\n/)
-			.map((line: string) => line.trim())
-			.filter((line: string) => line.length > 0)
 			.map((line: string) => {
-				const withoutHeading = line.replace(/^#+\s*/, '').trim();
+				const trimmed = line.trim();
+				if (trimmed.length === 0) {
+					return null;
+				}
+
+				const indentMatch = line.match(/^\s*/);
+				const indent = indentMatch ? indentMatch[0] : '';
+				const withoutHeading = trimmed.replace(/^#+\s*/, '').trim();
+
 				if (withoutHeading.startsWith('-')) {
 					const item = withoutHeading.replace(/^\-\s*/, '').trim();
-					return item.length > 0 ? `- ${item}` : '- ';
+					return `${indent}- ${item}`;
 				}
-				return `- ${withoutHeading}`;
-			});
+
+				return `${indent}- ${withoutHeading}`;
+			})
+			.filter((line: string | null): line is string => line !== null);
 
 		editor.setValue(`${frontmatter}${bulletLines.join('\n')}`);
 		new Notice('コンテンツをバレットリストに変換しました');

@@ -1,4 +1,4 @@
-import { App, Notice, TFile, Editor, MarkdownView } from 'obsidian';
+import { App, Notice, TFile } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
 import { parseFrontmatter, promptForText } from './utils';
 import { splitByTimeline, recombineSections } from './daily-notes';
@@ -136,23 +136,5 @@ export class QuickAddCommands {
 		const folder = settings?.folder?.trim() ?? '';
 		const format = settings?.format?.trim() || DEFAULT_DAILY_NOTE_FORMAT;
 		return { folder, format };
-	}
-
-	async insertMOC(editor: Editor, view: MarkdownView){
-		const mocTemplate = `
-# 📒関連
-
-- 
-
-# 📝ダッシュボード
-
-- 
-
-# 📜アーカイブ
-
-- 
-`;
-		editor.replaceRange(mocTemplate, editor.getCursor());
-		new Notice('MOCを挿入しました');
 	}
 } 

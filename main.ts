@@ -125,14 +125,6 @@ export default class CrystalPlugin extends Plugin {
 			}
 		});
 
-		this.addCommand({
-			id: 'crystal-insert-moc',
-			name: 'Insert MOC',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.quickAddCommands.insertMOC(editor, view);
-			}
-		});
-
 		// Anki Commands
 		this.addCommand({
 			id: 'crystal-add-note-to-anki',

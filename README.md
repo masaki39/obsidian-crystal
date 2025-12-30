@@ -66,11 +66,6 @@ BlueSkyへの投稿をアシストする。
 - **Auto Link Notes:** 新しいノートを作成すると、その日のデイリーノートに自動でリンクが追記される。
 - **Newest First (Daily Notes):** 新規タスク/リンク/タイムライン投稿を上に追加する。
 
-**Daily Notes Timeline（新規ビュー）:**
-- 日付順にデイリーノートを連続表示（無限スクロール）。
-- フィルター: All / Tasks / Heading（見出し抽出）。
-- カレンダー表示と日付ジャンプ、最上段の日付をハイライト。
-
 ### ✨ Quick Add
 
 定型的なコンテンツやタスクを素早く追加する。
@@ -78,7 +73,6 @@ BlueSkyへの投稿をアシストする。
 | コマンド | 機能 | 説明 |
 |---|---|---|
 | `Add Task to ToDo List` | ToDoリストにタスク追加 | 設定で指定したToDoリストファイルのInboxセクションにタスクを追加する。 |
-| `Insert MOC` | MOCを挿入 | 関連ノートなどをまとめるためのMOC（Map of Contents）テンプレートを挿入する。 |
 
 ### 🖼️ Image Processor
 
