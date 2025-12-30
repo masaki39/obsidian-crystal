@@ -52,6 +52,8 @@ export function getListTopOffset(scrollerEl: HTMLElement | null, listEl: HTMLEle
     }
     const listRect = listEl.getBoundingClientRect();
     const scrollerRect = scrollerEl.getBoundingClientRect();
-    const offset = listRect.top - scrollerRect.top;
+    const rawOffset = listRect.top - scrollerRect.top;
+    const paddingTop = Number.parseFloat(window.getComputedStyle(scrollerEl).paddingTop || '0') || 0;
+    const offset = rawOffset - paddingTop;
     return Number.isFinite(offset) ? Math.max(0, offset) : 0;
 }
