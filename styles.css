@@ -128,11 +128,14 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
 
 .daily-note-timeline-header {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: stretch;
     padding: 8px 12px;
     border-bottom: 1px solid var(--background-modifier-border);
     gap: 8px;
+    width: 100%;
+    max-width: var(--file-line-width);
+    margin-inline: auto;
 }
 
 .daily-note-timeline-title {
@@ -141,22 +144,37 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
 
 .daily-note-timeline-controls {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 8px;
-    margin-inline: auto;
+    width: 100%;
 }
 
-.daily-note-timeline-filter {
-    appearance: none;
-    padding: 4px 28px 4px 10px;
-    border-radius: 6px;
-    background-color: var(--background-primary);
+.daily-note-timeline-header-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.daily-note-timeline-filter-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.daily-note-timeline-filter-tab {
     border: 1px solid var(--background-modifier-border);
-    background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
-        linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
-    background-position: calc(100% - 14px) 55%, calc(100% - 8px) 55%;
-    background-size: 6px 6px, 6px 6px;
-    background-repeat: no-repeat;
+    border-radius: 999px;
+    padding: 4px 10px;
+    background-color: var(--background-primary);
+    color: var(--text-normal);
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.daily-note-timeline-filter-tab.is-active {
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border-color: transparent;
 }
 
 .daily-note-timeline-filter-heading {
@@ -164,7 +182,7 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
     border-radius: 6px;
     border: 1px solid var(--background-modifier-border);
     background-color: var(--background-primary);
-    width: 160px;
+    width: 180px;
 }
 
 .daily-note-timeline-search {
@@ -172,7 +190,8 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
     border-radius: 6px;
     border: 1px solid var(--background-modifier-border);
     background-color: var(--background-primary);
-    width: 200px;
+    flex: 1;
+    min-width: 200px;
 }
 
 .daily-note-timeline-filter-heading.is-hidden {
