@@ -1,22 +1,25 @@
 import { App, TFile } from 'obsidian';
-import { CrystalPluginSettings } from '../../settings';
 import { extractDateFromFileName, toISODateKey } from './date';
 
-export function getDateKeyFromFile(file: TFile, settings: CrystalPluginSettings): string | null {
-    const format = settings.dailyNoteDateFormat || 'YYYY-MM-DD';
-    const date = extractDateFromFileName(file.basename, format);
+export type DailyNotesConfig = {
+    folder: string;
+    format: string;
+};
+
+export function getDateKeyFromFile(file: TFile, config: DailyNotesConfig): string | null {
+    const date = extractDateFromFileName(file.basename, config.format);
     return date ? toISODateKey(date) : null;
 }
 
-export function collectDailyNoteFiles(app: App, settings: CrystalPluginSettings): TFile[] {
-    const folder = settings.dailyNotesFolder || 'DailyNotes';
+export function collectDailyNoteFiles(app: App, config: DailyNotesConfig): TFile[] {
+    const folder = config.folder;
     const files = app.vault.getFiles().filter(file => {
         return file.extension === 'md' && file.path.startsWith(`${folder}/`);
     });
     const withDates = files
         .map(file => ({
             file,
-            date: extractDateFromFileName(file.basename, settings.dailyNoteDateFormat || 'YYYY-MM-DD')
+            date: extractDateFromFileName(file.basename, config.format)
         }))
         .filter(entry => entry.date !== null) as Array<{ file: TFile; date: Date }>;
 

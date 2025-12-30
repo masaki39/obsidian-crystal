@@ -1,7 +1,7 @@
 import { App, TFile } from 'obsidian';
 import { CrystalPluginSettings } from '../../settings';
 import { TimelineCalendar } from '../calendar';
-import { collectDailyNoteFiles, getDateKeyFromFile, getDateFromKey, toISODateKey } from '../data';
+import { collectDailyNoteFiles, DailyNotesConfig, getDateKeyFromFile, getDateFromKey, toISODateKey } from '../data';
 import { filterTimelineContent, TimelineFilterMode } from '../filters';
 import {
     ensureScrollable,
@@ -15,6 +15,7 @@ import {
 import { TimelineFlowContext, jumpToDateKey, refreshTimeline, scrollToToday } from './flow';
 import { buildTimelineHeader } from './header';
 import { renderNote } from './render-range';
+import { appHasDailyNotesPluginLoaded, DEFAULT_DAILY_NOTE_FORMAT, getDailyNoteSettings } from 'obsidian-daily-notes-interface';
 
 type ControllerOptions = {
     app: App;
@@ -55,6 +56,7 @@ export class DailyNotesTimelineController {
     private settingsSaveTimer: number | null = null;
     private debugLog: (message: string, details?: Record<string, unknown>) => void;
     private pendingRefresh = false;
+    private dailyNotesConfig: DailyNotesConfig | null = null;
 
     constructor(options: ControllerOptions) {
         this.app = options.app;
@@ -107,8 +109,11 @@ export class DailyNotesTimelineController {
         if (!(file instanceof TFile)) {
             return;
         }
-        const dailyNotesFolder = this.settings.dailyNotesFolder || 'DailyNotes';
-        if (!file.path.startsWith(`${dailyNotesFolder}/`)) {
+        const config = this.getDailyNotesConfig();
+        if (!config) {
+            return;
+        }
+        if (!file.path.startsWith(`${config.folder}/`)) {
             return;
         }
         this.filteredContentCache.clear();
@@ -221,7 +226,11 @@ export class DailyNotesTimelineController {
     }
 
     private collectDailyNoteFiles(): TFile[] {
-        return collectDailyNoteFiles(this.app, this.settings);
+        const config = this.getDailyNotesConfig();
+        if (!config) {
+            return [];
+        }
+        return collectDailyNoteFiles(this.app, config);
     }
 
     private async getInitialTargetIndex(): Promise<number> {
@@ -253,7 +262,6 @@ export class DailyNotesTimelineController {
             listEl: this.listEl,
             file,
             position,
-            settings: this.settings,
             registerDomEvent: this.registerDomEvent,
             onOpenFile: (targetFile, openInNewLeaf) => {
                 void this.app.workspace.getLeaf(openInNewLeaf).openFile(targetFile);
@@ -272,7 +280,8 @@ export class DailyNotesTimelineController {
             headingFilterText: this.headingFilterText,
             markdownComponent: this.markdownComponent,
             resolveFilteredContent: (targetFile) => this.getFilteredContent(targetFile),
-            resolveLinkSourcePath: (targetFile) => targetFile.path
+            resolveLinkSourcePath: (targetFile) => targetFile.path,
+            resolveDateKey: (targetFile) => this.getDateKeyFromFile(targetFile)
         });
     }
 
@@ -420,7 +429,7 @@ export class DailyNotesTimelineController {
     }
 
     private scrollToTargetIndex(targetIndex: number, offset: number) {
-        const targetKey = getDateKeyFromFile(this.noteFiles[targetIndex], this.settings);
+        const targetKey = this.getDateKeyFromFile(this.noteFiles[targetIndex]);
         this.debugLog('scrollToTargetIndex', { targetIndex, targetKey, offset });
         if (targetKey) {
             this.scrollToDateKey(targetKey, offset);
@@ -483,7 +492,7 @@ export class DailyNotesTimelineController {
     }
 
     private findIndexByDateKey(dateKey: string): number {
-        return this.noteFiles.findIndex(file => getDateKeyFromFile(file, this.settings) === dateKey);
+        return this.noteFiles.findIndex(file => this.getDateKeyFromFile(file) === dateKey);
     }
 
     private async findNearestIndexWithContent(dateKey: string): Promise<number> {
@@ -494,7 +503,7 @@ export class DailyNotesTimelineController {
         let bestIndex = -1;
         let bestDiff = Number.POSITIVE_INFINITY;
         for (let i = 0; i < this.noteFiles.length; i += 1) {
-            const fileDateKey = getDateKeyFromFile(this.noteFiles[i], this.settings);
+            const fileDateKey = this.getDateKeyFromFile(this.noteFiles[i]);
             if (!fileDateKey) {
                 continue;
             }
@@ -546,4 +555,30 @@ export class DailyNotesTimelineController {
             debugLog: (message: string, details?: Record<string, unknown>) => this.debugLog(message, details)
         };
     }
+
+    private getDateKeyFromFile(file: TFile): string | null {
+        const config = this.getDailyNotesConfig();
+        if (!config) {
+            return null;
+        }
+        return getDateKeyFromFile(file, config);
+    }
+
+    private getDailyNotesConfig(): DailyNotesConfig | null {
+        if (!appHasDailyNotesPluginLoaded()) {
+            this.dailyNotesConfig = null;
+            return null;
+        }
+        const settings = getDailyNoteSettings();
+        const folder = settings?.folder?.trim();
+        if (!folder) {
+            this.dailyNotesConfig = null;
+            return null;
+        }
+        const format = settings?.format?.trim() || DEFAULT_DAILY_NOTE_FORMAT;
+        this.dailyNotesConfig = { folder, format };
+        return this.dailyNotesConfig;
+    }
+
+    // Notice removed: view already shows "No daily notes found."
 }

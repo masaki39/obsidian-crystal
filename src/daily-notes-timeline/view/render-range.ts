@@ -1,6 +1,4 @@
 import { MarkdownRenderer, TFile } from 'obsidian';
-import { CrystalPluginSettings } from '../../settings';
-import { getDateKeyFromFile } from '../data';
 import { createNoteElements } from './render';
 import { attachTimelineLinkHandler } from './links';
 import { attachTaskToggleHandler } from './tasks';
@@ -10,7 +8,6 @@ type RenderNoteOptions = {
     listEl: HTMLDivElement;
     file: TFile;
     position: 'append' | 'prepend';
-    settings: CrystalPluginSettings;
     registerDomEvent: (el: HTMLElement, type: string, callback: (event: Event) => any) => void;
     onOpenFile: (file: TFile, openInNewLeaf: boolean) => void;
     onOpenLink: (href: string, sourcePath: string, openInNewLeaf: boolean, isExternal: boolean) => void;
@@ -20,6 +17,7 @@ type RenderNoteOptions = {
     markdownComponent: any;
     resolveFilteredContent: (file: TFile) => Promise<string | null>;
     resolveLinkSourcePath: (file: TFile) => string;
+    resolveDateKey: (file: TFile) => string | null;
 };
 
 export async function renderNote(options: RenderNoteOptions): Promise<void> {
@@ -32,7 +30,7 @@ export async function renderNote(options: RenderNoteOptions): Promise<void> {
         registerDomEvent: options.registerDomEvent,
         onOpenFile: options.onOpenFile
     });
-    const dateKey = getDateKeyFromFile(options.file, options.settings);
+    const dateKey = options.resolveDateKey(options.file);
     if (dateKey) {
         noteEl.dataset.date = dateKey;
     }
