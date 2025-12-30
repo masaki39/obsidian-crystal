@@ -333,8 +333,8 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
 }
 
 .daily-note-timeline-highlight {
-    background: rgba(var(--interactive-accent-rgb), 0.3);
-    color: inherit;
+    background: var(--text-highlight-bg);
+    color: var(--text-highlight-fg, inherit);
     padding: 0 2px;
     border-radius: 3px;
 }
