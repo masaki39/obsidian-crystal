@@ -1,4 +1,4 @@
-import { MarkdownRenderer, TFile } from 'obsidian';
+import { App, MarkdownRenderChild, MarkdownRenderer, TFile } from 'obsidian';
 import { createNoteElements } from './render';
 import { attachTimelineLinkHandler } from './links';
 import { attachTaskToggleHandler } from './tasks';
@@ -22,6 +22,25 @@ type RenderNoteOptions = {
     resolveDateKey: (file: TFile) => string | null;
 };
 
+class TimelineMarkdownRenderChild extends MarkdownRenderChild {
+    private appRef: App;
+    private fileRef: TFile | null;
+
+    constructor(app: App, containerEl: HTMLElement, file: TFile | null) {
+        super(containerEl);
+        this.appRef = app;
+        this.fileRef = file;
+    }
+
+    get app(): App {
+        return this.appRef;
+    }
+
+    get file(): TFile | null {
+        return this.fileRef;
+    }
+}
+
 export async function renderNote(options: RenderNoteOptions): Promise<void> {
     const filtered = await options.resolveFilteredContent(options.file);
     if (filtered === null) {
@@ -43,7 +62,9 @@ export async function renderNote(options: RenderNoteOptions): Promise<void> {
         options.listEl.appendChild(noteEl);
     }
 
-    await MarkdownRenderer.renderMarkdown(filtered, bodyEl, options.file.path, options.markdownComponent);
+    const renderChild = new TimelineMarkdownRenderChild(options.markdownComponent.app, bodyEl, options.file);
+    options.markdownComponent.addChild(renderChild);
+    await MarkdownRenderer.render(options.markdownComponent.app, filtered, bodyEl, options.file.path, renderChild);
     await attachTaskToggleHandler({
         app: options.markdownComponent.app,
         container: bodyEl,

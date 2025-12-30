@@ -17,7 +17,7 @@ export interface CrystalPluginSettings {
 	blueskyAppendToDailyNote: boolean;
 	dailyNoteTimelineHeading: string;
 	dailyNoteTimelineFilterHeadingDefault: string;
-	dailyNoteTimelineDefaultFilter: 'all' | 'tasks' | 'lists' | 'links' | 'callouts' | 'heading';
+	dailyNoteTimelineDefaultFilter: 'all' | 'tasks' | 'lists' | 'links' | 'images' | 'callouts' | 'heading';
 	dailyNoteTimelineCalendarDefaultOpen: boolean;
 	dailyNoteAutoSort: boolean;
 	dailyNoteAutoLink: boolean;

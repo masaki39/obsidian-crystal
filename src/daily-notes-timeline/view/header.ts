@@ -44,6 +44,7 @@ export function buildTimelineHeader(options: HeaderOptions): HeaderElements {
         { label: 'Tasks', mode: 'tasks' },
         { label: 'Lists', mode: 'lists' },
         { label: 'Links', mode: 'links' },
+        { label: 'Images', mode: 'images' },
         { label: 'Callouts', mode: 'callouts' },
         { label: 'Heading', mode: 'heading' }
     ];
