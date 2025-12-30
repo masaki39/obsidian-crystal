@@ -265,7 +265,7 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
     bottom: 24px;
     height: 280px;
     width: calc(100% - 42px);
-    max-width: 350px;
+    max-width: 280px;
     padding: 12px;
     border-radius: 12px;
     border: 1px solid var(--background-modifier-border);
