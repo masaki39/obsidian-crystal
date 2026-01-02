@@ -79,6 +79,7 @@ export async function renderNote(options: RenderNoteOptions): Promise<RenderNote
         registerDomEvent: options.registerDomEvent,
         activeFilter: options.activeFilter,
         headingFilterText: options.headingFilterText,
+        filteredContent: filtered,
         onToggleTask: options.onToggleTask
     });
     attachTimelineLinkHandler(

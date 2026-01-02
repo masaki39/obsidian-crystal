@@ -8,31 +8,31 @@ type TaskToggleOptions = {
     registerDomEvent: (el: HTMLElement, type: string, callback: (event: Event) => any) => void;
     activeFilter: TimelineFilterMode;
     headingFilterText: string;
+    filteredContent: string;
     onToggleTask: (file: TFile, lineIndex: number, checked: boolean) => Promise<void>;
 };
 
-function getTaskLineIndicesForFilter(content: string, activeFilter: TimelineFilterMode, headingFilterText: string): number[] {
+export function mapTaskLineIndices(content: string, filteredContent: string): number[] {
     const lines = content.split('\n');
-    if (activeFilter === 'heading') {
-        const range = findHeadingSectionRange(lines, headingFilterText.trim());
-        if (!range) {
-            return [];
-        }
-        const indices: number[] = [];
-        for (let i = range.start; i < range.end; i += 1) {
-            if (isTaskLine(lines[i])) {
-                indices.push(i);
-            }
-        }
-        return indices;
+    const filteredLines = filteredContent.split('\n');
+    const filteredTaskLines = filteredLines.filter(line => isTaskLine(line));
+    if (filteredTaskLines.length === 0) {
+        return [];
     }
-
     const indices: number[] = [];
-    for (let i = 0; i < lines.length; i += 1) {
-        if (isTaskLine(lines[i])) {
-            if (activeFilter === 'tasks' || activeFilter === 'all') {
+    let searchFrom = 0;
+    for (const taskLine of filteredTaskLines) {
+        let found = false;
+        for (let i = searchFrom; i < lines.length; i += 1) {
+            if (lines[i] === taskLine) {
                 indices.push(i);
+                searchFrom = i + 1;
+                found = true;
+                break;
             }
+        }
+        if (!found) {
+            continue;
         }
     }
     return indices;
@@ -45,7 +45,7 @@ export async function attachTaskToggleHandler(options: TaskToggleOptions): Promi
     }
 
     const content = await options.app.vault.cachedRead(options.file);
-    const taskLineIndices = getTaskLineIndicesForFilter(content, options.activeFilter, options.headingFilterText);
+    const taskLineIndices = mapTaskLineIndices(content, options.filteredContent);
     const mappedCount = Math.min(taskLineIndices.length, checkboxes.length);
     for (let i = 0; i < mappedCount; i += 1) {
         checkboxes[i].dataset.crystalTaskLine = String(taskLineIndices[i]);

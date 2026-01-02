@@ -52,9 +52,10 @@ export class DailyNotesTimelineView extends ItemView {
             isLeafDeferred: () => this.leaf?.isDeferred ?? false
         });
 
-        this.registerEvent(this.app.vault.on('create', file => this.controller?.onVaultChange(file)));
-        this.registerEvent(this.app.vault.on('modify', file => this.controller?.onVaultChange(file)));
-        this.registerEvent(this.app.vault.on('delete', file => this.controller?.onVaultChange(file)));
+        this.registerEvent(this.app.vault.on('create', file => this.controller?.onVaultCreate(file)));
+        this.registerEvent(this.app.vault.on('modify', file => this.controller?.onVaultModify(file)));
+        this.registerEvent(this.app.vault.on('delete', file => this.controller?.onVaultDelete(file)));
+        this.registerEvent(this.app.vault.on('rename', (file, oldPath) => this.controller?.onVaultRename(file, oldPath)));
         this.registerEvent(this.app.workspace.on('active-leaf-change', leaf => {
             this.controller?.onActiveLeafChange(leaf, leaf === this.leaf);
         }));

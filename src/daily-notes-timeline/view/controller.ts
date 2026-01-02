@@ -45,6 +45,8 @@ export class DailyNotesTimelineController {
     private debugLog: (message: string, details?: Record<string, unknown>) => void;
     private pendingRefresh = false;
     private dailyNotesConfig: DailyNotesConfig | null = null;
+    private noteFilesCache: TFile[] | null = null;
+    private noteFilesCacheKey: string | null = null;
     private renderManager: TimelineRenderManager;
     private scrollManager: TimelineScrollManager;
 
@@ -131,30 +133,15 @@ export class DailyNotesTimelineController {
                 this.filterHeadingInputEl.value = this.headingFilterText;
             }
         }
-        this.scheduleRefresh({ preserveScroll: true });
+        this.scheduleRefresh({ preserveScroll: true, clearFilteredCache: true });
     }
 
     handleViewActivated(): Promise<void> {
         if (this.pendingRefresh) {
             this.pendingRefresh = false;
-            return this.refresh({ preserveScroll: true });
+            return this.refresh({ preserveScroll: true, clearFilteredCache: false });
         }
-        return this.refresh({ preserveScroll: false });
-    }
-
-    onVaultChange(file: TFile | any) {
-        if (!(file instanceof TFile)) {
-            return;
-        }
-        const config = this.getDailyNotesConfig();
-        if (!config) {
-            return;
-        }
-        if (!this.isInDailyNotesFolder(file.path, config.folder)) {
-            return;
-        }
-        this.renderManager.clearFilteredContentCache();
-        this.scheduleRefresh({ preserveScroll: true });
+        return this.refresh({ preserveScroll: false, clearFilteredCache: false });
     }
 
     onActiveLeafChange(leaf: any, isCurrentLeaf: boolean) {
@@ -176,7 +163,7 @@ export class DailyNotesTimelineController {
                 this.queueSettingsSave();
                 this.updateFilterUi();
                 this.renderManager.clearFilteredContentCache();
-                void this.refresh({ preserveScroll: true, alignTop: true });
+                void this.refresh({ preserveScroll: true, alignTop: true, clearFilteredCache: true });
             },
             onHeadingInput: (value) => {
                 this.headingFilterText = value;
@@ -184,12 +171,12 @@ export class DailyNotesTimelineController {
                 this.queueSettingsSave();
                 this.renderManager.clearFilteredContentCache();
                 if (this.activeFilter === 'heading') {
-                    void this.refresh({ preserveScroll: true, alignTop: true });
+                    void this.refresh({ preserveScroll: true, alignTop: true, clearFilteredCache: true });
                 }
             },
             onSearchInput: (value) => {
                 this.searchQuery = value.trim();
-                void this.refresh({ preserveScroll: true, alignTop: true });
+                void this.refresh({ preserveScroll: true, alignTop: true, clearFilteredCache: false });
             },
             onToday: () => {
                 void this.scrollToToday();
@@ -222,7 +209,7 @@ export class DailyNotesTimelineController {
         this.calendar.setVisible(this.settings.dailyNoteTimelineCalendarDefaultOpen ?? false);
     }
 
-    private scheduleRefresh(options: { preserveScroll: boolean }) {
+    private scheduleRefresh(options: { preserveScroll: boolean; clearFilteredCache?: boolean }) {
         if (this.refreshTimer !== null) {
             window.clearTimeout(this.refreshTimer);
         }
@@ -273,9 +260,18 @@ export class DailyNotesTimelineController {
     private collectDailyNoteFiles(): TFile[] {
         const config = this.getDailyNotesConfig();
         if (!config) {
+            this.noteFilesCache = null;
+            this.noteFilesCacheKey = null;
             return [];
         }
-        return collectDailyNoteFiles(this.app, config);
+        const cacheKey = `${config.folder}::${config.format}`;
+        if (this.noteFilesCache && this.noteFilesCacheKey === cacheKey) {
+            return this.noteFilesCache;
+        }
+        const files = collectDailyNoteFiles(this.app, config);
+        this.noteFilesCache = files;
+        this.noteFilesCacheKey = cacheKey;
+        return files;
     }
 
     private async getInitialTargetIndex(): Promise<number> {
@@ -283,7 +279,7 @@ export class DailyNotesTimelineController {
         return await this.findNearestIndexWithContent(todayKey);
     }
 
-    private async refresh(options: { preserveScroll?: boolean; alignTop?: boolean } = {}): Promise<void> {
+    private async refresh(options: { preserveScroll?: boolean; alignTop?: boolean; clearFilteredCache?: boolean } = {}): Promise<void> {
         await refreshTimeline(this.getFlowContext(), options);
     }
 
@@ -447,6 +443,79 @@ export class DailyNotesTimelineController {
             return !filePath.includes('/');
         }
         return filePath.startsWith(`${folder}/`);
+    }
+
+    private invalidateNoteFilesCache() {
+        this.noteFilesCache = null;
+        this.noteFilesCacheKey = null;
+    }
+
+    onVaultModify(file: TFile | any) {
+        if (!(file instanceof TFile)) {
+            return;
+        }
+        const config = this.getDailyNotesConfig();
+        if (!config) {
+            return;
+        }
+        if (!this.isInDailyNotesFolder(file.path, config.folder)) {
+            return;
+        }
+        this.renderManager.invalidateFile(file.path);
+        this.scheduleRefresh({ preserveScroll: true, clearFilteredCache: false });
+    }
+
+    onVaultCreate(file: TFile | any) {
+        if (!(file instanceof TFile)) {
+            return;
+        }
+        const config = this.getDailyNotesConfig();
+        if (!config) {
+            return;
+        }
+        if (!this.isInDailyNotesFolder(file.path, config.folder)) {
+            return;
+        }
+        this.invalidateNoteFilesCache();
+        this.renderManager.invalidateFile(file.path);
+        this.scheduleRefresh({ preserveScroll: true, clearFilteredCache: false });
+    }
+
+    onVaultDelete(file: TFile | any) {
+        if (!(file instanceof TFile)) {
+            return;
+        }
+        const config = this.getDailyNotesConfig();
+        if (!config) {
+            return;
+        }
+        if (!this.isInDailyNotesFolder(file.path, config.folder)) {
+            return;
+        }
+        this.invalidateNoteFilesCache();
+        this.renderManager.invalidateFile(file.path);
+        this.scheduleRefresh({ preserveScroll: true, clearFilteredCache: false });
+    }
+
+    onVaultRename(file: TFile | any, oldPath?: string) {
+        if (!(file instanceof TFile)) {
+            return;
+        }
+        const config = this.getDailyNotesConfig();
+        if (!config) {
+            return;
+        }
+        const wasInFolder = oldPath ? this.isInDailyNotesFolder(oldPath, config.folder) : false;
+        const isInFolder = this.isInDailyNotesFolder(file.path, config.folder);
+        if (!wasInFolder && !isInFolder) {
+            return;
+        }
+        this.invalidateNoteFilesCache();
+        if (oldPath) {
+            this.renderManager.invalidateFile(oldPath);
+        }
+        this.renderManager.invalidateFile(file.path);
+        this.scheduleRefresh({ preserveScroll: true, clearFilteredCache: false });
     }
 
     // Notice removed: view already shows "No daily notes found."

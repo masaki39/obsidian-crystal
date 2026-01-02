@@ -30,7 +30,7 @@ export type TimelineFlowContext = {
 
 export async function refreshTimeline(
     ctx: TimelineFlowContext,
-    options: { preserveScroll?: boolean; alignTop?: boolean } = {}
+    options: { preserveScroll?: boolean; alignTop?: boolean; clearFilteredCache?: boolean } = {}
 ): Promise<void> {
     const listEl = ctx.getListEl();
     if (!listEl) {
@@ -38,10 +38,13 @@ export async function refreshTimeline(
     }
     const preserveScroll = options.preserveScroll ?? false;
     const alignTop = options.alignTop ?? false;
+    const clearFilteredCache = options.clearFilteredCache ?? true;
     const anchorKey = preserveScroll ? ctx.getTopVisibleDateKey() : null;
     const anchorOffset = preserveScroll && !alignTop ? ctx.getTopVisibleOffset() : null;
-    ctx.debugLog('refresh:start', { preserveScroll, alignTop, anchorKey, anchorOffset });
-    ctx.clearFilteredContentCache();
+    ctx.debugLog('refresh:start', { preserveScroll, alignTop, anchorKey, anchorOffset, clearFilteredCache });
+    if (clearFilteredCache) {
+        ctx.clearFilteredContentCache();
+    }
     ctx.setNoteFiles(ctx.collectDailyNoteFiles());
     ctx.clearRenderedNotes();
     listEl.empty();
