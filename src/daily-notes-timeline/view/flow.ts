@@ -53,7 +53,7 @@ export async function refreshTimeline(
 
     const noteFiles = ctx.getNoteFiles();
     if (noteFiles.length === 0) {
-        listEl.createDiv({ text: 'No daily notes found.', cls: 'daily-note-timeline-empty daily-notes-timeline-empty' });
+        listEl.createDiv({ text: 'No daily notes found.', cls: 'daily-notes-timeline-empty' });
         return;
     }
 
@@ -70,7 +70,7 @@ export async function refreshTimeline(
             const end = Math.min(noteFiles.length - 1, targetIndex + ctx.getPageSize());
             await ctx.renderRange(start, end);
             if (listEl.children.length === 0) {
-                listEl.createDiv({ text: 'No results.', cls: 'daily-note-timeline-empty daily-notes-timeline-empty' });
+                listEl.createDiv({ text: 'No results.', cls: 'daily-notes-timeline-empty' });
                 return;
             }
             const offset = alignTop ? ctx.getListTopOffset() : (anchorOffset ?? 0);
@@ -84,7 +84,7 @@ export async function refreshTimeline(
     const targetIndex = await ctx.getInitialTargetIndex();
     ctx.debugLog('refresh:initial-target', { targetIndex, noteCount: noteFiles.length });
     if (targetIndex === -1) {
-        listEl.createDiv({ text: 'No results.', cls: 'daily-note-timeline-empty daily-notes-timeline-empty' });
+        listEl.createDiv({ text: 'No results.', cls: 'daily-notes-timeline-empty' });
         ctx.scheduleTopVisibleUpdate();
         return;
     }
@@ -92,7 +92,7 @@ export async function refreshTimeline(
     const end = Math.min(noteFiles.length - 1, targetIndex + ctx.getPageSize());
     await ctx.renderRange(start, end);
     if (listEl.children.length === 0) {
-        listEl.createDiv({ text: 'No results.', cls: 'daily-note-timeline-empty daily-notes-timeline-empty' });
+        listEl.createDiv({ text: 'No results.', cls: 'daily-notes-timeline-empty' });
         return;
     }
     if (targetIndex !== -1) {
@@ -119,13 +119,13 @@ export async function scrollToToday(ctx: TimelineFlowContext): Promise<void> {
 
     const noteFiles = ctx.getNoteFiles();
     if (noteFiles.length === 0) {
-        listEl.createDiv({ text: 'No daily notes found.', cls: 'daily-note-timeline-empty daily-notes-timeline-empty' });
+        listEl.createDiv({ text: 'No daily notes found.', cls: 'daily-notes-timeline-empty' });
         return;
     }
 
     const targetIndex = await ctx.getInitialTargetIndex();
     if (targetIndex === -1) {
-        listEl.createDiv({ text: 'No results.', cls: 'daily-note-timeline-empty daily-notes-timeline-empty' });
+        listEl.createDiv({ text: 'No results.', cls: 'daily-notes-timeline-empty' });
         return;
     }
 
@@ -133,7 +133,7 @@ export async function scrollToToday(ctx: TimelineFlowContext): Promise<void> {
     const end = Math.min(noteFiles.length - 1, targetIndex + ctx.getPageSize());
     await ctx.renderRange(start, end);
     if (listEl.children.length === 0) {
-        listEl.createDiv({ text: 'No results.', cls: 'daily-note-timeline-empty daily-notes-timeline-empty' });
+        listEl.createDiv({ text: 'No results.', cls: 'daily-notes-timeline-empty' });
         return;
     }
     const offset = ctx.getListTopOffset();
@@ -155,14 +155,14 @@ export async function jumpToDateKey(ctx: TimelineFlowContext, dateKey: string): 
     const targetIndex = await ctx.findNearestIndexWithContent(dateKey);
     if (targetIndex === -1) {
         listEl.empty();
-        listEl.createDiv({ text: 'No results.', cls: 'daily-note-timeline-empty daily-notes-timeline-empty' });
+        listEl.createDiv({ text: 'No results.', cls: 'daily-notes-timeline-empty' });
         return;
     }
     const start = Math.max(0, targetIndex - ctx.getPageSize());
     const end = Math.min(noteFiles.length - 1, targetIndex + ctx.getPageSize());
     await ctx.renderRange(start, end);
     if (listEl.children.length === 0) {
-        listEl.createDiv({ text: 'No results.', cls: 'daily-note-timeline-empty daily-notes-timeline-empty' });
+        listEl.createDiv({ text: 'No results.', cls: 'daily-notes-timeline-empty' });
         return;
     }
     const offset = ctx.getListTopOffset();

@@ -60,7 +60,7 @@ export function highlightMatches(container: HTMLElement, query: string) {
                 fragment.appendChild(document.createTextNode(text.slice(lastIndex, start)));
             }
             const mark = document.createElement('mark');
-            mark.classList.add('daily-note-timeline-highlight', 'daily-notes-timeline-highlight');
+            mark.className = 'daily-notes-timeline-highlight';
             mark.textContent = text.slice(start, end);
             fragment.appendChild(mark);
             lastIndex = end;

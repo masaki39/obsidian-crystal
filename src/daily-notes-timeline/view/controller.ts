@@ -121,7 +121,6 @@ export class DailyNotesTimelineController {
 
     async onOpen(): Promise<void> {
         this.contentEl.empty();
-        this.contentEl.addClass('daily-note-timeline-root');
         this.contentEl.addClass('daily-notes-timeline-root');
         this.activeFilter = this.settings.dailyNoteTimelineDefaultFilter ?? 'all';
         if (this.headingFilterText.trim().length === 0) {
@@ -575,7 +574,7 @@ export class DailyNotesTimelineController {
         noteEl.remove();
         this.updateRenderedRangeFromDom();
         if (listEl.children.length === 0) {
-            listEl.createDiv({ text: 'No results.', cls: 'daily-note-timeline-empty daily-notes-timeline-empty' });
+            listEl.createDiv({ text: 'No results.', cls: 'daily-notes-timeline-empty' });
         }
         return true;
     }

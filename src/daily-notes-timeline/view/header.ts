@@ -19,31 +19,24 @@ export type HeaderElements = {
 };
 
 export function buildTimelineHeader(options: HeaderOptions): HeaderElements {
-    const headerEl = options.contentEl.createDiv('daily-note-timeline-header');
-    headerEl.addClass('daily-notes-timeline-header');
-    const headerControls = headerEl.createDiv('daily-note-timeline-controls');
-    headerControls.addClass('daily-notes-timeline-controls');
-    const headerTopRow = headerControls.createDiv('daily-note-timeline-header-row');
-    headerTopRow.addClass('daily-notes-timeline-header-row');
-    const headerBottomRow = headerControls.createDiv('daily-note-timeline-header-row');
-    headerBottomRow.addClass('daily-notes-timeline-header-row');
+    const headerEl = options.contentEl.createDiv('daily-notes-timeline-header');
+    const headerControls = headerEl.createDiv('daily-notes-timeline-controls');
+    const headerTopRow = headerControls.createDiv('daily-notes-timeline-header-row');
+    const headerBottomRow = headerControls.createDiv('daily-notes-timeline-header-row');
 
     const searchInputEl = headerTopRow.createEl('input', {
-        cls: 'daily-note-timeline-search',
+        cls: 'daily-notes-timeline-search',
         type: 'text',
         placeholder: 'Search'
     });
-    searchInputEl.addClass('daily-notes-timeline-search');
     searchInputEl.value = options.searchQuery;
 
     const headerTodayButton = headerTopRow.createEl('button', {
         text: 'Today',
-        cls: 'daily-note-timeline-today'
+        cls: 'daily-notes-timeline-today'
     });
-    headerTodayButton.addClass('daily-notes-timeline-today');
 
-    const filterTabsEl = headerBottomRow.createDiv('daily-note-timeline-filter-tabs');
-    filterTabsEl.addClass('daily-notes-timeline-filter-tabs');
+    const filterTabsEl = headerBottomRow.createDiv('daily-notes-timeline-filter-tabs');
     const filterTabButtons: HTMLButtonElement[] = [];
     const filters: Array<{ label: string; mode: TimelineFilterMode }> = [
         { label: 'All', mode: 'all' },
@@ -57,20 +50,18 @@ export function buildTimelineHeader(options: HeaderOptions): HeaderElements {
     for (const filter of filters) {
         const button = filterTabsEl.createEl('button', {
             text: filter.label,
-            cls: 'daily-note-timeline-filter-tab'
+            cls: 'daily-notes-timeline-filter-tab'
         });
-        button.addClass('daily-notes-timeline-filter-tab');
         button.dataset.filter = filter.mode;
         filterTabButtons.push(button);
         options.registerDomEvent(button, 'click', () => options.onFilterChange(filter.mode));
     }
 
     const filterHeadingInputEl = headerBottomRow.createEl('input', {
-        cls: 'daily-note-timeline-filter-heading',
+        cls: 'daily-notes-timeline-filter-heading',
         type: 'text',
         placeholder: '# Time Line'
     });
-    filterHeadingInputEl.addClass('daily-notes-timeline-filter-heading');
     filterHeadingInputEl.value = options.headingFilterText;
 
     options.registerDomEvent(filterHeadingInputEl, 'input', () => {

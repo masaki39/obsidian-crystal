@@ -133,7 +133,7 @@ export class TimelineRenderManager {
         if (filtered === null) {
             return false;
         }
-        const bodyEl = noteEl.querySelector('.daily-note-timeline-item-body') as HTMLDivElement | null;
+        const bodyEl = noteEl.querySelector('.daily-notes-timeline-item-body') as HTMLDivElement | null;
         if (!bodyEl) {
             return false;
         }

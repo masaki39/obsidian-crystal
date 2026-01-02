@@ -13,14 +13,14 @@ export type NoteElements = {
 
 export function createNoteElements(options: NoteElementOptions): NoteElements {
     const noteEl = document.createElement('div');
-    noteEl.className = 'daily-note-timeline-item daily-notes-timeline-item';
+    noteEl.className = 'daily-notes-timeline-item';
     noteEl.dataset.path = options.file.path;
 
     const titleRowEl = document.createElement('div');
-    titleRowEl.className = 'daily-note-timeline-item-header daily-notes-timeline-item-header';
+    titleRowEl.className = 'daily-notes-timeline-item-header';
 
     const titleEl = document.createElement('a');
-    titleEl.className = 'daily-note-timeline-item-title daily-notes-timeline-item-title';
+    titleEl.className = 'daily-notes-timeline-item-title';
     titleEl.textContent = options.file.basename;
     titleEl.href = options.file.path;
     titleEl.setAttribute('data-href', options.file.path);
@@ -33,7 +33,7 @@ export function createNoteElements(options: NoteElementOptions): NoteElements {
     titleRowEl.appendChild(titleEl);
 
     const bodyEl = document.createElement('div');
-    bodyEl.className = 'daily-note-timeline-item-body daily-notes-timeline-item-body';
+    bodyEl.className = 'daily-notes-timeline-item-body';
 
     noteEl.appendChild(titleRowEl);
     noteEl.appendChild(bodyEl);

@@ -37,31 +37,22 @@ export class TimelineCalendar {
     }
 
     build() {
-        this.calendarEl = this.contentEl.createDiv('daily-note-timeline-calendar');
-        this.calendarEl.addClass('daily-notes-timeline-calendar');
+        this.calendarEl = this.contentEl.createDiv('daily-notes-timeline-calendar');
         this.calendarEl.addClass('is-hidden');
-        const calendarHeader = this.calendarEl.createDiv('daily-note-timeline-calendar-header');
-        calendarHeader.addClass('daily-notes-timeline-calendar-header');
-        this.calendarTitleEl = calendarHeader.createDiv('daily-note-timeline-calendar-title');
-        this.calendarTitleEl.addClass('daily-notes-timeline-calendar-title');
-        const calendarNav = calendarHeader.createDiv('daily-note-timeline-calendar-nav');
-        calendarNav.addClass('daily-notes-timeline-calendar-nav');
-        const prevButton = calendarNav.createEl('button', { text: '<', cls: 'daily-note-timeline-calendar-nav-button' });
-        prevButton.addClass('daily-notes-timeline-calendar-nav-button');
-        const todayButton = calendarNav.createEl('button', { text: 'today', cls: 'daily-note-timeline-calendar-nav-button' });
-        todayButton.addClass('daily-notes-timeline-calendar-nav-button');
-        const nextButton = calendarNav.createEl('button', { text: '>', cls: 'daily-note-timeline-calendar-nav-button' });
-        nextButton.addClass('daily-notes-timeline-calendar-nav-button');
+        const calendarHeader = this.calendarEl.createDiv('daily-notes-timeline-calendar-header');
+        this.calendarTitleEl = calendarHeader.createDiv('daily-notes-timeline-calendar-title');
+        const calendarNav = calendarHeader.createDiv('daily-notes-timeline-calendar-nav');
+        const prevButton = calendarNav.createEl('button', { text: '<', cls: 'daily-notes-timeline-calendar-nav-button' });
+        const todayButton = calendarNav.createEl('button', { text: 'today', cls: 'daily-notes-timeline-calendar-nav-button' });
+        const nextButton = calendarNav.createEl('button', { text: '>', cls: 'daily-notes-timeline-calendar-nav-button' });
         this.registerDomEvent(prevButton, 'click', () => this.shiftCalendarMonth(-1));
         this.registerDomEvent(todayButton, 'click', () => this.scrollToToday());
         this.registerDomEvent(nextButton, 'click', () => this.shiftCalendarMonth(1));
-        this.calendarGridEl = this.calendarEl.createDiv('daily-note-timeline-calendar-grid');
-        this.calendarGridEl.addClass('daily-notes-timeline-calendar-grid');
+        this.calendarGridEl = this.calendarEl.createDiv('daily-notes-timeline-calendar-grid');
 
         this.toggleButtonEl = this.contentEl.createEl('button', {
-            cls: 'daily-note-timeline-calendar-toggle'
+            cls: 'daily-notes-timeline-calendar-toggle'
         });
-        this.toggleButtonEl.addClass('daily-notes-timeline-calendar-toggle');
         setIcon(this.toggleButtonEl, 'calendar');
         this.registerDomEvent(this.toggleButtonEl, 'click', () => this.toggleCalendar());
     }
@@ -89,7 +80,6 @@ export class TimelineCalendar {
             return;
         }
         this.calendarEl.toggleClass('is-hidden', !this.isVisible);
-        this.contentEl.toggleClass('daily-note-timeline-calendar-open', this.isVisible);
         this.contentEl.toggleClass('daily-notes-timeline-calendar-open', this.isVisible);
         if (this.currentTopDateKey) {
             this.updateForDate(this.currentTopDateKey);
@@ -133,8 +123,7 @@ export class TimelineCalendar {
         this.calendarGridEl.empty();
         const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         for (const [index, dayName] of weekdays.entries()) {
-            const dayEl = this.calendarGridEl.createDiv('daily-note-timeline-calendar-weekday');
-            dayEl.addClass('daily-notes-timeline-calendar-weekday');
+            const dayEl = this.calendarGridEl.createDiv('daily-notes-timeline-calendar-weekday');
             dayEl.textContent = dayName;
             if (index === 0) {
                 dayEl.addClass('is-sun');
@@ -150,15 +139,13 @@ export class TimelineCalendar {
         const daysInMonth = new Date(year, month + 1, 0).getDate();
 
         for (let i = 0; i < startWeekday; i += 1) {
-            const empty = this.calendarGridEl.createDiv('daily-note-timeline-calendar-empty');
-            empty.addClass('daily-notes-timeline-calendar-empty');
+            this.calendarGridEl.createDiv('daily-notes-timeline-calendar-empty');
         }
 
         for (let day = 1; day <= daysInMonth; day += 1) {
             const date = new Date(year, month, day);
             const key = toISODateKey(date);
-            const dayEl = this.calendarGridEl.createDiv('daily-note-timeline-calendar-day');
-            dayEl.addClass('daily-notes-timeline-calendar-day');
+            const dayEl = this.calendarGridEl.createDiv('daily-notes-timeline-calendar-day');
             dayEl.textContent = day.toString();
             dayEl.dataset.date = key;
             if (key === activeKey) {
@@ -172,8 +159,7 @@ export class TimelineCalendar {
         const totalCells = usedCells + trailingCells;
         const remainingToSixRows = Math.max(0, 42 - totalCells);
         for (let i = 0; i < trailingCells + remainingToSixRows; i += 1) {
-            const empty = this.calendarGridEl.createDiv('daily-note-timeline-calendar-empty');
-            empty.addClass('daily-notes-timeline-calendar-empty');
+            this.calendarGridEl.createDiv('daily-notes-timeline-calendar-empty');
         }
     }
 
@@ -181,7 +167,7 @@ export class TimelineCalendar {
         if (!this.calendarGridEl) {
             return;
         }
-        const activeEl = this.calendarGridEl.querySelector('.daily-note-timeline-calendar-day.is-active');
+        const activeEl = this.calendarGridEl.querySelector('.daily-notes-timeline-calendar-day.is-active');
         if (activeEl) {
             activeEl.classList.remove('is-active');
         }
