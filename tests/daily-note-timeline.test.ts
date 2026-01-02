@@ -1,4 +1,5 @@
 import { extractHeadingSectionFromContent, filterTasksContent, filterTimelineContent } from '../src/daily-notes-timeline/filters';
+import { extractDateFromFileName, toISODateKey } from '../src/daily-notes-timeline/data';
 
 describe('daily note timeline filters', () => {
     test('filterTasksContent returns task lines only', () => {
@@ -42,5 +43,17 @@ describe('daily note timeline filters', () => {
     test('filterTimelineContent respects heading filter', () => {
         const input = ['# A', 'text', '# B', 'b1'].join('\n');
         expect(filterTimelineContent(input, 'heading', 'B')).toBe('b1');
+    });
+
+    test('extractDateFromFileName supports separators and literals', () => {
+        const date = extractDateFromFileName('2024.02.03 daily', 'YYYY.MM.DD [daily]');
+        expect(date).not.toBeNull();
+        expect(toISODateKey(date as Date)).toBe('2024-02-03');
+    });
+
+    test('extractDateFromFileName supports weekday tokens', () => {
+        const date = extractDateFromFileName('2024-02-03 Sat', 'YYYY-MM-DD ddd');
+        expect(date).not.toBeNull();
+        expect(toISODateKey(date as Date)).toBe('2024-02-03');
     });
 });

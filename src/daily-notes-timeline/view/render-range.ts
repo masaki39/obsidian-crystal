@@ -8,6 +8,7 @@ import { highlightMatches } from './highlight';
 type RenderNoteOptions = {
     listEl: HTMLDivElement;
     file: TFile;
+    noteIndex: number;
     position: 'append' | 'prepend';
     registerDomEvent: (el: HTMLElement, type: string, callback: (event: Event) => any) => void;
     onOpenFile: (file: TFile, openInNewLeaf: boolean) => void;
@@ -51,6 +52,7 @@ export async function renderNote(options: RenderNoteOptions): Promise<void> {
         registerDomEvent: options.registerDomEvent,
         onOpenFile: options.onOpenFile
     });
+    noteEl.dataset.index = String(options.noteIndex);
     const dateKey = options.resolveDateKey(options.file);
     if (dateKey) {
         noteEl.dataset.date = dateKey;

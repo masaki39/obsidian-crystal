@@ -10,7 +10,7 @@ type LoaderOptions = {
     endIndex: number;
     scrollerEl: HTMLDivElement | null;
     hasFilteredContent: (file: TFile) => Promise<boolean>;
-    renderNote: (file: TFile, position: 'append' | 'prepend') => Promise<void>;
+    renderNote: (file: TFile, position: 'append' | 'prepend', noteIndex: number) => Promise<void>;
 };
 
 type LoaderResult = {
@@ -18,7 +18,23 @@ type LoaderResult = {
     endIndex: number;
 };
 
-function trimRendered(listEl: HTMLDivElement, maxRendered: number, direction: 'top' | 'bottom', scrollerEl: HTMLDivElement | null, startIndex: number, endIndex: number): LoaderResult {
+function getElementIndex(element: Element | null): number | null {
+    if (!element) {
+        return null;
+    }
+    const value = (element as HTMLElement).dataset.index;
+    const parsed = value ? Number(value) : Number.NaN;
+    return Number.isFinite(parsed) ? parsed : null;
+}
+
+function trimRendered(
+    listEl: HTMLDivElement,
+    maxRendered: number,
+    direction: 'top' | 'bottom',
+    scrollerEl: HTMLDivElement | null,
+    startIndex: number,
+    endIndex: number
+): LoaderResult {
     const currentCount = listEl.children.length;
     if (currentCount <= maxRendered) {
         return { startIndex, endIndex };
@@ -34,7 +50,7 @@ function trimRendered(listEl: HTMLDivElement, maxRendered: number, direction: 't
         for (let i = 0; i < removeCount; i += 1) {
             listEl.firstElementChild?.remove();
         }
-        const nextStartIndex = Math.min(startIndex + removeCount, endIndex + 1);
+        const nextStartIndex = getElementIndex(listEl.firstElementChild) ?? startIndex;
         restoreAnchorOffset(anchor, anchorOffset, scrollerEl);
         return { startIndex: nextStartIndex, endIndex };
     }
@@ -42,7 +58,7 @@ function trimRendered(listEl: HTMLDivElement, maxRendered: number, direction: 't
     for (let i = 0; i < removeCount; i += 1) {
         listEl.lastElementChild?.remove();
     }
-    const nextEndIndex = Math.max(startIndex - 1, endIndex - removeCount);
+    const nextEndIndex = getElementIndex(listEl.lastElementChild) ?? endIndex;
     return { startIndex, endIndex: nextEndIndex };
 }
 
@@ -61,7 +77,7 @@ export async function loadPrevious(options: LoaderOptions): Promise<LoaderResult
         if (!await options.hasFilteredContent(options.noteFiles[i])) {
             continue;
         }
-        await options.renderNote(options.noteFiles[i], 'prepend');
+        await options.renderNote(options.noteFiles[i], 'prepend', i);
         renderedCount += 1;
     }
 
@@ -83,7 +99,7 @@ export async function loadNext(options: LoaderOptions): Promise<LoaderResult> {
         if (!await options.hasFilteredContent(options.noteFiles[i])) {
             continue;
         }
-        await options.renderNote(options.noteFiles[i], 'append');
+        await options.renderNote(options.noteFiles[i], 'append', i);
         renderedCount += 1;
     }
 

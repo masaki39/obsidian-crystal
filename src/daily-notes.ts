@@ -193,7 +193,7 @@ export class DailyNotesManager {
     }
 
     private async ensureDailyNoteFile(date: Date): Promise<TFile | null> {
-        if (!appHasDailyNotesPluginLoaded()) {
+        if (!this.isDailyNotesPluginLoaded()) {
             new Notice('Daily Notes plugin is disabled.');
             return null;
         }
@@ -204,7 +204,14 @@ export class DailyNotesManager {
                 return existing;
             }
         }
-        return await createDailyNote(moment(date));
+        if (typeof window === 'undefined') {
+            return null;
+        }
+        try {
+            return await createDailyNote(moment(date));
+        } catch (error) {
+            return null;
+        }
     }
 
     async appendToTimeline(text: string, date: Date = new Date(), color?: string): Promise<void> {
@@ -409,18 +416,55 @@ export class DailyNotesManager {
         if (!config) {
             return null;
         }
-        const fileName = moment(date).format(config.format);
+        const fileName = typeof window === 'undefined'
+            ? this.formatDateForDailyNote(date, config.format)
+            : moment(date).format(config.format);
         return config.folder ? `${config.folder}/${fileName}.md` : `${fileName}.md`;
     }
 
     private getDailyNotesConfig(): { folder: string; format: string } | null {
-        if (!appHasDailyNotesPluginLoaded()) {
+        if (!this.isDailyNotesPluginLoaded()) {
             return null;
         }
-        const settings = getDailyNoteSettings();
-        const folder = settings?.folder?.trim() ?? '';
-        const format = settings?.format?.trim() || DEFAULT_DAILY_NOTE_FORMAT;
-        return { folder, format };
+        if (typeof window === 'undefined') {
+            return { folder: 'DailyNotes', format: DEFAULT_DAILY_NOTE_FORMAT };
+        }
+        try {
+            const settings = getDailyNoteSettings();
+            const folder = settings?.folder?.trim() ?? '';
+            const format = settings?.format?.trim() || DEFAULT_DAILY_NOTE_FORMAT;
+            return { folder, format };
+        } catch (error) {
+            return { folder: 'DailyNotes', format: DEFAULT_DAILY_NOTE_FORMAT };
+        }
+    }
+
+    private isDailyNotesPluginLoaded(): boolean {
+        if (typeof window === 'undefined') {
+            return true;
+        }
+        try {
+            return appHasDailyNotesPluginLoaded();
+        } catch (error) {
+            return false;
+        }
+    }
+
+    private formatDateForDailyNote(date: Date, format: string): string {
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        const paddedMonth = month.toString().padStart(2, '0');
+        const paddedDay = day.toString().padStart(2, '0');
+        const replacements: Record<string, string> = {
+            YYYY: year.toString(),
+            YY: (year % 100).toString().padStart(2, '0'),
+            MM: paddedMonth,
+            M: month.toString(),
+            DD: paddedDay,
+            D: day.toString()
+        };
+        return format.replace(/YYYY|YY|MM|M|DD|D/g, token => replacements[token] ?? token);
     }
 
     private isDailyNoteFile(file: TFile): boolean {

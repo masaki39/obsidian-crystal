@@ -262,17 +262,19 @@ export class DailyNotesTimelineController {
         this.startIndex = start;
         this.endIndex = end;
         for (let i = start; i <= end; i += 1) {
-            await this.renderNote(this.noteFiles[i], 'append');
+            await this.renderNote(this.noteFiles[i], 'append', i);
         }
+        this.updateRenderedRangeFromDom();
     }
 
-    private async renderNote(file: TFile, position: 'append' | 'prepend'): Promise<void> {
+    private async renderNote(file: TFile, position: 'append' | 'prepend', noteIndex: number): Promise<void> {
         if (!this.listEl) {
             return;
         }
         await renderNote({
             listEl: this.listEl,
             file,
+            noteIndex,
             position,
             registerDomEvent: this.registerDomEvent,
             onOpenFile: (targetFile, openInNewLeaf) => {
@@ -387,7 +389,7 @@ export class DailyNotesTimelineController {
             return;
         }
         this.isLoading = true;
-        const { startIndex } = await loadPrevious({
+        const { startIndex, endIndex } = await loadPrevious({
             listEl: this.listEl,
             noteFiles: this.noteFiles,
             pageSize: this.pageSize,
@@ -396,9 +398,10 @@ export class DailyNotesTimelineController {
             endIndex: this.endIndex,
             scrollerEl: this.scrollerEl,
             hasFilteredContent: (file) => this.hasFilteredContent(file),
-            renderNote: (file, position) => this.renderNote(file, position)
+            renderNote: (file, position, noteIndex) => this.renderNote(file, position, noteIndex)
         });
         this.startIndex = startIndex;
+        this.endIndex = endIndex;
         this.isLoading = false;
     }
 
@@ -407,7 +410,7 @@ export class DailyNotesTimelineController {
             return;
         }
         this.isLoading = true;
-        const { endIndex } = await loadNext({
+        const { startIndex, endIndex } = await loadNext({
             listEl: this.listEl,
             noteFiles: this.noteFiles,
             pageSize: this.pageSize,
@@ -416,8 +419,9 @@ export class DailyNotesTimelineController {
             endIndex: this.endIndex,
             scrollerEl: this.scrollerEl,
             hasFilteredContent: (file) => this.hasFilteredContent(file),
-            renderNote: (file, position) => this.renderNote(file, position)
+            renderNote: (file, position, noteIndex) => this.renderNote(file, position, noteIndex)
         });
+        this.startIndex = startIndex;
         this.endIndex = endIndex;
         this.isLoading = false;
     }
@@ -486,6 +490,22 @@ export class DailyNotesTimelineController {
             scrollElementToOffset(targetEl, this.scrollerEl, offset);
             this.scheduleTopVisibleUpdate();
         });
+    }
+
+    private updateRenderedRangeFromDom() {
+        if (!this.listEl || this.listEl.children.length === 0) {
+            return;
+        }
+        const first = this.listEl.firstElementChild as HTMLElement | null;
+        const last = this.listEl.lastElementChild as HTMLElement | null;
+        const firstIndex = first?.dataset.index ? Number(first.dataset.index) : Number.NaN;
+        const lastIndex = last?.dataset.index ? Number(last.dataset.index) : Number.NaN;
+        if (Number.isFinite(firstIndex)) {
+            this.startIndex = firstIndex;
+        }
+        if (Number.isFinite(lastIndex)) {
+            this.endIndex = lastIndex;
+        }
     }
 
     private scrollToDateKey(dateKey: string, offset: number) {

@@ -64,6 +64,10 @@ export async function refreshTimeline(
             const start = Math.max(0, targetIndex - ctx.getPageSize());
             const end = Math.min(noteFiles.length - 1, targetIndex + ctx.getPageSize());
             await ctx.renderRange(start, end);
+            if (listEl.children.length === 0) {
+                listEl.createDiv({ text: 'No results.', cls: 'daily-note-timeline-empty' });
+                return;
+            }
             const offset = alignTop ? ctx.getListTopOffset() : (anchorOffset ?? 0);
             ctx.debugLog('refresh:scroll-preserve', { targetIndex, start, end, offset });
             ctx.scrollToTargetIndex(targetIndex, offset);
@@ -75,12 +79,17 @@ export async function refreshTimeline(
     const targetIndex = await ctx.getInitialTargetIndex();
     ctx.debugLog('refresh:initial-target', { targetIndex, noteCount: noteFiles.length });
     if (targetIndex === -1) {
+        listEl.createDiv({ text: 'No results.', cls: 'daily-note-timeline-empty' });
         ctx.scheduleTopVisibleUpdate();
         return;
     }
     const start = Math.max(0, targetIndex - ctx.getPageSize());
     const end = Math.min(noteFiles.length - 1, targetIndex + ctx.getPageSize());
     await ctx.renderRange(start, end);
+    if (listEl.children.length === 0) {
+        listEl.createDiv({ text: 'No results.', cls: 'daily-note-timeline-empty' });
+        return;
+    }
     if (targetIndex !== -1) {
         const offset = ctx.getListTopOffset();
         ctx.debugLog('refresh:scroll-initial', { targetIndex, start, end, offset });
@@ -110,18 +119,27 @@ export async function scrollToToday(ctx: TimelineFlowContext): Promise<void> {
 
     const targetIndex = await ctx.getInitialTargetIndex();
     if (targetIndex === -1) {
+        listEl.createDiv({ text: 'No results.', cls: 'daily-note-timeline-empty' });
         return;
     }
 
     const start = Math.max(0, targetIndex - ctx.getPageSize());
     const end = Math.min(noteFiles.length - 1, targetIndex + ctx.getPageSize());
     await ctx.renderRange(start, end);
+    if (listEl.children.length === 0) {
+        listEl.createDiv({ text: 'No results.', cls: 'daily-note-timeline-empty' });
+        return;
+    }
     const offset = ctx.getListTopOffset();
     ctx.debugLog('scrollToToday:scroll', { targetIndex, start, end, offset });
     ctx.scrollToTargetIndex(targetIndex, offset);
 }
 
 export async function jumpToDateKey(ctx: TimelineFlowContext, dateKey: string): Promise<void> {
+    const listEl = ctx.getListEl();
+    if (!listEl) {
+        return;
+    }
     const noteFiles = ctx.getNoteFiles().length > 0 ? ctx.getNoteFiles() : ctx.collectDailyNoteFiles();
     if (noteFiles.length === 0) {
         return;
@@ -129,11 +147,17 @@ export async function jumpToDateKey(ctx: TimelineFlowContext, dateKey: string): 
     ctx.setNoteFiles(noteFiles);
     const targetIndex = await ctx.findNearestIndexWithContent(dateKey);
     if (targetIndex === -1) {
+        listEl.empty();
+        listEl.createDiv({ text: 'No results.', cls: 'daily-note-timeline-empty' });
         return;
     }
     const start = Math.max(0, targetIndex - ctx.getPageSize());
     const end = Math.min(noteFiles.length - 1, targetIndex + ctx.getPageSize());
     await ctx.renderRange(start, end);
+    if (listEl.children.length === 0) {
+        listEl.createDiv({ text: 'No results.', cls: 'daily-note-timeline-empty' });
+        return;
+    }
     const offset = ctx.getListTopOffset();
     ctx.scrollToTargetIndex(targetIndex, offset);
 }
