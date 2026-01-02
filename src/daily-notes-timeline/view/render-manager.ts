@@ -29,6 +29,8 @@ export class TimelineRenderManager {
     private getHeadingFilterText: () => string;
     private getSearchQuery: () => string;
     private filteredContentCache = new Map<string, string | null>();
+    private searchMatchCache = new Map<string, boolean>();
+    private searchMatchCacheKey: string | null = null;
     private renderedChildren = new Map<HTMLElement, MarkdownRenderChild>();
 
     constructor(options: RenderManagerOptions) {
@@ -47,10 +49,13 @@ export class TimelineRenderManager {
 
     clearFilteredContentCache() {
         this.filteredContentCache.clear();
+        this.searchMatchCache.clear();
+        this.searchMatchCacheKey = null;
     }
 
     invalidateFile(path: string) {
         this.filteredContentCache.delete(path);
+        this.searchMatchCache.delete(path);
     }
 
     clearRenderedNotes() {
@@ -94,7 +99,18 @@ export class TimelineRenderManager {
     }
 
     async hasFilteredContent(file: TFile): Promise<boolean> {
-        return await this.getFilteredContent(file) !== null;
+        const searchKey = this.getSearchCacheKey();
+        if (this.searchMatchCacheKey !== searchKey) {
+            this.searchMatchCacheKey = searchKey;
+            this.searchMatchCache.clear();
+        }
+        if (this.searchMatchCache.has(file.path)) {
+            return this.searchMatchCache.get(file.path) ?? false;
+        }
+        const content = await this.getFilteredContent(file);
+        const matches = content !== null;
+        this.searchMatchCache.set(file.path, matches);
+        return matches;
     }
 
     private applyFilter(content: string): string | null {
@@ -126,5 +142,11 @@ export class TimelineRenderManager {
         const haystack = content.toLowerCase();
         const matchesAll = terms.every(term => haystack.includes(term.toLowerCase()));
         return matchesAll ? content : null;
+    }
+
+    private getSearchCacheKey(): string {
+        const heading = this.getHeadingFilterText().trim();
+        const query = this.getSearchQuery().trim().toLowerCase();
+        return `${this.getActiveFilter()}::${heading}::${query}`;
     }
 }
