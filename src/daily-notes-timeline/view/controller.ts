@@ -443,15 +443,20 @@ export class DailyNotesTimelineController {
     }
 
     private getDailyNotesConfig(): DailyNotesConfig | null {
-        if (!appHasDailyNotesPluginLoaded()) {
+        try {
+            if (!appHasDailyNotesPluginLoaded()) {
+                this.dailyNotesConfig = null;
+                return null;
+            }
+            const settings = getDailyNoteSettings();
+            const folder = settings?.folder?.trim() ?? '';
+            const format = settings?.format?.trim() || DEFAULT_DAILY_NOTE_FORMAT;
+            this.dailyNotesConfig = { folder, format };
+            return this.dailyNotesConfig;
+        } catch (error) {
             this.dailyNotesConfig = null;
             return null;
         }
-        const settings = getDailyNoteSettings();
-        const folder = settings?.folder?.trim() ?? '';
-        const format = settings?.format?.trim() || DEFAULT_DAILY_NOTE_FORMAT;
-        this.dailyNotesConfig = { folder, format };
-        return this.dailyNotesConfig;
     }
 
     private isInDailyNotesFolder(filePath: string, folder: string): boolean {

@@ -13,7 +13,11 @@ type TaskToggleOptions = {
     onToggleTask: (file: TFile, lineIndex: number, checked: boolean) => Promise<void>;
 };
 
-export function mapTaskLineIndices(content: string, filteredContent: string): number[] {
+export function mapTaskLineIndices(
+    content: string,
+    filteredContent: string,
+    range?: { start: number; end: number }
+): number[] {
     const lines = content.split('\n');
     const filteredLines = filteredContent.split('\n');
     const filteredTaskLines = filteredLines.filter(line => isTaskLine(line));
@@ -21,7 +25,9 @@ export function mapTaskLineIndices(content: string, filteredContent: string): nu
         return [];
     }
     const lineIndexMap = new Map<string, number[]>();
-    for (let i = 0; i < lines.length; i += 1) {
+    const start = range ? Math.max(0, range.start) : 0;
+    const end = range ? Math.min(lines.length, range.end) : lines.length;
+    for (let i = start; i < end; i += 1) {
         const line = lines[i];
         if (!isTaskLine(line)) {
             continue;
@@ -35,7 +41,7 @@ export function mapTaskLineIndices(content: string, filteredContent: string): nu
     }
     const cursorByLine = new Map<string, number>();
     const indices: number[] = [];
-    let searchFrom = 0;
+    let searchFrom = start;
     for (const taskLine of filteredTaskLines) {
         const candidates = lineIndexMap.get(taskLine);
         if (!candidates || candidates.length === 0) {
@@ -64,7 +70,10 @@ export async function attachTaskToggleHandler(options: TaskToggleOptions): Promi
     }
 
     const content = options.rawContent ?? await options.app.vault.cachedRead(options.file);
-    const taskLineIndices = mapTaskLineIndices(content, options.filteredContent);
+    const headingRange = options.activeFilter === 'heading'
+        ? findHeadingSectionRange(content.split('\n'), options.headingFilterText)
+        : null;
+    const taskLineIndices = mapTaskLineIndices(content, options.filteredContent, headingRange ?? undefined);
     const mappedCount = Math.min(taskLineIndices.length, checkboxes.length);
     for (let i = 0; i < mappedCount; i += 1) {
         checkboxes[i].dataset.crystalTaskLine = String(taskLineIndices[i]);

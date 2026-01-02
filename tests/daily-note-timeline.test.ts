@@ -1,4 +1,4 @@
-import { extractHeadingSectionFromContent, filterTasksContent, filterTimelineContent } from '../src/daily-notes-timeline/filters';
+import { extractHeadingSectionFromContent, filterTasksContent, filterTimelineContent, findHeadingSectionRange } from '../src/daily-notes-timeline/filters';
 import { collectDailyNoteFiles, extractDateFromFileName, toISODateKey } from '../src/daily-notes-timeline/data';
 import { mapTaskLineIndices } from '../src/daily-notes-timeline/view/tasks';
 import { TFile } from 'obsidian';
@@ -114,6 +114,24 @@ describe('daily note timeline task mapping', () => {
 
         const filtered = filterTimelineContent(content, 'heading', 'Target') ?? '';
         const indices = mapTaskLineIndices(content, filtered);
+
+        expect(indices).toEqual([3, 4]);
+    });
+
+    test('maps heading tasks when duplicate lines exist elsewhere', () => {
+        const content = [
+            '# One',
+            '- [ ] duplicate',
+            '## Target',
+            '- [ ] duplicate',
+            '- [ ] unique',
+            '## Next',
+            '- [ ] duplicate',
+        ].join('\n');
+
+        const filtered = filterTimelineContent(content, 'heading', 'Target') ?? '';
+        const range = findHeadingSectionRange(content.split('\n'), 'Target');
+        const indices = mapTaskLineIndices(content, filtered, range ?? undefined);
 
         expect(indices).toEqual([3, 4]);
     });
