@@ -586,7 +586,7 @@ export class DailyNotesTimelineController {
         noteEl.remove();
         this.updateRenderedRangeFromDom();
         if (listEl.children.length === 0) {
-            listEl.createDiv({ text: 'No results.', cls: 'daily-notes-timeline-empty' });
+            await this.refresh({ preserveScroll: true, clearFilteredCache: false });
         }
         return true;
     }

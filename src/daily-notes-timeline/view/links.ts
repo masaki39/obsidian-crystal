@@ -6,6 +6,10 @@ export function attachTimelineLinkHandler(
     sourcePath: string,
     onOpenLink: (href: string, sourcePath: string, openInNewLeaf: boolean, isExternal: boolean) => void
 ) {
+    if (container.dataset.crystalTimelineLinkHandlerAttached === '1') {
+        return;
+    }
+    container.dataset.crystalTimelineLinkHandlerAttached = '1';
     registerDomEvent(container, 'click', (event: MouseEvent) => {
         const target = event.target as HTMLElement | null;
         const linkEl = target?.closest('a') as HTMLAnchorElement | null;
