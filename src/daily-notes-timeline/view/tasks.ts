@@ -75,8 +75,13 @@ export async function attachTaskToggleHandler(options: TaskToggleOptions): Promi
         : null;
     const taskLineIndices = mapTaskLineIndices(content, options.filteredContent, headingRange ?? undefined);
     const mappedCount = Math.min(taskLineIndices.length, checkboxes.length);
-    for (let i = 0; i < mappedCount; i += 1) {
-        checkboxes[i].dataset.crystalTaskLine = String(taskLineIndices[i]);
+    for (let i = 0; i < checkboxes.length; i += 1) {
+        const mappedIndex = i < mappedCount ? taskLineIndices[i] : null;
+        if (mappedIndex !== null && Number.isFinite(mappedIndex)) {
+            checkboxes[i].dataset.crystalTaskLine = String(mappedIndex);
+        } else {
+            delete checkboxes[i].dataset.crystalTaskLine;
+        }
     }
 
     if (options.container.dataset.crystalTaskHandlerAttached === '1') {
@@ -88,8 +93,8 @@ export async function attachTaskToggleHandler(options: TaskToggleOptions): Promi
         if (!target || target.type !== 'checkbox') {
             return;
         }
-        const lineAttr = target.dataset.crystalTaskLine ?? target.closest('[data-line]')?.getAttribute('data-line');
-        const lineIndex = lineAttr !== null && lineAttr !== undefined ? Number(lineAttr) : Number.NaN;
+        const lineAttr = target.dataset.crystalTaskLine ?? null;
+        const lineIndex = lineAttr !== null ? Number(lineAttr) : Number.NaN;
         if (!Number.isFinite(lineIndex)) {
             return;
         }
