@@ -9,6 +9,7 @@ type TaskToggleOptions = {
     activeFilter: TimelineFilterMode;
     headingFilterText: string;
     filteredContent: string;
+    rawContent?: string;
     onToggleTask: (file: TFile, lineIndex: number, checked: boolean) => Promise<void>;
 };
 
@@ -44,7 +45,7 @@ export async function attachTaskToggleHandler(options: TaskToggleOptions): Promi
         return;
     }
 
-    const content = await options.app.vault.cachedRead(options.file);
+    const content = options.rawContent ?? await options.app.vault.cachedRead(options.file);
     const taskLineIndices = mapTaskLineIndices(content, options.filteredContent);
     const mappedCount = Math.min(taskLineIndices.length, checkboxes.length);
     for (let i = 0; i < mappedCount; i += 1) {

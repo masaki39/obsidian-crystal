@@ -185,13 +185,13 @@ export class DailyNotesTimelineController {
                 this.renderManager.clearFilteredContentCache();
                 this.nearestIndexCache.clear();
                 if (this.activeFilter === 'heading') {
-                    void this.refresh({ preserveScroll: true, alignTop: true, clearFilteredCache: true });
+                    this.scheduleRefresh({ preserveScroll: true, alignTop: true, clearFilteredCache: true });
                 }
             },
             onSearchInput: (value) => {
                 this.searchQuery = value.trim();
                 this.nearestIndexCache.clear();
-                void this.refresh({ preserveScroll: true, alignTop: true, clearFilteredCache: false });
+                this.scheduleRefresh({ preserveScroll: true, alignTop: true, clearFilteredCache: false });
             },
             onToday: () => {
                 void this.scrollToToday();
@@ -224,7 +224,7 @@ export class DailyNotesTimelineController {
         this.calendar.setVisible(this.settings.dailyNoteTimelineCalendarDefaultOpen ?? false);
     }
 
-    private scheduleRefresh(options: { preserveScroll: boolean; clearFilteredCache?: boolean }) {
+    private scheduleRefresh(options: { preserveScroll: boolean; alignTop?: boolean; clearFilteredCache?: boolean }) {
         if (this.refreshTimer !== null) {
             window.clearTimeout(this.refreshTimer);
         }
@@ -234,7 +234,11 @@ export class DailyNotesTimelineController {
                 this.pendingRefresh = true;
                 return;
             }
-            void this.refresh(options);
+            void this.refresh({
+                preserveScroll: options.preserveScroll,
+                alignTop: options.alignTop,
+                clearFilteredCache: options.clearFilteredCache
+            });
         }, 200);
     }
 

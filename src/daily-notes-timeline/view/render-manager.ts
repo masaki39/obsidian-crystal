@@ -29,6 +29,7 @@ export class TimelineRenderManager {
     private getHeadingFilterText: () => string;
     private getSearchQuery: () => string;
     private filteredContentCache = new Map<string, string | null>();
+    private fileContentCache = new Map<string, string>();
     private searchMatchCache = new Map<string, boolean>();
     private searchMatchCacheKey: string | null = null;
     private renderedChildren = new Map<HTMLElement, MarkdownRenderChild>();
@@ -50,12 +51,14 @@ export class TimelineRenderManager {
 
     clearFilteredContentCache() {
         this.filteredContentCache.clear();
+        this.fileContentCache.clear();
         this.searchMatchCache.clear();
         this.searchMatchCacheKey = null;
     }
 
     invalidateFile(path: string) {
         this.filteredContentCache.delete(path);
+        this.fileContentCache.delete(path);
         this.searchMatchCache.delete(path);
     }
 
@@ -99,6 +102,7 @@ export class TimelineRenderManager {
             searchQuery: this.getSearchQuery(),
             markdownComponent: this.markdownComponent,
             resolveFilteredContent: (targetFile) => this.getFilteredContent(targetFile),
+            resolveRawContent: (targetFile) => this.getRawContent(targetFile),
             resolveLinkSourcePath: (targetFile) => this.resolveLinkSourcePath(targetFile),
             resolveDateKey: (targetFile) => this.resolveDateKey(targetFile)
         });
@@ -154,7 +158,8 @@ export class TimelineRenderManager {
             searchQuery: this.getSearchQuery(),
             markdownComponent: this.markdownComponent,
             resolveLinkSourcePath: (targetFile) => this.resolveLinkSourcePath(targetFile),
-            filteredContent: filtered
+            filteredContent: filtered,
+            rawContent: await this.getRawContent(file)
         });
         this.renderedChildren.set(noteEl, renderChild);
         this.renderedByPath.set(file.path, noteEl);
@@ -171,9 +176,20 @@ export class TimelineRenderManager {
             return this.applySearch(cached);
         }
         const content = await this.app.vault.cachedRead(file);
+        this.fileContentCache.set(file.path, content);
         const filtered = this.applyFilter(content);
         this.filteredContentCache.set(file.path, filtered);
         return this.applySearch(filtered);
+    }
+
+    private async getRawContent(file: TFile): Promise<string> {
+        const cached = this.fileContentCache.get(file.path);
+        if (cached !== undefined) {
+            return cached;
+        }
+        const content = await this.app.vault.cachedRead(file);
+        this.fileContentCache.set(file.path, content);
+        return content;
     }
 
     private applySearch(content: string | null): string | null {

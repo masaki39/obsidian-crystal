@@ -19,6 +19,7 @@ type RenderNoteOptions = {
     searchQuery: string;
     markdownComponent: any;
     resolveFilteredContent: (file: TFile) => Promise<string | null>;
+    resolveRawContent: (file: TFile) => Promise<string>;
     resolveLinkSourcePath: (file: TFile) => string;
     resolveDateKey: (file: TFile) => string | null;
 };
@@ -40,6 +41,7 @@ type RenderNoteContentOptions = {
     markdownComponent: any;
     resolveLinkSourcePath: (file: TFile) => string;
     filteredContent: string;
+    rawContent?: string;
 };
 
 class TimelineMarkdownRenderChild extends MarkdownRenderChild {
@@ -79,6 +81,7 @@ export async function renderNoteContent(options: RenderNoteContentOptions): Prom
         activeFilter: options.activeFilter,
         headingFilterText: options.headingFilterText,
         filteredContent: options.filteredContent,
+        rawContent: options.rawContent,
         onToggleTask: options.onToggleTask
     });
     attachTimelineLinkHandler(
@@ -96,6 +99,7 @@ export async function renderNote(options: RenderNoteOptions): Promise<RenderNote
     if (filtered === null) {
         return null;
     }
+    const rawContent = await options.resolveRawContent(options.file);
     const { noteEl, bodyEl } = createNoteElements({
         file: options.file,
         registerDomEvent: options.registerDomEvent,
@@ -123,7 +127,8 @@ export async function renderNote(options: RenderNoteOptions): Promise<RenderNote
         searchQuery: options.searchQuery,
         markdownComponent: options.markdownComponent,
         resolveLinkSourcePath: options.resolveLinkSourcePath,
-        filteredContent: filtered
+        filteredContent: filtered,
+        rawContent
     });
     return { noteEl, renderChild };
 }
