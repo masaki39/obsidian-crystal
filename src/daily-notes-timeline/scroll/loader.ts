@@ -11,6 +11,7 @@ type LoaderOptions = {
     scrollerEl: HTMLDivElement | null;
     hasFilteredContent: (file: TFile) => Promise<boolean>;
     renderNote: (file: TFile, position: 'append' | 'prepend', noteIndex: number) => Promise<void>;
+    onRemove?: (element: HTMLElement) => void;
 };
 
 type LoaderResult = {
@@ -33,7 +34,8 @@ function trimRendered(
     direction: 'top' | 'bottom',
     scrollerEl: HTMLDivElement | null,
     startIndex: number,
-    endIndex: number
+    endIndex: number,
+    onRemove?: (element: HTMLElement) => void
 ): LoaderResult {
     const currentCount = listEl.children.length;
     if (currentCount <= maxRendered) {
@@ -47,6 +49,12 @@ function trimRendered(
     if (direction === 'top') {
         const anchor = listEl.children[removeCount] as HTMLElement | undefined;
         const anchorOffset = getAnchorOffset(anchor, scrollerEl);
+        if (onRemove) {
+            const removed = Array.from(listEl.children).slice(0, removeCount) as HTMLElement[];
+            for (const element of removed) {
+                onRemove(element);
+            }
+        }
         for (let i = 0; i < removeCount; i += 1) {
             listEl.firstElementChild?.remove();
         }
@@ -55,6 +63,12 @@ function trimRendered(
         return { startIndex: nextStartIndex, endIndex };
     }
 
+    if (onRemove) {
+        const removed = Array.from(listEl.children).slice(-removeCount) as HTMLElement[];
+        for (const element of removed) {
+            onRemove(element);
+        }
+    }
     for (let i = 0; i < removeCount; i += 1) {
         listEl.lastElementChild?.remove();
     }
@@ -81,7 +95,15 @@ export async function loadPrevious(options: LoaderOptions): Promise<LoaderResult
         renderedCount += 1;
     }
 
-    const trimmed = trimRendered(options.listEl, options.maxRendered, 'bottom', options.scrollerEl, newStart, options.endIndex);
+    const trimmed = trimRendered(
+        options.listEl,
+        options.maxRendered,
+        'bottom',
+        options.scrollerEl,
+        newStart,
+        options.endIndex,
+        options.onRemove
+    );
     restoreAnchorOffset(anchor, anchorOffset, options.scrollerEl);
     return trimmed;
 }
@@ -103,6 +125,14 @@ export async function loadNext(options: LoaderOptions): Promise<LoaderResult> {
         renderedCount += 1;
     }
 
-    const trimmed = trimRendered(options.listEl, options.maxRendered, 'top', options.scrollerEl, options.startIndex, newEnd);
+    const trimmed = trimRendered(
+        options.listEl,
+        options.maxRendered,
+        'top',
+        options.scrollerEl,
+        options.startIndex,
+        newEnd,
+        options.onRemove
+    );
     return trimmed;
 }

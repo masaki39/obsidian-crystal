@@ -1,4 +1,4 @@
-import { App, TFile } from 'obsidian';
+import { App, MarkdownRenderChild, TFile } from 'obsidian';
 import { CrystalPluginSettings } from '../../settings';
 import { TimelineCalendar } from '../calendar';
 import { collectDailyNoteFiles, DailyNotesConfig, getDateKeyFromFile, getDateFromKey, toISODateKey } from '../data';
@@ -59,6 +59,7 @@ export class DailyNotesTimelineController {
     private debugLog: (message: string, details?: Record<string, unknown>) => void;
     private pendingRefresh = false;
     private dailyNotesConfig: DailyNotesConfig | null = null;
+    private renderedChildren = new Map<HTMLElement, MarkdownRenderChild>();
 
     constructor(options: ControllerOptions) {
         this.app = options.app;
@@ -85,6 +86,7 @@ export class DailyNotesTimelineController {
     }
 
     async onClose(): Promise<void> {
+        this.clearRenderedNotes();
         this.contentEl.empty();
     }
 
@@ -258,6 +260,7 @@ export class DailyNotesTimelineController {
         if (!this.listEl) {
             return;
         }
+        this.clearRenderedNotes();
         this.listEl.empty();
         this.startIndex = start;
         this.endIndex = end;
@@ -271,7 +274,7 @@ export class DailyNotesTimelineController {
         if (!this.listEl) {
             return;
         }
-        await renderNote({
+        const result = await renderNote({
             listEl: this.listEl,
             file,
             noteIndex,
@@ -298,6 +301,10 @@ export class DailyNotesTimelineController {
             resolveLinkSourcePath: (targetFile) => targetFile.path,
             resolveDateKey: (targetFile) => this.getDateKeyFromFile(targetFile)
         });
+        if (!result) {
+            return;
+        }
+        this.renderedChildren.set(result.noteEl, result.renderChild);
     }
 
     private applyFilter(content: string): string | null {
@@ -398,7 +405,8 @@ export class DailyNotesTimelineController {
             endIndex: this.endIndex,
             scrollerEl: this.scrollerEl,
             hasFilteredContent: (file) => this.hasFilteredContent(file),
-            renderNote: (file, position, noteIndex) => this.renderNote(file, position, noteIndex)
+            renderNote: (file, position, noteIndex) => this.renderNote(file, position, noteIndex),
+            onRemove: (element) => this.cleanupRenderedNote(element)
         });
         this.startIndex = startIndex;
         this.endIndex = endIndex;
@@ -419,7 +427,8 @@ export class DailyNotesTimelineController {
             endIndex: this.endIndex,
             scrollerEl: this.scrollerEl,
             hasFilteredContent: (file) => this.hasFilteredContent(file),
-            renderNote: (file, position, noteIndex) => this.renderNote(file, position, noteIndex)
+            renderNote: (file, position, noteIndex) => this.renderNote(file, position, noteIndex),
+            onRemove: (element) => this.cleanupRenderedNote(element)
         });
         this.startIndex = startIndex;
         this.endIndex = endIndex;
@@ -589,6 +598,7 @@ export class DailyNotesTimelineController {
             clearFilteredContentCache: () => {
                 this.filteredContentCache.clear();
             },
+            clearRenderedNotes: () => this.clearRenderedNotes(),
             collectDailyNoteFiles: () => this.collectDailyNoteFiles(),
             getInitialTargetIndex: () => this.getInitialTargetIndex(),
             getTopVisibleDateKey: () => this.getTopVisibleDateKey(),
@@ -603,6 +613,22 @@ export class DailyNotesTimelineController {
             scheduleTopVisibleUpdate: () => this.scheduleTopVisibleUpdate(),
             debugLog: (message: string, details?: Record<string, unknown>) => this.debugLog(message, details)
         };
+    }
+
+    private cleanupRenderedNote(noteEl: HTMLElement) {
+        const child = this.renderedChildren.get(noteEl);
+        if (!child) {
+            return;
+        }
+        this.renderedChildren.delete(noteEl);
+        this.markdownComponent?.removeChild(child);
+    }
+
+    private clearRenderedNotes() {
+        for (const child of this.renderedChildren.values()) {
+            this.markdownComponent?.removeChild(child);
+        }
+        this.renderedChildren.clear();
     }
 
     private getDateKeyFromFile(file: TFile): string | null {

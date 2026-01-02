@@ -16,6 +16,7 @@ export type TimelineFlowContext = {
     getInitialTargetIndex: () => Promise<number>;
     getTopVisibleDateKey: () => string | null;
     getTopVisibleOffset: () => number | null;
+    clearRenderedNotes: () => void;
     findIndexByDateKey: (dateKey: string) => number;
     hasFilteredContent: (file: TFile) => Promise<boolean>;
     findNearestIndexWithContent: (dateKey: string) => Promise<number>;
@@ -42,6 +43,7 @@ export async function refreshTimeline(
     ctx.debugLog('refresh:start', { preserveScroll, alignTop, anchorKey, anchorOffset });
     ctx.clearFilteredContentCache();
     ctx.setNoteFiles(ctx.collectDailyNoteFiles());
+    ctx.clearRenderedNotes();
     listEl.empty();
     ctx.setStartIndex(0);
     ctx.setEndIndex(-1);
@@ -107,6 +109,7 @@ export async function scrollToToday(ctx: TimelineFlowContext): Promise<void> {
     }
     ctx.debugLog('scrollToToday:start');
     ctx.setNoteFiles(ctx.collectDailyNoteFiles());
+    ctx.clearRenderedNotes();
     listEl.empty();
     ctx.setStartIndex(0);
     ctx.setEndIndex(-1);
@@ -145,6 +148,7 @@ export async function jumpToDateKey(ctx: TimelineFlowContext, dateKey: string): 
         return;
     }
     ctx.setNoteFiles(noteFiles);
+    ctx.clearRenderedNotes();
     const targetIndex = await ctx.findNearestIndexWithContent(dateKey);
     if (targetIndex === -1) {
         listEl.empty();

@@ -23,6 +23,11 @@ type RenderNoteOptions = {
     resolveDateKey: (file: TFile) => string | null;
 };
 
+export type RenderNoteResult = {
+    noteEl: HTMLDivElement;
+    renderChild: MarkdownRenderChild;
+};
+
 class TimelineMarkdownRenderChild extends MarkdownRenderChild {
     private appRef: App;
     private fileRef: TFile | null;
@@ -42,10 +47,10 @@ class TimelineMarkdownRenderChild extends MarkdownRenderChild {
     }
 }
 
-export async function renderNote(options: RenderNoteOptions): Promise<void> {
+export async function renderNote(options: RenderNoteOptions): Promise<RenderNoteResult | null> {
     const filtered = await options.resolveFilteredContent(options.file);
     if (filtered === null) {
-        return;
+        return null;
     }
     const { noteEl, bodyEl } = createNoteElements({
         file: options.file,
@@ -83,4 +88,5 @@ export async function renderNote(options: RenderNoteOptions): Promise<void> {
         options.onOpenLink
     );
     highlightMatches(bodyEl, options.searchQuery);
+    return { noteEl, renderChild };
 }
