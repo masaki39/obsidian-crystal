@@ -20,21 +20,39 @@ export function mapTaskLineIndices(content: string, filteredContent: string): nu
     if (filteredTaskLines.length === 0) {
         return [];
     }
+    const lineIndexMap = new Map<string, number[]>();
+    for (let i = 0; i < lines.length; i += 1) {
+        const line = lines[i];
+        if (!isTaskLine(line)) {
+            continue;
+        }
+        const existing = lineIndexMap.get(line);
+        if (existing) {
+            existing.push(i);
+        } else {
+            lineIndexMap.set(line, [i]);
+        }
+    }
+    const cursorByLine = new Map<string, number>();
     const indices: number[] = [];
     let searchFrom = 0;
     for (const taskLine of filteredTaskLines) {
-        let found = false;
-        for (let i = searchFrom; i < lines.length; i += 1) {
-            if (lines[i] === taskLine) {
-                indices.push(i);
-                searchFrom = i + 1;
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
+        const candidates = lineIndexMap.get(taskLine);
+        if (!candidates || candidates.length === 0) {
             continue;
         }
+        let cursor = cursorByLine.get(taskLine) ?? 0;
+        while (cursor < candidates.length && candidates[cursor] < searchFrom) {
+            cursor += 1;
+        }
+        if (cursor >= candidates.length) {
+            cursorByLine.set(taskLine, cursor);
+            continue;
+        }
+        const index = candidates[cursor];
+        cursorByLine.set(taskLine, cursor + 1);
+        indices.push(index);
+        searchFrom = index + 1;
     }
     return indices;
 }

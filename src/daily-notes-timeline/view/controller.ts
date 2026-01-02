@@ -480,6 +480,9 @@ export class DailyNotesTimelineController {
         if (!this.isInDailyNotesFolder(file.path, config.folder)) {
             return;
         }
+        if (file.extension !== 'md') {
+            return;
+        }
         this.renderManager.invalidateFile(file.path);
         const updated = await this.tryUpdateRenderedNote(file);
         if (updated) {
