@@ -20,7 +20,6 @@ export type HeaderElements = {
 
 export function buildTimelineHeader(options: HeaderOptions): HeaderElements {
     const headerEl = options.contentEl.createDiv('daily-note-timeline-header');
-    headerEl.createEl('div', { cls: 'daily-note-timeline-title' });
     const headerControls = headerEl.createDiv('daily-note-timeline-controls');
     const headerTopRow = headerControls.createDiv('daily-note-timeline-header-row');
     const headerBottomRow = headerControls.createDiv('daily-note-timeline-header-row');

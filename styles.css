@@ -138,10 +138,6 @@ div:has(> [data-callout="timeline"]) + div:not(> [data-callout="timeline"]) {
     margin-inline: auto;
 }
 
-.daily-note-timeline-title {
-    font-weight: 600;
-}
-
 .daily-note-timeline-controls {
     display: flex;
     flex-direction: column;
