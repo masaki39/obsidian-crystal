@@ -1,10 +1,9 @@
 import { App, TFile } from 'obsidian';
 import { CrystalPluginSettings } from '../../settings';
-import { TimelineCalendar } from '../calendar';
 import { DailyNotesConfig, getDateKeyFromFile, toISODateKey } from '../data';
 import { TimelineFilterMode } from '../filters';
 import { TimelineFlowContext, jumpToDateKey, refreshTimeline, scrollToToday } from './flow';
-import { buildTimelineHeader } from './header';
+import { TimelineControllerUi } from './controller-ui';
 import { TimelineNoteFilesCache } from './note-files-cache';
 import { TimelineRenderManager } from './render-manager';
 import { TimelineScrollManager } from './scroll-manager';
@@ -30,10 +29,7 @@ export class DailyNotesTimelineController {
     private onSettingsChange: (() => Promise<void>) | null = null;
     private markdownComponent: any;
     private isLeafDeferred: (() => boolean) | null = null;
-    private filterTabButtons: HTMLButtonElement[] = [];
-    private filterHeadingInputEl: HTMLInputElement | null = null;
-    private searchInputEl: HTMLInputElement | null = null;
-    private calendar: TimelineCalendar | null = null;
+    private ui: TimelineControllerUi;
     private noteFiles: TFile[] = [];
     private noteFileIndex: TimelineDateIndex = { dateKeys: [], dateNumbers: [], indexByDateKey: new Map() };
     private startIndex = 0;
@@ -82,7 +78,10 @@ export class DailyNotesTimelineController {
             },
             onOpenLink: (href, source, openInNewLeaf, isExternal) => {
                 if (isExternal) {
-                    window.open(href, '_blank');
+                    const opened = window.open(href, '_blank', 'noopener');
+                    if (opened) {
+                        opened.opener = null;
+                    }
                     return;
                 }
                 this.app.workspace.openLinkText(href, source, openInNewLeaf);
@@ -95,6 +94,45 @@ export class DailyNotesTimelineController {
             getActiveFilter: () => this.activeFilter,
             getHeadingFilterText: () => this.headingFilterText,
             getSearchQuery: () => this.searchQuery
+        });
+        this.ui = new TimelineControllerUi({
+            contentEl: this.contentEl,
+            settings: this.settings,
+            registerDomEvent: this.registerDomEvent,
+            onFilterChange: (mode) => {
+                this.activeFilter = mode;
+                this.settings.dailyNoteTimelineDefaultFilter = this.activeFilter;
+                this.queueSettingsSave();
+                this.ui.updateFilterUi(this.activeFilter);
+                this.renderManager.clearFilteredContentCache();
+                this.nearestIndexCache.clear();
+                void this.refresh({ preserveScroll: true, alignTop: true, clearFilteredCache: true });
+            },
+            onHeadingInput: (value) => {
+                this.headingFilterText = value;
+                this.settings.dailyNoteTimelineFilterHeadingDefault = this.headingFilterText;
+                this.queueSettingsSave();
+                this.renderManager.clearFilteredContentCache();
+                this.nearestIndexCache.clear();
+                if (this.activeFilter === 'heading') {
+                    this.scheduleRefresh({ preserveScroll: true, alignTop: true, clearFilteredCache: true });
+                }
+            },
+            onSearchInput: (value) => {
+                this.searchQuery = value.trim();
+                this.nearestIndexCache.clear();
+                this.scheduleRefresh({ preserveScroll: true, alignTop: true, clearFilteredCache: false });
+            },
+            onToday: () => {
+                void this.scrollToToday();
+            },
+            onScrollToToday: () => {
+                void this.scrollToToday();
+            },
+            onJumpToDateKey: (dateKey) => {
+                void this.jumpToDateKey(dateKey);
+            },
+            onQueueSettingsSave: () => this.queueSettingsSave()
         });
         this.scrollManager = new TimelineScrollManager({
             contentEl: options.contentEl,
@@ -115,7 +153,7 @@ export class DailyNotesTimelineController {
             onRemoveRenderedNote: (element) => this.renderManager.cleanupRenderedNote(element),
             resolveDateKey: (file) => this.getDateKeyFromFile(file),
             onTopVisibleDateChange: (dateKey) => {
-                this.calendar?.updateForDate(dateKey);
+                this.ui.updateCalendarForDate(dateKey);
             },
             debugLog: (message, details) => this.debugLog(message, details)
         });
@@ -128,7 +166,7 @@ export class DailyNotesTimelineController {
         if (this.headingFilterText.trim().length === 0) {
             this.headingFilterText = this.settings.dailyNoteTimelineFilterHeadingDefault?.trim() ?? '';
         }
-        this.buildHeader();
+        this.ui.buildHeader(this.activeFilter, this.headingFilterText, this.searchQuery);
         this.buildScroller();
         this.buildCalendar();
         await this.refreshInternal({ preserveScroll: false });
@@ -153,9 +191,7 @@ export class DailyNotesTimelineController {
         this.settings = settings;
         if (this.headingFilterText.trim().length === 0) {
             this.headingFilterText = this.settings.dailyNoteTimelineFilterHeadingDefault?.trim() ?? '';
-            if (this.filterHeadingInputEl) {
-                this.filterHeadingInputEl.value = this.headingFilterText;
-            }
+            this.ui.setHeadingFilterText(this.headingFilterText);
         }
         this.scheduleRefresh({ preserveScroll: true, clearFilteredCache: true });
     }
@@ -174,66 +210,13 @@ export class DailyNotesTimelineController {
         }
     }
 
-    private buildHeader() {
-        const elements = buildTimelineHeader({
-            contentEl: this.contentEl,
-            registerDomEvent: this.registerDomEvent,
-            activeFilter: this.activeFilter,
-            headingFilterText: this.headingFilterText,
-            searchQuery: this.searchQuery,
-            onFilterChange: (mode) => {
-                this.activeFilter = mode;
-                this.settings.dailyNoteTimelineDefaultFilter = this.activeFilter;
-                this.queueSettingsSave();
-                this.updateFilterUi();
-                this.renderManager.clearFilteredContentCache();
-                this.nearestIndexCache.clear();
-                void this.refresh({ preserveScroll: true, alignTop: true, clearFilteredCache: true });
-            },
-            onHeadingInput: (value) => {
-                this.headingFilterText = value;
-                this.settings.dailyNoteTimelineFilterHeadingDefault = this.headingFilterText;
-                this.queueSettingsSave();
-                this.renderManager.clearFilteredContentCache();
-                this.nearestIndexCache.clear();
-                if (this.activeFilter === 'heading') {
-                    this.scheduleRefresh({ preserveScroll: true, alignTop: true, clearFilteredCache: true });
-                }
-            },
-            onSearchInput: (value) => {
-                this.searchQuery = value.trim();
-                this.nearestIndexCache.clear();
-                this.scheduleRefresh({ preserveScroll: true, alignTop: true, clearFilteredCache: false });
-            },
-            onToday: () => {
-                void this.scrollToToday();
-            }
-        });
-        this.filterTabButtons = elements.filterTabButtons;
-        this.filterHeadingInputEl = elements.filterHeadingInputEl;
-        this.searchInputEl = elements.searchInputEl;
-        this.updateFilterUi();
-    }
-
     private buildScroller() {
         this.scrollManager.buildScroller();
     }
 
     private buildCalendar() {
-        this.calendar = new TimelineCalendar({
-            contentEl: this.contentEl,
-            settings: this.settings,
-            registerDomEvent: this.registerDomEvent,
-            onScrollToToday: () => {
-                void this.scrollToToday();
-            },
-            onJumpToDateKey: (dateKey) => {
-                void this.jumpToDateKey(dateKey);
-            },
-            onQueueSettingsSave: () => this.queueSettingsSave()
-        });
-        this.calendar.build();
-        this.calendar.setVisible(this.settings.dailyNoteTimelineCalendarDefaultOpen ?? false);
+        this.ui.buildCalendar();
+        this.ui.setCalendarVisible(this.settings.dailyNoteTimelineCalendarDefaultOpen ?? false);
     }
 
     private scheduleRefresh(options: { preserveScroll: boolean; alignTop?: boolean; clearFilteredCache?: boolean }) {
@@ -275,17 +258,6 @@ export class DailyNotesTimelineController {
             this.settingsSaveTimer = null;
             void this.onSettingsChange?.();
         }, 300);
-    }
-
-    private updateFilterUi() {
-        if (!this.filterHeadingInputEl) {
-            return;
-        }
-        this.filterHeadingInputEl.toggleClass('is-hidden', this.activeFilter !== 'heading');
-        for (const button of this.filterTabButtons) {
-            const mode = (button.dataset.filter as TimelineFilterMode) ?? 'all';
-            button.toggleClass('is-active', mode === this.activeFilter);
-        }
     }
 
     private collectDailyNoteFiles(): TFile[] {
