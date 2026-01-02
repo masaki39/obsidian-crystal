@@ -65,7 +65,9 @@ export class TimelineScrollManager {
 
     buildScroller() {
         this.scrollerEl = this.contentEl.createDiv('daily-note-timeline-scroll');
+        this.scrollerEl.addClass('daily-notes-timeline-scroll');
         this.listEl = this.scrollerEl.createDiv('daily-note-timeline-list');
+        this.listEl.addClass('daily-notes-timeline-list');
         this.registerDomEvent(this.scrollerEl, 'scroll', () => this.onScroll());
     }
 

@@ -51,6 +51,8 @@ export class DailyNotesTimelineController {
     private noteFilesCache: TimelineNoteFilesCache;
     private dateKeyCache = new Map<string, string | null>();
     private dateKeyCacheKey: string | null = null;
+    private nearestIndexCache = new Map<string, number>();
+    private noteFilesVersion = 0;
     private renderManager: TimelineRenderManager;
     private scrollManager: TimelineScrollManager;
 
@@ -120,6 +122,7 @@ export class DailyNotesTimelineController {
     async onOpen(): Promise<void> {
         this.contentEl.empty();
         this.contentEl.addClass('daily-note-timeline-root');
+        this.contentEl.addClass('daily-notes-timeline-root');
         this.activeFilter = this.settings.dailyNoteTimelineDefaultFilter ?? 'all';
         if (this.headingFilterText.trim().length === 0) {
             this.headingFilterText = this.settings.dailyNoteTimelineFilterHeadingDefault?.trim() ?? '';
@@ -173,6 +176,7 @@ export class DailyNotesTimelineController {
                 this.queueSettingsSave();
                 this.updateFilterUi();
                 this.renderManager.clearFilteredContentCache();
+                this.nearestIndexCache.clear();
                 void this.refresh({ preserveScroll: true, alignTop: true, clearFilteredCache: true });
             },
             onHeadingInput: (value) => {
@@ -180,12 +184,14 @@ export class DailyNotesTimelineController {
                 this.settings.dailyNoteTimelineFilterHeadingDefault = this.headingFilterText;
                 this.queueSettingsSave();
                 this.renderManager.clearFilteredContentCache();
+                this.nearestIndexCache.clear();
                 if (this.activeFilter === 'heading') {
                     void this.refresh({ preserveScroll: true, alignTop: true, clearFilteredCache: true });
                 }
             },
             onSearchInput: (value) => {
                 this.searchQuery = value.trim();
+                this.nearestIndexCache.clear();
                 void this.refresh({ preserveScroll: true, alignTop: true, clearFilteredCache: false });
             },
             onToday: () => {
@@ -354,12 +360,19 @@ export class DailyNotesTimelineController {
     }
 
     private async findNearestIndexWithContent(dateKey: string): Promise<number> {
-        return await findNearestIndexWithContent({
+        const cacheKey = this.getNearestIndexCacheKey(dateKey);
+        const cached = this.nearestIndexCache.get(cacheKey);
+        if (cached !== undefined) {
+            return cached;
+        }
+        const index = await findNearestIndexWithContent({
             files: this.noteFiles,
             index: this.noteFileIndex,
             targetDateKey: dateKey,
             hasFilteredContent: (file) => this.hasFilteredContent(file)
         });
+        this.nearestIndexCache.set(cacheKey, index);
+        return index;
     }
 
     private getFlowContext(): TimelineFlowContext {
@@ -370,6 +383,8 @@ export class DailyNotesTimelineController {
             setNoteFiles: (files: TFile[]) => {
                 this.noteFiles = files;
                 this.noteFileIndex = buildDateIndex(files, (file) => this.getDateKeyFromFile(file));
+                this.noteFilesVersion += 1;
+                this.nearestIndexCache.clear();
             },
             getStartIndex: () => this.startIndex,
             setStartIndex: (value: number) => {
@@ -416,6 +431,12 @@ export class DailyNotesTimelineController {
         const key = getDateKeyFromFile(file, config);
         this.dateKeyCache.set(file.path, key);
         return key;
+    }
+
+    private getNearestIndexCacheKey(dateKey: string): string {
+        const heading = this.headingFilterText.trim();
+        const query = this.searchQuery.trim().toLowerCase();
+        return `${this.noteFilesVersion}::${this.activeFilter}::${heading}::${query}::${dateKey}`;
     }
 
     private getDailyNotesConfig(): DailyNotesConfig | null {
@@ -554,7 +575,7 @@ export class DailyNotesTimelineController {
         noteEl.remove();
         this.updateRenderedRangeFromDom();
         if (listEl.children.length === 0) {
-            listEl.createDiv({ text: 'No results.', cls: 'daily-note-timeline-empty' });
+            listEl.createDiv({ text: 'No results.', cls: 'daily-note-timeline-empty daily-notes-timeline-empty' });
         }
         return true;
     }
