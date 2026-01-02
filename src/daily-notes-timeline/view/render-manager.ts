@@ -32,6 +32,8 @@ export class TimelineRenderManager {
     private fileContentCache = new Map<string, string>();
     private searchMatchCache = new Map<string, boolean>();
     private searchMatchCacheKey: string | null = null;
+    private searchTermsCacheKey: string | null = null;
+    private searchTermsCache: string[] = [];
     private readonly maxFilteredCacheEntries = 600;
     private readonly maxRawCacheEntries = 300;
     private readonly maxSearchCacheEntries = 800;
@@ -117,6 +119,9 @@ export class TimelineRenderManager {
     }
 
     async hasFilteredContent(file: TFile): Promise<boolean> {
+        if (this.getActiveFilter() === 'all' && this.getSearchQuery().trim().length === 0) {
+            return true;
+        }
         const searchKey = this.getSearchCacheKey();
         if (this.searchMatchCacheKey !== searchKey) {
             this.searchMatchCacheKey = searchKey;
@@ -217,16 +222,30 @@ export class TimelineRenderManager {
         if (content === null) {
             return null;
         }
-        const terms = this.getSearchQuery()
-            .trim()
-            .split(/\s+/)
-            .filter(term => term.length > 0);
+        const terms = this.getSearchTerms();
         if (terms.length === 0) {
             return content;
         }
         const haystack = content.toLowerCase();
-        const matchesAll = terms.every(term => haystack.includes(term.toLowerCase()));
+        const matchesAll = terms.every(term => haystack.includes(term));
         return matchesAll ? content : null;
+    }
+
+    private getSearchTerms(): string[] {
+        const query = this.getSearchQuery().trim();
+        if (query.length === 0) {
+            this.searchTermsCacheKey = '';
+            this.searchTermsCache = [];
+            return this.searchTermsCache;
+        }
+        const key = query.toLowerCase();
+        if (this.searchTermsCacheKey === key) {
+            return this.searchTermsCache;
+        }
+        const terms = key.split(/\s+/).filter(term => term.length > 0);
+        this.searchTermsCacheKey = key;
+        this.searchTermsCache = terms;
+        return terms;
     }
 
     private getSearchCacheKey(): string {
