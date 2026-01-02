@@ -12,6 +12,7 @@ export async function ensureScrollable(options: EnsureScrollableOptions): Promis
     let guard = 0;
     const maxIterations = Math.max(10, options.getNoteFilesLength());
     while (options.scrollerEl.scrollHeight <= options.scrollerEl.clientHeight + 32) {
+        const previousHeight = options.scrollerEl.scrollHeight;
         if (options.getStartIndex() === 0 && options.getEndIndex() >= options.getNoteFilesLength() - 1) {
             break;
         }
@@ -23,6 +24,9 @@ export async function ensureScrollable(options: EnsureScrollableOptions): Promis
             break;
         }
         guard += 1;
+        if (options.scrollerEl.scrollHeight <= previousHeight + 1) {
+            break;
+        }
         if (guard >= maxIterations) {
             break;
         }

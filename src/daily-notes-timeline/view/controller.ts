@@ -43,6 +43,7 @@ export class DailyNotesTimelineController {
     private settingsSaveTimer: number | null = null;
     private debugLog: (message: string, details?: Record<string, unknown>) => void;
     private pendingRefresh = false;
+    private pendingRefreshOptions: { preserveScroll?: boolean; alignTop?: boolean; clearFilteredCache?: boolean } | null = null;
     private dailyNotesConfig: DailyNotesConfig | null = null;
     private noteFilesCache: TimelineNoteFilesCache;
     private dateKeyCache = new Map<string, string | null>();
@@ -199,7 +200,9 @@ export class DailyNotesTimelineController {
     handleViewActivated(): Promise<void> {
         if (this.pendingRefresh) {
             this.pendingRefresh = false;
-            return this.queueRefresh({ preserveScroll: true, clearFilteredCache: false });
+            const options = this.pendingRefreshOptions ?? { preserveScroll: true, clearFilteredCache: false };
+            this.pendingRefreshOptions = null;
+            return this.queueRefresh(options);
         }
         return this.queueRefresh({ preserveScroll: false, clearFilteredCache: false });
     }
@@ -227,6 +230,11 @@ export class DailyNotesTimelineController {
             this.refreshTimer = null;
             if (!this.isViewActive()) {
                 this.pendingRefresh = true;
+                this.pendingRefreshOptions = {
+                    preserveScroll: options.preserveScroll,
+                    alignTop: options.alignTop,
+                    clearFilteredCache: options.clearFilteredCache
+                };
                 return;
             }
             void this.refresh({
