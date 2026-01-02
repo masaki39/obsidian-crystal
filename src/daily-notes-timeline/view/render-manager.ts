@@ -32,6 +32,9 @@ export class TimelineRenderManager {
     private fileContentCache = new Map<string, string>();
     private searchMatchCache = new Map<string, boolean>();
     private searchMatchCacheKey: string | null = null;
+    private readonly maxFilteredCacheEntries = 600;
+    private readonly maxRawCacheEntries = 300;
+    private readonly maxSearchCacheEntries = 800;
     private renderedChildren = new Map<HTMLElement, MarkdownRenderChild>();
     private renderedByPath = new Map<string, HTMLDivElement>();
 
@@ -120,11 +123,13 @@ export class TimelineRenderManager {
             this.searchMatchCache.clear();
         }
         if (this.searchMatchCache.has(file.path)) {
-            return this.searchMatchCache.get(file.path) ?? false;
+            const cached = this.searchMatchCache.get(file.path) ?? false;
+            this.touchCache(this.searchMatchCache, file.path, cached, this.maxSearchCacheEntries);
+            return cached;
         }
         const content = await this.getFilteredContent(file);
         const matches = content !== null;
-        this.searchMatchCache.set(file.path, matches);
+        this.touchCache(this.searchMatchCache, file.path, matches, this.maxSearchCacheEntries);
         return matches;
     }
 
@@ -173,23 +178,39 @@ export class TimelineRenderManager {
     private async getFilteredContent(file: TFile): Promise<string | null> {
         const cached = this.filteredContentCache.get(file.path);
         if (cached !== undefined) {
+            this.touchCache(this.filteredContentCache, file.path, cached, this.maxFilteredCacheEntries);
             return this.applySearch(cached);
         }
         const content = await this.app.vault.cachedRead(file);
-        this.fileContentCache.set(file.path, content);
+        this.touchCache(this.fileContentCache, file.path, content, this.maxRawCacheEntries);
         const filtered = this.applyFilter(content);
-        this.filteredContentCache.set(file.path, filtered);
+        this.touchCache(this.filteredContentCache, file.path, filtered, this.maxFilteredCacheEntries);
         return this.applySearch(filtered);
     }
 
     private async getRawContent(file: TFile): Promise<string> {
         const cached = this.fileContentCache.get(file.path);
         if (cached !== undefined) {
+            this.touchCache(this.fileContentCache, file.path, cached, this.maxRawCacheEntries);
             return cached;
         }
         const content = await this.app.vault.cachedRead(file);
-        this.fileContentCache.set(file.path, content);
+        this.touchCache(this.fileContentCache, file.path, content, this.maxRawCacheEntries);
         return content;
+    }
+
+    private touchCache<K, V>(cache: Map<K, V>, key: K, value: V, maxEntries: number) {
+        if (cache.has(key)) {
+            cache.delete(key);
+        }
+        cache.set(key, value);
+        if (cache.size <= maxEntries) {
+            return;
+        }
+        const oldestKey = cache.keys().next().value;
+        if (oldestKey !== undefined) {
+            cache.delete(oldestKey);
+        }
     }
 
     private applySearch(content: string | null): string | null {
