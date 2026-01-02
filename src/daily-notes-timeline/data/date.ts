@@ -17,6 +17,8 @@ type DateMatchPattern = {
     dayIndex?: number;
 };
 
+const DATE_PATTERN_CACHE = new Map<string, DateMatchPattern | null>();
+
 const DATE_TOKENS: Record<string, { pattern: string; capture?: 'year' | 'month' | 'day' }> = {
     YYYY: { pattern: '\\d{4}', capture: 'year' },
     YY: { pattern: '\\d{2}', capture: 'year' },
@@ -101,6 +103,10 @@ function buildDatePattern(format: string): DateMatchPattern | null {
     if (!format) {
         return null;
     }
+    const cached = DATE_PATTERN_CACHE.get(format);
+    if (cached !== undefined) {
+        return cached;
+    }
     const tokens = tokenizeFormat(format);
     const parts: string[] = ['^'];
     let groupIndex = 0;
@@ -133,12 +139,14 @@ function buildDatePattern(format: string): DateMatchPattern | null {
     }
 
     parts.push('$');
-    return {
+    const pattern = {
         regex: new RegExp(parts.join('')),
         yearIndex,
         monthIndex,
         dayIndex
     };
+    DATE_PATTERN_CACHE.set(format, pattern);
+    return pattern;
 }
 
 export function extractDateFromFileName(fileName: string, format: string): Date | null {

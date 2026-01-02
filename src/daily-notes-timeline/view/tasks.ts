@@ -52,6 +52,10 @@ export async function attachTaskToggleHandler(options: TaskToggleOptions): Promi
         checkboxes[i].dataset.crystalTaskLine = String(taskLineIndices[i]);
     }
 
+    if (options.container.dataset.crystalTaskHandlerAttached === '1') {
+        return;
+    }
+    options.container.dataset.crystalTaskHandlerAttached = '1';
     options.registerDomEvent(options.container, 'change', async (event: Event) => {
         const target = event.target as HTMLInputElement | null;
         if (!target || target.type !== 'checkbox') {
