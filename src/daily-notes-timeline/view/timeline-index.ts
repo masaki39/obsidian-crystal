@@ -87,6 +87,7 @@ export async function findNearestIndexWithContent(options: FindNearestOptions): 
         return startIndex;
     }
 
+    const orderedCandidates: number[] = [];
     let leftIndex = startIndex - 1;
     let rightIndex = startIndex + 1;
     while (leftIndex >= 0 || rightIndex < length) {
@@ -108,15 +109,24 @@ export async function findNearestIndexWithContent(options: FindNearestOptions): 
         }
 
         if (chooseLeft) {
-            if (await options.hasFilteredContent(options.files[leftIndex])) {
-                return leftIndex;
-            }
+            orderedCandidates.push(leftIndex);
             leftIndex -= 1;
         } else if (rightIndex < length) {
-            if (await options.hasFilteredContent(options.files[rightIndex])) {
-                return rightIndex;
-            }
+            orderedCandidates.push(rightIndex);
             rightIndex += 1;
+        }
+    }
+
+    const batchSize = 4;
+    for (let i = 0; i < orderedCandidates.length; i += batchSize) {
+        const batch = orderedCandidates.slice(i, i + batchSize);
+        const results = await Promise.all(
+            batch.map(index => options.hasFilteredContent(options.files[index]))
+        );
+        for (let j = 0; j < results.length; j += 1) {
+            if (results[j]) {
+                return batch[j];
+            }
         }
     }
 
