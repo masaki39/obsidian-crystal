@@ -11,8 +11,16 @@ export function getDateKeyFromFile(file: TFile, config: DailyNotesConfig): strin
     return date ? toISODateKey(date) : null;
 }
 
+function normalizeFolderPath(folder: string): string {
+    const trimmed = folder.trim();
+    if (!trimmed) {
+        return '';
+    }
+    return trimmed.replace(/^\/+|\/+$/g, '');
+}
+
 export function collectDailyNoteFiles(app: App, config: DailyNotesConfig): TFile[] {
-    const folder = config.folder;
+    const folder = normalizeFolderPath(config.folder);
     const files = app.vault.getFiles().filter(file => {
         if (file.extension !== 'md') {
             return false;

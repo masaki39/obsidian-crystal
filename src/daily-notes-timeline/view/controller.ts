@@ -55,6 +55,8 @@ export class DailyNotesTimelineController {
     private noteFilesVersion = 0;
     private renderManager: TimelineRenderManager;
     private scrollManager: TimelineScrollManager;
+    private refreshPromise: Promise<void> | null = null;
+    private refreshQueue: { preserveScroll?: boolean; alignTop?: boolean; clearFilteredCache?: boolean } | null = null;
 
     constructor(options: ControllerOptions) {
         this.app = options.app;
@@ -129,10 +131,20 @@ export class DailyNotesTimelineController {
         this.buildHeader();
         this.buildScroller();
         this.buildCalendar();
-        await this.refresh({ preserveScroll: false });
+        await this.refreshInternal({ preserveScroll: false });
     }
 
     async onClose(): Promise<void> {
+        if (this.refreshTimer !== null) {
+            window.clearTimeout(this.refreshTimer);
+            this.refreshTimer = null;
+        }
+        if (this.settingsSaveTimer !== null) {
+            window.clearTimeout(this.settingsSaveTimer);
+            this.settingsSaveTimer = null;
+        }
+        this.pendingRefresh = false;
+        this.refreshQueue = null;
         this.renderManager.clearRenderedNotes();
         this.contentEl.empty();
     }
@@ -151,9 +163,9 @@ export class DailyNotesTimelineController {
     handleViewActivated(): Promise<void> {
         if (this.pendingRefresh) {
             this.pendingRefresh = false;
-            return this.refresh({ preserveScroll: true, clearFilteredCache: false });
+            return this.queueRefresh({ preserveScroll: true, clearFilteredCache: false });
         }
-        return this.refresh({ preserveScroll: false, clearFilteredCache: false });
+        return this.queueRefresh({ preserveScroll: false, clearFilteredCache: false });
     }
 
     onActiveLeafChange(leaf: any, isCurrentLeaf: boolean) {
@@ -286,7 +298,28 @@ export class DailyNotesTimelineController {
     }
 
     private async refresh(options: { preserveScroll?: boolean; alignTop?: boolean; clearFilteredCache?: boolean } = {}): Promise<void> {
+        await this.queueRefresh(options);
+    }
+
+    private async refreshInternal(options: { preserveScroll?: boolean; alignTop?: boolean; clearFilteredCache?: boolean } = {}): Promise<void> {
         await refreshTimeline(this.getFlowContext(), options);
+    }
+
+    private async queueRefresh(options: { preserveScroll?: boolean; alignTop?: boolean; clearFilteredCache?: boolean } = {}): Promise<void> {
+        if (this.refreshPromise) {
+            this.refreshQueue = options;
+            return this.refreshPromise;
+        }
+        this.refreshPromise = this.refreshInternal(options)
+            .finally(() => {
+                this.refreshPromise = null;
+            });
+        await this.refreshPromise;
+        if (this.refreshQueue) {
+            const next = this.refreshQueue;
+            this.refreshQueue = null;
+            await this.queueRefresh(next);
+        }
     }
 
     private async renderRange(start: number, end: number): Promise<void> {
@@ -449,7 +482,7 @@ export class DailyNotesTimelineController {
                 return null;
             }
             const settings = getDailyNoteSettings();
-            const folder = settings?.folder?.trim() ?? '';
+            const folder = this.normalizeFolderPath(settings?.folder ?? '');
             const format = settings?.format?.trim() || DEFAULT_DAILY_NOTE_FORMAT;
             this.dailyNotesConfig = { folder, format };
             return this.dailyNotesConfig;
@@ -459,11 +492,20 @@ export class DailyNotesTimelineController {
         }
     }
 
+    private normalizeFolderPath(folder: string): string {
+        const trimmed = folder.trim();
+        if (!trimmed) {
+            return '';
+        }
+        return trimmed.replace(/^\/+|\/+$/g, '');
+    }
+
     private isInDailyNotesFolder(filePath: string, folder: string): boolean {
-        if (folder.trim().length === 0) {
+        const normalized = this.normalizeFolderPath(folder);
+        if (normalized.length === 0) {
             return !filePath.includes('/');
         }
-        return filePath.startsWith(`${folder}/`);
+        return filePath.startsWith(`${normalized}/`);
     }
 
     private invalidateDateKeyCache(path?: string) {
