@@ -1,8 +1,8 @@
-import { App, MarkdownRenderChild, TFile } from 'obsidian';
+import { App, TFile } from 'obsidian';
 import { CrystalPluginSettings } from '../../settings';
 import { TimelineCalendar } from '../calendar';
 import { collectDailyNoteFiles, DailyNotesConfig, getDateKeyFromFile, getDateFromKey, toISODateKey } from '../data';
-import { filterTimelineContent, TimelineFilterMode } from '../filters';
+import { TimelineFilterMode } from '../filters';
 import {
     ensureScrollable,
     getListTopOffset,
@@ -14,7 +14,7 @@ import {
 } from '../scroll';
 import { TimelineFlowContext, jumpToDateKey, refreshTimeline, scrollToToday } from './flow';
 import { buildTimelineHeader } from './header';
-import { renderNote } from './render-range';
+import { TimelineRenderManager } from './render-manager';
 import { appHasDailyNotesPluginLoaded, DEFAULT_DAILY_NOTE_FORMAT, getDailyNoteSettings } from 'obsidian-daily-notes-interface';
 
 type ControllerOptions = {
@@ -54,12 +54,11 @@ export class DailyNotesTimelineController {
     private activeFilter: TimelineFilterMode = 'all';
     private headingFilterText = '';
     private searchQuery = '';
-    private filteredContentCache = new Map<string, string | null>();
     private settingsSaveTimer: number | null = null;
     private debugLog: (message: string, details?: Record<string, unknown>) => void;
     private pendingRefresh = false;
     private dailyNotesConfig: DailyNotesConfig | null = null;
-    private renderedChildren = new Map<HTMLElement, MarkdownRenderChild>();
+    private renderManager: TimelineRenderManager;
 
     constructor(options: ControllerOptions) {
         this.app = options.app;
@@ -70,6 +69,29 @@ export class DailyNotesTimelineController {
         this.markdownComponent = options.markdownComponent;
         this.isLeafDeferred = options.isLeafDeferred ?? null;
         this.debugLog = options.debugLog;
+        this.renderManager = new TimelineRenderManager({
+            app: options.app,
+            markdownComponent: options.markdownComponent,
+            registerDomEvent: options.registerDomEvent,
+            onOpenFile: (file, openInNewLeaf) => {
+                void this.app.workspace.getLeaf(openInNewLeaf).openFile(file);
+            },
+            onOpenLink: (href, source, openInNewLeaf, isExternal) => {
+                if (isExternal) {
+                    window.open(href, '_blank');
+                    return;
+                }
+                this.app.workspace.openLinkText(href, source, openInNewLeaf);
+            },
+            onToggleTask: async (targetFile, lineIndex, checked) => {
+                await this.updateTaskLine(targetFile, lineIndex, checked);
+            },
+            resolveLinkSourcePath: (targetFile) => targetFile.path,
+            resolveDateKey: (targetFile) => this.getDateKeyFromFile(targetFile),
+            getActiveFilter: () => this.activeFilter,
+            getHeadingFilterText: () => this.headingFilterText,
+            getSearchQuery: () => this.searchQuery
+        });
     }
 
     async onOpen(): Promise<void> {
@@ -86,7 +108,7 @@ export class DailyNotesTimelineController {
     }
 
     async onClose(): Promise<void> {
-        this.clearRenderedNotes();
+        this.renderManager.clearRenderedNotes();
         this.contentEl.empty();
     }
 
@@ -120,7 +142,7 @@ export class DailyNotesTimelineController {
         if (!this.isInDailyNotesFolder(file.path, config.folder)) {
             return;
         }
-        this.filteredContentCache.clear();
+        this.renderManager.clearFilteredContentCache();
         this.scheduleRefresh({ preserveScroll: true });
     }
 
@@ -260,7 +282,7 @@ export class DailyNotesTimelineController {
         if (!this.listEl) {
             return;
         }
-        this.clearRenderedNotes();
+        this.renderManager.clearRenderedNotes();
         this.listEl.empty();
         this.startIndex = start;
         this.endIndex = end;
@@ -274,68 +296,7 @@ export class DailyNotesTimelineController {
         if (!this.listEl) {
             return;
         }
-        const result = await renderNote({
-            listEl: this.listEl,
-            file,
-            noteIndex,
-            position,
-            registerDomEvent: this.registerDomEvent,
-            onOpenFile: (targetFile, openInNewLeaf) => {
-                void this.app.workspace.getLeaf(openInNewLeaf).openFile(targetFile);
-            },
-            onOpenLink: (href, source, openInNewLeaf, isExternal) => {
-                if (isExternal) {
-                    window.open(href, '_blank');
-                    return;
-                }
-                this.app.workspace.openLinkText(href, source, openInNewLeaf);
-            },
-            onToggleTask: async (targetFile, lineIndex, checked) => {
-                await this.updateTaskLine(targetFile, lineIndex, checked);
-            },
-            activeFilter: this.activeFilter,
-            headingFilterText: this.headingFilterText,
-            searchQuery: this.searchQuery,
-            markdownComponent: this.markdownComponent,
-            resolveFilteredContent: (targetFile) => this.getFilteredContent(targetFile),
-            resolveLinkSourcePath: (targetFile) => targetFile.path,
-            resolveDateKey: (targetFile) => this.getDateKeyFromFile(targetFile)
-        });
-        if (!result) {
-            return;
-        }
-        this.renderedChildren.set(result.noteEl, result.renderChild);
-    }
-
-    private applyFilter(content: string): string | null {
-        return filterTimelineContent(content, this.activeFilter, this.headingFilterText.trim());
-    }
-
-    private async getFilteredContent(file: TFile): Promise<string | null> {
-        const cached = this.filteredContentCache.get(file.path);
-        if (cached !== undefined) {
-            return this.applySearch(cached);
-        }
-        const content = await this.app.vault.cachedRead(file);
-        const filtered = this.applyFilter(content);
-        this.filteredContentCache.set(file.path, filtered);
-        return this.applySearch(filtered);
-    }
-
-    private applySearch(content: string | null): string | null {
-        if (content === null) {
-            return null;
-        }
-        const terms = this.searchQuery
-            .trim()
-            .split(/\s+/)
-            .filter(term => term.length > 0);
-        if (terms.length === 0) {
-            return content;
-        }
-        const haystack = content.toLowerCase();
-        const matchesAll = terms.every(term => haystack.includes(term.toLowerCase()));
-        return matchesAll ? content : null;
+        await this.renderManager.renderNote(this.listEl, file, position, noteIndex);
     }
 
     private async updateTaskLine(file: TFile, lineIndex: number, checked: boolean): Promise<void> {
@@ -352,7 +313,7 @@ export class DailyNotesTimelineController {
             lines[lineIndex] = updated;
             return lines.join('\n');
         });
-        this.filteredContentCache.delete(file.path);
+        this.renderManager.invalidateFile(file.path);
     }
 
     private async scrollToToday(): Promise<void> {
@@ -406,7 +367,7 @@ export class DailyNotesTimelineController {
             scrollerEl: this.scrollerEl,
             hasFilteredContent: (file) => this.hasFilteredContent(file),
             renderNote: (file, position, noteIndex) => this.renderNote(file, position, noteIndex),
-            onRemove: (element) => this.cleanupRenderedNote(element)
+            onRemove: (element) => this.renderManager.cleanupRenderedNote(element)
         });
         this.startIndex = startIndex;
         this.endIndex = endIndex;
@@ -428,7 +389,7 @@ export class DailyNotesTimelineController {
             scrollerEl: this.scrollerEl,
             hasFilteredContent: (file) => this.hasFilteredContent(file),
             renderNote: (file, position, noteIndex) => this.renderNote(file, position, noteIndex),
-            onRemove: (element) => this.cleanupRenderedNote(element)
+            onRemove: (element) => this.renderManager.cleanupRenderedNote(element)
         });
         this.startIndex = startIndex;
         this.endIndex = endIndex;
@@ -546,7 +507,7 @@ export class DailyNotesTimelineController {
     }
 
     private async hasFilteredContent(file: TFile): Promise<boolean> {
-        return await this.getFilteredContent(file) !== null;
+        return await this.renderManager.hasFilteredContent(file);
     }
 
     private findIndexByDateKey(dateKey: string): number {
@@ -596,9 +557,9 @@ export class DailyNotesTimelineController {
             },
             getPageSize: () => this.pageSize,
             clearFilteredContentCache: () => {
-                this.filteredContentCache.clear();
+                this.renderManager.clearFilteredContentCache();
             },
-            clearRenderedNotes: () => this.clearRenderedNotes(),
+            clearRenderedNotes: () => this.renderManager.clearRenderedNotes(),
             collectDailyNoteFiles: () => this.collectDailyNoteFiles(),
             getInitialTargetIndex: () => this.getInitialTargetIndex(),
             getTopVisibleDateKey: () => this.getTopVisibleDateKey(),
@@ -613,22 +574,6 @@ export class DailyNotesTimelineController {
             scheduleTopVisibleUpdate: () => this.scheduleTopVisibleUpdate(),
             debugLog: (message: string, details?: Record<string, unknown>) => this.debugLog(message, details)
         };
-    }
-
-    private cleanupRenderedNote(noteEl: HTMLElement) {
-        const child = this.renderedChildren.get(noteEl);
-        if (!child) {
-            return;
-        }
-        this.renderedChildren.delete(noteEl);
-        this.markdownComponent?.removeChild(child);
-    }
-
-    private clearRenderedNotes() {
-        for (const child of this.renderedChildren.values()) {
-            this.markdownComponent?.removeChild(child);
-        }
-        this.renderedChildren.clear();
     }
 
     private getDateKeyFromFile(file: TFile): string | null {
