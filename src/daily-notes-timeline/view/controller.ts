@@ -3,18 +3,10 @@ import { CrystalPluginSettings } from '../../settings';
 import { TimelineCalendar } from '../calendar';
 import { collectDailyNoteFiles, DailyNotesConfig, getDateKeyFromFile, getDateFromKey, toISODateKey } from '../data';
 import { TimelineFilterMode } from '../filters';
-import {
-    ensureScrollable,
-    getListTopOffset,
-    getTopVisibleDateKey,
-    getTopVisibleOffset,
-    loadNext,
-    loadPrevious,
-    scrollElementToOffset
-} from '../scroll';
 import { TimelineFlowContext, jumpToDateKey, refreshTimeline, scrollToToday } from './flow';
 import { buildTimelineHeader } from './header';
 import { TimelineRenderManager } from './render-manager';
+import { TimelineScrollManager } from './scroll-manager';
 import { appHasDailyNotesPluginLoaded, DEFAULT_DAILY_NOTE_FORMAT, getDailyNoteSettings } from 'obsidian-daily-notes-interface';
 
 type ControllerOptions = {
@@ -36,8 +28,6 @@ export class DailyNotesTimelineController {
     private onSettingsChange: (() => Promise<void>) | null = null;
     private markdownComponent: any;
     private isLeafDeferred: (() => boolean) | null = null;
-    private scrollerEl: HTMLDivElement | null = null;
-    private listEl: HTMLDivElement | null = null;
     private filterTabButtons: HTMLButtonElement[] = [];
     private filterHeadingInputEl: HTMLInputElement | null = null;
     private searchInputEl: HTMLInputElement | null = null;
@@ -45,10 +35,7 @@ export class DailyNotesTimelineController {
     private noteFiles: TFile[] = [];
     private startIndex = 0;
     private endIndex = -1;
-    private isLoading = false;
     private refreshTimer: number | null = null;
-    private topVisibleRaf: number | null = null;
-    private currentTopDateKey: string | null = null;
     private readonly pageSize = 5;
     private readonly maxRendered = 20;
     private activeFilter: TimelineFilterMode = 'all';
@@ -59,6 +46,7 @@ export class DailyNotesTimelineController {
     private pendingRefresh = false;
     private dailyNotesConfig: DailyNotesConfig | null = null;
     private renderManager: TimelineRenderManager;
+    private scrollManager: TimelineScrollManager;
 
     constructor(options: ControllerOptions) {
         this.app = options.app;
@@ -91,6 +79,29 @@ export class DailyNotesTimelineController {
             getActiveFilter: () => this.activeFilter,
             getHeadingFilterText: () => this.headingFilterText,
             getSearchQuery: () => this.searchQuery
+        });
+        this.scrollManager = new TimelineScrollManager({
+            contentEl: options.contentEl,
+            registerDomEvent: options.registerDomEvent,
+            getNoteFiles: () => this.noteFiles,
+            getStartIndex: () => this.startIndex,
+            setStartIndex: (value) => {
+                this.startIndex = value;
+            },
+            getEndIndex: () => this.endIndex,
+            setEndIndex: (value) => {
+                this.endIndex = value;
+            },
+            getPageSize: () => this.pageSize,
+            getMaxRendered: () => this.maxRendered,
+            renderNote: (file, position, noteIndex) => this.renderNote(file, position, noteIndex),
+            hasFilteredContent: (file) => this.hasFilteredContent(file),
+            onRemoveRenderedNote: (element) => this.renderManager.cleanupRenderedNote(element),
+            resolveDateKey: (file) => this.getDateKeyFromFile(file),
+            onTopVisibleDateChange: (dateKey) => {
+                this.calendar?.updateForDate(dateKey);
+            },
+            debugLog: (message, details) => this.debugLog(message, details)
         });
     }
 
@@ -164,14 +175,14 @@ export class DailyNotesTimelineController {
                 this.settings.dailyNoteTimelineDefaultFilter = this.activeFilter;
                 this.queueSettingsSave();
                 this.updateFilterUi();
-                this.filteredContentCache.clear();
+                this.renderManager.clearFilteredContentCache();
                 void this.refresh({ preserveScroll: true, alignTop: true });
             },
             onHeadingInput: (value) => {
                 this.headingFilterText = value;
                 this.settings.dailyNoteTimelineFilterHeadingDefault = this.headingFilterText;
                 this.queueSettingsSave();
-                this.filteredContentCache.clear();
+                this.renderManager.clearFilteredContentCache();
                 if (this.activeFilter === 'heading') {
                     void this.refresh({ preserveScroll: true, alignTop: true });
                 }
@@ -191,9 +202,7 @@ export class DailyNotesTimelineController {
     }
 
     private buildScroller() {
-        this.scrollerEl = this.contentEl.createDiv('daily-note-timeline-scroll');
-        this.listEl = this.scrollerEl.createDiv('daily-note-timeline-list');
-        this.registerDomEvent(this.scrollerEl, 'scroll', () => this.onScroll());
+        this.scrollManager.buildScroller();
     }
 
     private buildCalendar() {
@@ -279,11 +288,12 @@ export class DailyNotesTimelineController {
     }
 
     private async renderRange(start: number, end: number): Promise<void> {
-        if (!this.listEl) {
+        const listEl = this.scrollManager.getListEl();
+        if (!listEl) {
             return;
         }
         this.renderManager.clearRenderedNotes();
-        this.listEl.empty();
+        listEl.empty();
         this.startIndex = start;
         this.endIndex = end;
         for (let i = start; i <= end; i += 1) {
@@ -293,10 +303,11 @@ export class DailyNotesTimelineController {
     }
 
     private async renderNote(file: TFile, position: 'append' | 'prepend', noteIndex: number): Promise<void> {
-        if (!this.listEl) {
+        const listEl = this.scrollManager.getListEl();
+        if (!listEl) {
             return;
         }
-        await this.renderManager.renderNote(this.listEl, file, position, noteIndex);
+        await this.renderManager.renderNote(listEl, file, position, noteIndex);
     }
 
     private async updateTaskLine(file: TFile, lineIndex: number, checked: boolean): Promise<void> {
@@ -320,154 +331,13 @@ export class DailyNotesTimelineController {
         await scrollToToday(this.getFlowContext());
     }
 
-    private async ensureScrollable() {
-        if (!this.scrollerEl || this.isLoading || this.noteFiles.length === 0) {
-            return;
-        }
-        await ensureScrollable({
-            scrollerEl: this.scrollerEl,
-            getStartIndex: () => this.startIndex,
-            getEndIndex: () => this.endIndex,
-            getNoteFilesLength: () => this.noteFiles.length,
-            loadNext: () => this.loadNext(),
-            loadPrevious: () => this.loadPrevious(),
-            scheduleTopVisibleUpdate: () => this.scheduleTopVisibleUpdate()
-        });
-    }
-
-    private async onScroll(): Promise<void> {
-        if (!this.scrollerEl || this.isLoading || this.noteFiles.length === 0) {
-            return;
-        }
-        const threshold = 200;
-        const { scrollTop, scrollHeight, clientHeight } = this.scrollerEl;
-        const remaining = scrollHeight - (scrollTop + clientHeight);
-
-        if (scrollTop < threshold) {
-            await this.loadPrevious();
-        }
-        if (remaining < threshold) {
-            await this.loadNext();
-        }
-        this.scheduleTopVisibleUpdate();
-    }
-
-    private async loadPrevious(): Promise<void> {
-        if (!this.listEl || this.startIndex === 0 || this.isLoading) {
-            return;
-        }
-        this.isLoading = true;
-        const { startIndex, endIndex } = await loadPrevious({
-            listEl: this.listEl,
-            noteFiles: this.noteFiles,
-            pageSize: this.pageSize,
-            maxRendered: this.maxRendered,
-            startIndex: this.startIndex,
-            endIndex: this.endIndex,
-            scrollerEl: this.scrollerEl,
-            hasFilteredContent: (file) => this.hasFilteredContent(file),
-            renderNote: (file, position, noteIndex) => this.renderNote(file, position, noteIndex),
-            onRemove: (element) => this.renderManager.cleanupRenderedNote(element)
-        });
-        this.startIndex = startIndex;
-        this.endIndex = endIndex;
-        this.isLoading = false;
-    }
-
-    private async loadNext(): Promise<void> {
-        if (!this.listEl || this.endIndex >= this.noteFiles.length - 1 || this.isLoading) {
-            return;
-        }
-        this.isLoading = true;
-        const { startIndex, endIndex } = await loadNext({
-            listEl: this.listEl,
-            noteFiles: this.noteFiles,
-            pageSize: this.pageSize,
-            maxRendered: this.maxRendered,
-            startIndex: this.startIndex,
-            endIndex: this.endIndex,
-            scrollerEl: this.scrollerEl,
-            hasFilteredContent: (file) => this.hasFilteredContent(file),
-            renderNote: (file, position, noteIndex) => this.renderNote(file, position, noteIndex),
-            onRemove: (element) => this.renderManager.cleanupRenderedNote(element)
-        });
-        this.startIndex = startIndex;
-        this.endIndex = endIndex;
-        this.isLoading = false;
-    }
-
-    private scheduleTopVisibleUpdate() {
-        if (this.topVisibleRaf !== null) {
-            return;
-        }
-        this.topVisibleRaf = window.requestAnimationFrame(() => {
-            this.topVisibleRaf = null;
-            this.updateTopVisibleDate();
-        });
-    }
-
-    private updateTopVisibleDate() {
-        let topDateKey = getTopVisibleDateKey(this.scrollerEl, this.listEl);
-        if (!topDateKey) {
-            topDateKey = toISODateKey(new Date());
-        }
-
-        if (topDateKey === this.currentTopDateKey) {
-            return;
-        }
-        this.currentTopDateKey = topDateKey;
-        this.calendar?.updateForDate(topDateKey);
-    }
-
-    private getTopVisibleDateKey(): string | null {
-        return getTopVisibleDateKey(this.scrollerEl, this.listEl);
-    }
-
-    private getTopVisibleOffset(): number | null {
-        return getTopVisibleOffset(this.scrollerEl, this.listEl);
-    }
-
-    private getListTopOffset(): number {
-        return getListTopOffset(this.scrollerEl, this.listEl);
-    }
-
-    private scrollToTargetIndex(targetIndex: number, offset: number) {
-        const targetKey = this.getDateKeyFromFile(this.noteFiles[targetIndex]);
-        this.debugLog('scrollToTargetIndex', { targetIndex, targetKey, offset });
-        if (targetKey) {
-            this.scrollToDateKey(targetKey, offset);
-            this.scheduleScrollCorrection(targetKey, offset);
-        } else {
-            this.scrollToIndex(targetIndex);
-        }
-    }
-
-    private scrollToIndex(targetIndex: number) {
-        if (!this.scrollerEl || !this.listEl) {
-            return;
-        }
-        const relativeIndex = targetIndex - this.startIndex;
-        const targetEl = this.listEl.children[relativeIndex] as HTMLElement | undefined;
-        if (!targetEl) {
-            return;
-        }
-        this.debugLog('scrollToIndex', { targetIndex, relativeIndex, startIndex: this.startIndex });
-        requestAnimationFrame(() => {
-            if (!this.scrollerEl) {
-                return;
-            }
-            const offset = this.getListTopOffset();
-            scrollElementToOffset(targetEl, this.scrollerEl, offset);
-            this.scheduleTopVisibleUpdate();
-        });
-    }
-
     private updateRenderedRangeFromDom() {
-        if (!this.listEl || this.listEl.children.length === 0) {
+        const listEl = this.scrollManager.getListEl();
+        if (!listEl || listEl.children.length === 0) {
             return;
         }
-        const first = this.listEl.firstElementChild as HTMLElement | null;
-        const last = this.listEl.lastElementChild as HTMLElement | null;
+        const first = listEl.firstElementChild as HTMLElement | null;
+        const last = listEl.lastElementChild as HTMLElement | null;
         const firstIndex = first?.dataset.index ? Number(first.dataset.index) : Number.NaN;
         const lastIndex = last?.dataset.index ? Number(last.dataset.index) : Number.NaN;
         if (Number.isFinite(firstIndex)) {
@@ -476,30 +346,6 @@ export class DailyNotesTimelineController {
         if (Number.isFinite(lastIndex)) {
             this.endIndex = lastIndex;
         }
-    }
-
-    private scrollToDateKey(dateKey: string, offset: number) {
-        if (!this.scrollerEl || !this.listEl) {
-            return;
-        }
-        const targetEl = this.listEl.querySelector(`[data-date="${dateKey}"]`) as HTMLElement | null;
-        if (!targetEl) {
-            return;
-        }
-        this.debugLog('scrollToDateKey', { dateKey, offset });
-        requestAnimationFrame(() => {
-            scrollElementToOffset(targetEl, this.scrollerEl, offset);
-            this.scheduleTopVisibleUpdate();
-        });
-    }
-
-    private scheduleScrollCorrection(dateKey: string, offset: number) {
-        window.requestAnimationFrame(() => {
-            this.scrollToDateKey(dateKey, offset);
-            window.setTimeout(() => {
-                this.scrollToDateKey(dateKey, offset);
-            }, 80);
-        });
     }
 
     private async jumpToDateKey(dateKey: string) {
@@ -541,8 +387,8 @@ export class DailyNotesTimelineController {
 
     private getFlowContext(): TimelineFlowContext {
         return {
-            getListEl: () => this.listEl,
-            getScrollerEl: () => this.scrollerEl,
+            getListEl: () => this.scrollManager.getListEl(),
+            getScrollerEl: () => this.scrollManager.getScrollerEl(),
             getNoteFiles: () => this.noteFiles,
             setNoteFiles: (files: TFile[]) => {
                 this.noteFiles = files;
@@ -562,16 +408,16 @@ export class DailyNotesTimelineController {
             clearRenderedNotes: () => this.renderManager.clearRenderedNotes(),
             collectDailyNoteFiles: () => this.collectDailyNoteFiles(),
             getInitialTargetIndex: () => this.getInitialTargetIndex(),
-            getTopVisibleDateKey: () => this.getTopVisibleDateKey(),
-            getTopVisibleOffset: () => this.getTopVisibleOffset(),
+            getTopVisibleDateKey: () => this.scrollManager.getTopVisibleDateKey(),
+            getTopVisibleOffset: () => this.scrollManager.getTopVisibleOffset(),
             findIndexByDateKey: (targetKey: string) => this.findIndexByDateKey(targetKey),
             hasFilteredContent: (file: TFile) => this.hasFilteredContent(file),
             findNearestIndexWithContent: (targetKey: string) => this.findNearestIndexWithContent(targetKey),
             renderRange: (start: number, end: number) => this.renderRange(start, end),
-            getListTopOffset: () => this.getListTopOffset(),
-            scrollToTargetIndex: (targetIndex: number, offset: number) => this.scrollToTargetIndex(targetIndex, offset),
-            ensureScrollable: () => this.ensureScrollable(),
-            scheduleTopVisibleUpdate: () => this.scheduleTopVisibleUpdate(),
+            getListTopOffset: () => this.scrollManager.getListTopOffset(),
+            scrollToTargetIndex: (targetIndex: number, offset: number) => this.scrollManager.scrollToTargetIndex(targetIndex, offset),
+            ensureScrollable: () => this.scrollManager.ensureScrollable(),
+            scheduleTopVisibleUpdate: () => this.scrollManager.scheduleTopVisibleUpdate(),
             debugLog: (message: string, details?: Record<string, unknown>) => this.debugLog(message, details)
         };
     }
