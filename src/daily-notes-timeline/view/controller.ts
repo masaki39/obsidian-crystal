@@ -579,7 +579,13 @@ export class DailyNotesTimelineController {
         if (!this.isInDailyNotesFolder(file.path, config.folder)) {
             return;
         }
-        this.invalidateNoteFilesCache();
+        if (file.extension !== 'md') {
+            return;
+        }
+        const updated = this.updateNoteFilesCacheForAdd(file);
+        if (!updated) {
+            this.invalidateNoteFilesCache();
+        }
         this.invalidateDateKeyCache(file.path);
         this.renderManager.invalidateFile(file.path);
         this.scheduleRefresh({ preserveScroll: true, clearFilteredCache: false });
@@ -596,7 +602,13 @@ export class DailyNotesTimelineController {
         if (!this.isInDailyNotesFolder(file.path, config.folder)) {
             return;
         }
-        this.invalidateNoteFilesCache();
+        if (file.extension !== 'md') {
+            return;
+        }
+        const updated = this.updateNoteFilesCacheForRemove(file.path);
+        if (!updated) {
+            this.invalidateNoteFilesCache();
+        }
         this.invalidateDateKeyCache(file.path);
         this.renderManager.invalidateFile(file.path);
         this.scheduleRefresh({ preserveScroll: true, clearFilteredCache: false });
@@ -615,7 +627,11 @@ export class DailyNotesTimelineController {
         if (!wasInFolder && !isInFolder) {
             return;
         }
-        this.invalidateNoteFilesCache();
+        const removed = oldPath ? this.updateNoteFilesCacheForRemove(oldPath) : false;
+        const added = isInFolder ? this.updateNoteFilesCacheForAdd(file) : false;
+        if (!removed && !added) {
+            this.invalidateNoteFilesCache();
+        }
         this.invalidateDateKeyCache(oldPath);
         this.invalidateDateKeyCache(file.path);
         if (oldPath) {
@@ -623,6 +639,60 @@ export class DailyNotesTimelineController {
         }
         this.renderManager.invalidateFile(file.path);
         this.scheduleRefresh({ preserveScroll: true, clearFilteredCache: false });
+    }
+
+    private updateNoteFilesCacheForAdd(file: TFile): boolean {
+        if (!this.noteFilesCache) {
+            return false;
+        }
+        const config = this.getDailyNotesConfig();
+        if (!config) {
+            return false;
+        }
+        if (!this.isInDailyNotesFolder(file.path, config.folder)) {
+            return false;
+        }
+        if (file.extension !== 'md') {
+            return false;
+        }
+        const existingIndex = this.noteFilesCache.findIndex(entry => entry.path === file.path);
+        if (existingIndex !== -1) {
+            return true;
+        }
+        const dateKey = this.getDateKeyFromFile(file);
+        if (!dateKey) {
+            return false;
+        }
+        const dateNumber = this.dateKeyToNumber(dateKey);
+        if (!Number.isFinite(dateNumber)) {
+            return false;
+        }
+        let insertIndex = this.noteFilesCache.length;
+        for (let i = 0; i < this.noteFilesCache.length; i += 1) {
+            const existingKey = this.getDateKeyFromFile(this.noteFilesCache[i]);
+            const existingNumber = this.dateKeyToNumber(existingKey ?? '');
+            if (!Number.isFinite(existingNumber)) {
+                continue;
+            }
+            if (dateNumber > existingNumber) {
+                insertIndex = i;
+                break;
+            }
+        }
+        this.noteFilesCache.splice(insertIndex, 0, file);
+        return true;
+    }
+
+    private updateNoteFilesCacheForRemove(path: string): boolean {
+        if (!this.noteFilesCache) {
+            return false;
+        }
+        const index = this.noteFilesCache.findIndex(file => file.path === path);
+        if (index === -1) {
+            return false;
+        }
+        this.noteFilesCache.splice(index, 1);
+        return true;
     }
 
     // Notice removed: view already shows "No daily notes found."
