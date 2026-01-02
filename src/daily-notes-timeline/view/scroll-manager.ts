@@ -206,12 +206,13 @@ export class TimelineScrollManager {
         if (!this.scrollerEl || !this.listEl) {
             return;
         }
-        const relativeIndex = targetIndex - this.getStartIndex();
-        const targetEl = this.listEl.children[relativeIndex] as HTMLElement | undefined;
+        const selector = `[data-index="${targetIndex}"]`;
+        const targetEl = this.listEl.querySelector(selector) as HTMLElement | null
+            ?? (this.listEl.children[targetIndex - this.getStartIndex()] as HTMLElement | undefined);
         if (!targetEl) {
             return;
         }
-        this.debugLog('scrollToIndex', { targetIndex, relativeIndex, startIndex: this.getStartIndex() });
+        this.debugLog('scrollToIndex', { targetIndex, startIndex: this.getStartIndex() });
         requestAnimationFrame(() => {
             if (!this.scrollerEl) {
                 return;

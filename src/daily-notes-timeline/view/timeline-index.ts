@@ -43,6 +43,14 @@ export async function findNearestIndexWithContent(options: FindNearestOptions): 
     }
     const targetDate = getDateFromKey(options.targetDateKey);
     const targetNumber = dateKeyToNumber(options.targetDateKey);
+    if (!Number.isFinite(targetNumber) || Number.isNaN(targetDate.getTime())) {
+        for (let i = 0; i < length; i += 1) {
+            if (await options.hasFilteredContent(options.files[i])) {
+                return i;
+            }
+        }
+        return -1;
+    }
     let left = 0;
     let right = length - 1;
     let insertionIndex = length;

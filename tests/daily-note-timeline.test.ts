@@ -1,6 +1,7 @@
 import { extractHeadingSectionFromContent, filterTasksContent, filterTimelineContent, findHeadingSectionRange } from '../src/daily-notes-timeline/filters';
 import { collectDailyNoteFiles, extractDateFromFileName, toISODateKey } from '../src/daily-notes-timeline/data';
 import { mapTaskLineIndices } from '../src/daily-notes-timeline/view/tasks';
+import { buildDateIndex, findNearestIndexWithContent } from '../src/daily-notes-timeline/view/timeline-index';
 import { TFile } from 'obsidian';
 
 class MockFile extends TFile {
@@ -44,6 +45,17 @@ describe('daily note timeline filters', () => {
     test('filterTasksContent returns null when no tasks', () => {
         const input = ['# Title', 'Paragraph', '- item'].join('\n');
         expect(filterTasksContent(input)).toBeNull();
+    });
+
+    test('filterTasksContent includes + and numbered tasks', () => {
+        const input = [
+            '# Title',
+            '+ [ ] Plus task',
+            '1. [x] Numbered task',
+            '- [ ] Dash task'
+        ].join('\n');
+
+        expect(filterTasksContent(input)).toBe('+ [ ] Plus task\n1. [x] Numbered task\n- [ ] Dash task');
     });
 
     test('extractHeadingSectionFromContent matches heading text ignoring hashes', () => {
@@ -166,5 +178,23 @@ describe('daily note timeline file collection', () => {
             '2024-01-03.md',
             '2024-01-01.md'
         ]);
+    });
+});
+
+describe('daily note timeline index', () => {
+    test('findNearestIndexWithContent falls back to first matching content for invalid date key', async () => {
+        const files = [
+            new MockFile('2024-01-03.md'),
+            new MockFile('2024-01-02.md')
+        ];
+        const index = buildDateIndex(files, file => file.basename);
+        const result = await findNearestIndexWithContent({
+            files,
+            index,
+            targetDateKey: 'not-a-date',
+            hasFilteredContent: async (file) => file.path.includes('2024-01-02')
+        });
+
+        expect(result).toBe(1);
     });
 });

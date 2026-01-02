@@ -1,4 +1,4 @@
-const TASK_LINE_REGEX = /^\s*[-*]\s+\[[ xX]\]\s+/;
+const TASK_LINE_REGEX = /^\s*(?:[-*+]|\d+\.)\s+\[[ xX]\]\s+/;
 
 export function isTaskLine(line: string): boolean {
     return TASK_LINE_REGEX.test(line);

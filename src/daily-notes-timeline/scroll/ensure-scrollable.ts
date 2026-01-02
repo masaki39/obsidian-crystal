@@ -10,6 +10,7 @@ type EnsureScrollableOptions = {
 
 export async function ensureScrollable(options: EnsureScrollableOptions): Promise<void> {
     let guard = 0;
+    const maxIterations = Math.max(10, options.getNoteFilesLength());
     while (options.scrollerEl.scrollHeight <= options.scrollerEl.clientHeight + 32) {
         if (options.getStartIndex() === 0 && options.getEndIndex() >= options.getNoteFilesLength() - 1) {
             break;
@@ -22,7 +23,7 @@ export async function ensureScrollable(options: EnsureScrollableOptions): Promis
             break;
         }
         guard += 1;
-        if (guard >= 10) {
+        if (guard >= maxIterations) {
             break;
         }
     }

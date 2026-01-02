@@ -319,7 +319,7 @@ export class DailyNotesTimelineController {
                 return content;
             }
             const line = lines[lineIndex];
-            const updated = line.replace(/^(\s*[-*]\s+\[)([ xX])(\])/, `$1${checked ? 'x' : ' '}$3`);
+            const updated = line.replace(/^(\s*(?:[-*+]|\d+\.)\s+\[)([ xX])(\])/, `$1${checked ? 'x' : ' '}$3`);
             if (updated === line) {
                 return content;
             }
