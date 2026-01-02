@@ -14,6 +14,7 @@ export type NoteElements = {
 export function createNoteElements(options: NoteElementOptions): NoteElements {
     const noteEl = document.createElement('div');
     noteEl.className = 'daily-note-timeline-item';
+    noteEl.dataset.path = options.file.path;
 
     const titleRowEl = document.createElement('div');
     titleRowEl.className = 'daily-note-timeline-item-header';

@@ -28,6 +28,20 @@ export type RenderNoteResult = {
     renderChild: MarkdownRenderChild;
 };
 
+type RenderNoteContentOptions = {
+    bodyEl: HTMLDivElement;
+    file: TFile;
+    registerDomEvent: (el: HTMLElement, type: string, callback: (event: Event) => any) => void;
+    onOpenLink: (href: string, sourcePath: string, openInNewLeaf: boolean, isExternal: boolean) => void;
+    onToggleTask: (file: TFile, lineIndex: number, checked: boolean) => Promise<void>;
+    activeFilter: TimelineFilterMode;
+    headingFilterText: string;
+    searchQuery: string;
+    markdownComponent: any;
+    resolveLinkSourcePath: (file: TFile) => string;
+    filteredContent: string;
+};
+
 class TimelineMarkdownRenderChild extends MarkdownRenderChild {
     private appRef: App;
     private fileRef: TFile | null;
@@ -45,6 +59,36 @@ class TimelineMarkdownRenderChild extends MarkdownRenderChild {
     get file(): TFile | null {
         return this.fileRef;
     }
+}
+
+export async function renderNoteContent(options: RenderNoteContentOptions): Promise<MarkdownRenderChild> {
+    const renderChild = new TimelineMarkdownRenderChild(options.markdownComponent.app, options.bodyEl, options.file);
+    options.markdownComponent.addChild(renderChild);
+    await MarkdownRenderer.render(
+        options.markdownComponent.app,
+        options.filteredContent,
+        options.bodyEl,
+        options.file.path,
+        renderChild
+    );
+    await attachTaskToggleHandler({
+        app: options.markdownComponent.app,
+        container: options.bodyEl,
+        file: options.file,
+        registerDomEvent: options.registerDomEvent,
+        activeFilter: options.activeFilter,
+        headingFilterText: options.headingFilterText,
+        filteredContent: options.filteredContent,
+        onToggleTask: options.onToggleTask
+    });
+    attachTimelineLinkHandler(
+        options.registerDomEvent,
+        options.bodyEl,
+        options.resolveLinkSourcePath(options.file),
+        options.onOpenLink
+    );
+    highlightMatches(options.bodyEl, options.searchQuery);
+    return renderChild;
 }
 
 export async function renderNote(options: RenderNoteOptions): Promise<RenderNoteResult | null> {
@@ -68,26 +112,18 @@ export async function renderNote(options: RenderNoteOptions): Promise<RenderNote
     } else {
         options.listEl.appendChild(noteEl);
     }
-
-    const renderChild = new TimelineMarkdownRenderChild(options.markdownComponent.app, bodyEl, options.file);
-    options.markdownComponent.addChild(renderChild);
-    await MarkdownRenderer.render(options.markdownComponent.app, filtered, bodyEl, options.file.path, renderChild);
-    await attachTaskToggleHandler({
-        app: options.markdownComponent.app,
-        container: bodyEl,
+    const renderChild = await renderNoteContent({
+        bodyEl,
         file: options.file,
         registerDomEvent: options.registerDomEvent,
+        onOpenLink: options.onOpenLink,
+        onToggleTask: options.onToggleTask,
         activeFilter: options.activeFilter,
         headingFilterText: options.headingFilterText,
-        filteredContent: filtered,
-        onToggleTask: options.onToggleTask
+        searchQuery: options.searchQuery,
+        markdownComponent: options.markdownComponent,
+        resolveLinkSourcePath: options.resolveLinkSourcePath,
+        filteredContent: filtered
     });
-    attachTimelineLinkHandler(
-        options.registerDomEvent,
-        bodyEl,
-        options.resolveLinkSourcePath(options.file),
-        options.onOpenLink
-    );
-    highlightMatches(bodyEl, options.searchQuery);
     return { noteEl, renderChild };
 }

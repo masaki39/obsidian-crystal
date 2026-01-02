@@ -1,6 +1,6 @@
 import { App, MarkdownRenderChild, TFile } from 'obsidian';
 import { filterTimelineContent, TimelineFilterMode } from '../filters';
-import { renderNote } from './render-range';
+import { renderNote, renderNoteContent } from './render-range';
 
 type RenderManagerOptions = {
     app: App;
@@ -32,6 +32,7 @@ export class TimelineRenderManager {
     private searchMatchCache = new Map<string, boolean>();
     private searchMatchCacheKey: string | null = null;
     private renderedChildren = new Map<HTMLElement, MarkdownRenderChild>();
+    private renderedByPath = new Map<string, HTMLDivElement>();
 
     constructor(options: RenderManagerOptions) {
         this.app = options.app;
@@ -63,12 +64,21 @@ export class TimelineRenderManager {
             this.markdownComponent?.removeChild(child);
         }
         this.renderedChildren.clear();
+        this.renderedByPath.clear();
     }
 
     cleanupRenderedNote(noteEl: HTMLElement) {
         const child = this.renderedChildren.get(noteEl);
         if (!child) {
+            const path = (noteEl as HTMLElement).dataset.path;
+            if (path) {
+                this.renderedByPath.delete(path);
+            }
             return;
+        }
+        const path = (noteEl as HTMLElement).dataset.path;
+        if (path) {
+            this.renderedByPath.delete(path);
         }
         this.renderedChildren.delete(noteEl);
         this.markdownComponent?.removeChild(child);
@@ -96,6 +106,7 @@ export class TimelineRenderManager {
             return;
         }
         this.renderedChildren.set(result.noteEl, result.renderChild);
+        this.renderedByPath.set(file.path, result.noteEl);
     }
 
     async hasFilteredContent(file: TFile): Promise<boolean> {
@@ -111,6 +122,43 @@ export class TimelineRenderManager {
         const matches = content !== null;
         this.searchMatchCache.set(file.path, matches);
         return matches;
+    }
+
+    getRenderedNoteElement(path: string): HTMLDivElement | null {
+        return this.renderedByPath.get(path) ?? null;
+    }
+
+    async rerenderNote(noteEl: HTMLDivElement, file: TFile): Promise<boolean> {
+        const filtered = await this.getFilteredContent(file);
+        if (filtered === null) {
+            return false;
+        }
+        const bodyEl = noteEl.querySelector('.daily-note-timeline-item-body') as HTMLDivElement | null;
+        if (!bodyEl) {
+            return false;
+        }
+        const existing = this.renderedChildren.get(noteEl);
+        if (existing) {
+            this.renderedChildren.delete(noteEl);
+            this.markdownComponent?.removeChild(existing);
+        }
+        bodyEl.textContent = '';
+        const renderChild = await renderNoteContent({
+            bodyEl,
+            file,
+            registerDomEvent: this.registerDomEvent,
+            onOpenLink: this.onOpenLink,
+            onToggleTask: this.onToggleTask,
+            activeFilter: this.getActiveFilter(),
+            headingFilterText: this.getHeadingFilterText(),
+            searchQuery: this.getSearchQuery(),
+            markdownComponent: this.markdownComponent,
+            resolveLinkSourcePath: (targetFile) => this.resolveLinkSourcePath(targetFile),
+            filteredContent: filtered
+        });
+        this.renderedChildren.set(noteEl, renderChild);
+        this.renderedByPath.set(file.path, noteEl);
+        return true;
     }
 
     private applyFilter(content: string): string | null {
