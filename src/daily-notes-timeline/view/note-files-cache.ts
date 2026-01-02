@@ -53,6 +53,11 @@ export class TimelineNoteFilesCache {
         if (!config) {
             return false;
         }
+        const cacheKey = `${config.folder}::${config.format}`;
+        if (this.cacheKey !== cacheKey) {
+            this.invalidate();
+            return false;
+        }
         if (!this.isInDailyNotesFolder(file.path, config.folder)) {
             return false;
         }
@@ -89,6 +94,15 @@ export class TimelineNoteFilesCache {
 
     updateForRemove(path: string): boolean {
         if (!this.cache) {
+            return false;
+        }
+        const config = this.getConfig();
+        if (!config) {
+            return false;
+        }
+        const cacheKey = `${config.folder}::${config.format}`;
+        if (this.cacheKey !== cacheKey) {
+            this.invalidate();
             return false;
         }
         const index = this.cache.findIndex(file => file.path === path);
