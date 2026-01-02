@@ -33,6 +33,9 @@ export class DailyNotesTimelineController {
     private searchInputEl: HTMLInputElement | null = null;
     private calendar: TimelineCalendar | null = null;
     private noteFiles: TFile[] = [];
+    private noteFileDateKeys: string[] = [];
+    private noteFileDateNumbers: number[] = [];
+    private noteFileIndexByDateKey = new Map<string, number>();
     private startIndex = 0;
     private endIndex = -1;
     private refreshTimer: number | null = null;
@@ -47,6 +50,8 @@ export class DailyNotesTimelineController {
     private dailyNotesConfig: DailyNotesConfig | null = null;
     private noteFilesCache: TFile[] | null = null;
     private noteFilesCacheKey: string | null = null;
+    private dateKeyCache = new Map<string, string | null>();
+    private dateKeyCacheKey: string | null = null;
     private renderManager: TimelineRenderManager;
     private scrollManager: TimelineScrollManager;
 
@@ -353,32 +358,94 @@ export class DailyNotesTimelineController {
     }
 
     private findIndexByDateKey(dateKey: string): number {
-        return this.noteFiles.findIndex(file => this.getDateKeyFromFile(file) === dateKey);
+        return this.noteFileIndexByDateKey.get(dateKey) ?? -1;
     }
 
     private async findNearestIndexWithContent(dateKey: string): Promise<number> {
-        if (this.noteFiles.length === 0) {
+        const length = this.noteFiles.length;
+        if (length === 0) {
             return -1;
         }
         const targetDate = getDateFromKey(dateKey);
-        let bestIndex = -1;
-        let bestDiff = Number.POSITIVE_INFINITY;
-        for (let i = 0; i < this.noteFiles.length; i += 1) {
-            const fileDateKey = this.getDateKeyFromFile(this.noteFiles[i]);
-            if (!fileDateKey) {
+        const targetNumber = this.dateKeyToNumber(dateKey);
+        let left = 0;
+        let right = length - 1;
+        let insertionIndex = length;
+        while (left <= right) {
+            const mid = Math.floor((left + right) / 2);
+            const midNumber = this.noteFileDateNumbers[mid];
+            if (!Number.isFinite(midNumber)) {
+                left = mid + 1;
                 continue;
             }
-            if (!await this.hasFilteredContent(this.noteFiles[i])) {
-                continue;
+            if (midNumber === targetNumber) {
+                insertionIndex = mid;
+                break;
             }
-            const fileDate = getDateFromKey(fileDateKey);
-            const diff = Math.abs(fileDate.getTime() - targetDate.getTime());
-            if (diff < bestDiff) {
-                bestDiff = diff;
-                bestIndex = i;
+            if (midNumber > targetNumber) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+            insertionIndex = left;
+        }
+
+        const candidates: number[] = [];
+        if (insertionIndex < length) {
+            candidates.push(insertionIndex);
+        }
+        if (insertionIndex - 1 >= 0) {
+            candidates.push(insertionIndex - 1);
+        }
+        let startIndex = candidates[0] ?? 0;
+        if (candidates.length > 1) {
+            const firstKey = this.noteFileDateKeys[candidates[0]];
+            const secondKey = this.noteFileDateKeys[candidates[1]];
+            if (firstKey && secondKey) {
+                const firstDiff = Math.abs(getDateFromKey(firstKey).getTime() - targetDate.getTime());
+                const secondDiff = Math.abs(getDateFromKey(secondKey).getTime() - targetDate.getTime());
+                startIndex = firstDiff <= secondDiff ? candidates[0] : candidates[1];
             }
         }
-        return bestIndex;
+
+        if (await this.hasFilteredContent(this.noteFiles[startIndex])) {
+            return startIndex;
+        }
+
+        let leftIndex = startIndex - 1;
+        let rightIndex = startIndex + 1;
+        while (leftIndex >= 0 || rightIndex < length) {
+            let chooseLeft = false;
+            if (leftIndex >= 0 && rightIndex < length) {
+                const leftKey = this.noteFileDateKeys[leftIndex];
+                const rightKey = this.noteFileDateKeys[rightIndex];
+                if (!leftKey) {
+                    chooseLeft = false;
+                } else if (!rightKey) {
+                    chooseLeft = true;
+                } else {
+                    const leftDiff = Math.abs(getDateFromKey(leftKey).getTime() - targetDate.getTime());
+                    const rightDiff = Math.abs(getDateFromKey(rightKey).getTime() - targetDate.getTime());
+                    chooseLeft = leftDiff <= rightDiff;
+                }
+            } else if (leftIndex >= 0) {
+                chooseLeft = true;
+            }
+
+            if (chooseLeft) {
+                if (await this.hasFilteredContent(this.noteFiles[leftIndex])) {
+                    return leftIndex;
+                }
+                leftIndex -= 1;
+            } else if (rightIndex < length) {
+                if (await this.hasFilteredContent(this.noteFiles[rightIndex])) {
+                    return rightIndex;
+                }
+                rightIndex += 1;
+            }
+        }
+
+        return -1;
     }
 
     private getFlowContext(): TimelineFlowContext {
@@ -388,6 +455,15 @@ export class DailyNotesTimelineController {
             getNoteFiles: () => this.noteFiles,
             setNoteFiles: (files: TFile[]) => {
                 this.noteFiles = files;
+                this.noteFileDateKeys = files.map(file => this.getDateKeyFromFile(file) ?? '');
+                this.noteFileDateNumbers = this.noteFileDateKeys.map(key => this.dateKeyToNumber(key));
+                this.noteFileIndexByDateKey = new Map();
+                for (let i = 0; i < this.noteFileDateKeys.length; i += 1) {
+                    const key = this.noteFileDateKeys[i];
+                    if (key) {
+                        this.noteFileIndexByDateKey.set(key, i);
+                    }
+                }
             },
             getStartIndex: () => this.startIndex,
             setStartIndex: (value: number) => {
@@ -423,7 +499,17 @@ export class DailyNotesTimelineController {
         if (!config) {
             return null;
         }
-        return getDateKeyFromFile(file, config);
+        const cacheKey = `${config.folder}::${config.format}`;
+        if (this.dateKeyCacheKey !== cacheKey) {
+            this.dateKeyCacheKey = cacheKey;
+            this.dateKeyCache.clear();
+        }
+        if (this.dateKeyCache.has(file.path)) {
+            return this.dateKeyCache.get(file.path) ?? null;
+        }
+        const key = getDateKeyFromFile(file, config);
+        this.dateKeyCache.set(file.path, key);
+        return key;
     }
 
     private getDailyNotesConfig(): DailyNotesConfig | null {
@@ -448,6 +534,23 @@ export class DailyNotesTimelineController {
     private invalidateNoteFilesCache() {
         this.noteFilesCache = null;
         this.noteFilesCacheKey = null;
+    }
+
+    private invalidateDateKeyCache(path?: string) {
+        if (!path) {
+            this.dateKeyCache.clear();
+            return;
+        }
+        this.dateKeyCache.delete(path);
+    }
+
+    private dateKeyToNumber(dateKey: string): number {
+        if (!dateKey) {
+            return Number.NaN;
+        }
+        const raw = dateKey.replace(/-/g, '');
+        const num = Number.parseInt(raw, 10);
+        return Number.isFinite(num) ? num : Number.NaN;
     }
 
     onVaultModify(file: TFile | any) {
@@ -477,6 +580,7 @@ export class DailyNotesTimelineController {
             return;
         }
         this.invalidateNoteFilesCache();
+        this.invalidateDateKeyCache(file.path);
         this.renderManager.invalidateFile(file.path);
         this.scheduleRefresh({ preserveScroll: true, clearFilteredCache: false });
     }
@@ -493,6 +597,7 @@ export class DailyNotesTimelineController {
             return;
         }
         this.invalidateNoteFilesCache();
+        this.invalidateDateKeyCache(file.path);
         this.renderManager.invalidateFile(file.path);
         this.scheduleRefresh({ preserveScroll: true, clearFilteredCache: false });
     }
@@ -511,6 +616,8 @@ export class DailyNotesTimelineController {
             return;
         }
         this.invalidateNoteFilesCache();
+        this.invalidateDateKeyCache(oldPath);
+        this.invalidateDateKeyCache(file.path);
         if (oldPath) {
             this.renderManager.invalidateFile(oldPath);
         }
