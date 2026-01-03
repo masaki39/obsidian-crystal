@@ -16,9 +16,6 @@ export interface CrystalPluginSettings {
 	blueskyPassword: string;
 	blueskyAppendToDailyNote: boolean;
 	dailyNoteTimelineHeading: string;
-	dailyNoteTimelineFilterHeadingDefault: string;
-	dailyNoteTimelineDefaultFilter: 'all' | 'tasks' | 'lists' | 'links' | 'images' | 'callouts' | 'heading';
-	dailyNoteTimelineCalendarDefaultOpen: boolean;
 	dailyNoteAutoSort: boolean;
 	dailyNoteAutoLink: boolean;
 	dailyNoteNewestFirst: boolean;
@@ -50,9 +47,6 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	blueskyPassword: '',
 	blueskyAppendToDailyNote: false,
 	dailyNoteTimelineHeading: '# Time Line',
-	dailyNoteTimelineFilterHeadingDefault: '',
-	dailyNoteTimelineDefaultFilter: 'all',
-	dailyNoteTimelineCalendarDefaultOpen: false,
 	dailyNoteAutoSort: true,
 	dailyNoteAutoLink: true,
 	dailyNoteNewestFirst: false,

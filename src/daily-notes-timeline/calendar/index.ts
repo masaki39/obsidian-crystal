@@ -1,1 +1,0 @@
-export { TimelineCalendar } from './calendar';

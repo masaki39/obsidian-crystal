@@ -3,7 +3,6 @@ import { CrystalPluginSettings, DEFAULT_SETTINGS, CrystalSettingTab } from './sr
 import { GeminiService } from './src/gemini-service';
 import { BlueskyService } from './src/bluesky-service';
 import { DailyNotesManager } from './src/daily-notes';
-import { DailyNotesTimelineModule } from './src/daily-notes-timeline';
 import { PCloudService } from './src/pcloud-service';
 import { ImagePasteAndDropHandler } from './src/clipboard-paste-handler';
 import { EditorCommands } from './src/editor-commands';
@@ -38,7 +37,6 @@ export default class CrystalPlugin extends Plugin {
 	private tabSwitcherService: TabSwitcherService;
 	private macroCommands: MacroCommands;
 	private pdfHandler: PdfHandler;
-	private dailyNotesTimelineModule: DailyNotesTimelineModule;
 
 	async onload() {
 		await this.loadSettings();
@@ -60,9 +58,6 @@ export default class CrystalPlugin extends Plugin {
 		this.tabSwitcherService = new TabSwitcherService(this.app, this);
 		this.macroCommands = new MacroCommands(this.marpCommands, this.editorCommands, this);
 		this.pdfHandler = new PdfHandler(this.app, this.terminalService, this.settings, this);
-
-		this.dailyNotesTimelineModule = new DailyNotesTimelineModule(this, this.settings, () => this.saveSettings());
-		this.dailyNotesTimelineModule.onload();
 
 		// Load Services
 		this.blueskyService.onload();
@@ -165,7 +160,6 @@ export default class CrystalPlugin extends Plugin {
 		this.imagePasteAndDropHandler.updateSettings(this.settings);
 		this.editorCommands.updateSettings(this.settings);
 		this.quickAddCommands.updateSettings(this.settings);
-		this.dailyNotesTimelineModule.updateSettings(this.settings);
 		
 		// Handler is always enabled, processing behavior depends on autoWebpPaste setting
 		// No need to enable/disable the handler itself
