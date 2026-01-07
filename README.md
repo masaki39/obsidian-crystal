@@ -10,6 +10,7 @@
 > - 多くの機能は、外部サービス（Gemini, pCloud, Anki, Marp CLI, Poppler, macOS Shortcuts）の事前設定やインストールが必要である。
 > - 個人用途に最適化されているため、利用者の環境に応じた設定調整が必要な場合がある。
 > - 一定以上の規模になったり独立した機能をもつコードは別リポジトリに適宜切り離される
+>   - [Tab Swap](https://github.com/masaki39/tab-swap)
 >   - [Daily Notes Timeline](https://github.com/masaki39/daily-notes-timeline)
 
 ## インストール
@@ -111,8 +112,6 @@ BlueSkyへの投稿をアシストする。
 | `Increase Blockquote Level` | ブロッククォートレベル増加 | 選択した行のブロッククォート（`>`）レベルを1段階増加させる。 |
 | `Convert Links to Relative Paths` | リンクを相対パスに変換 | ファイル内のWikiリンクやMarkdownリンクを、すべて相対パス形式のMarkdownリンクに一括変換する。 |
 | `Convert Active File to Bullet List` | 本文をバレット化 | アクティブファイルの本文をバレットリストに変換する（フロントマターは保持）。 |
-| `Move Tab Left` | タブを左に移動 | 現在のアクティブタブを左隣のタブと交換して移動する。ピン留めタブにも対応。 |
-| `Move Tab Right` | タブを右に移動 | 現在のアクティブタブを右隣のタブと交換して移動する。ピン留めタブにも対応。 |
 | `Organize File with Tags` | タグでファイルを整理 | タグを選択し、ファイル名に絵文字プレフィックスや日付を追加、フロントマターを更新し、指定フォルダへ移動させる。 |
 
 > [!note]
