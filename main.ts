@@ -13,7 +13,6 @@ import { TerminalService } from './src/terminal-service';
 import { QuartzService } from './src/quartz-service';
 import { ShortcutService } from './src/shorcut-service';
 import { ClaudeService } from './src/claude-service';
-import { TabSwitcherService } from './src/tab-switcher';
 import { MacroCommands } from './src/macro';
 import { PdfHandler } from './src/pdf-handler';
 
@@ -34,7 +33,6 @@ export default class CrystalPlugin extends Plugin {
 	private quartzService: QuartzService;
 	private shortcutService: ShortcutService;
 	private claudeService: ClaudeService;
-	private tabSwitcherService: TabSwitcherService;
 	private macroCommands: MacroCommands;
 	private pdfHandler: PdfHandler;
 
@@ -55,7 +53,6 @@ export default class CrystalPlugin extends Plugin {
 		this.quartzService = new QuartzService(this, this.settings, this.terminalService);
 		this.shortcutService = new ShortcutService(this.terminalService, this.settings, this);
 		this.claudeService = new ClaudeService(this.app, this);
-		this.tabSwitcherService = new TabSwitcherService(this.app, this);
 		this.macroCommands = new MacroCommands(this.marpCommands, this.editorCommands, this);
 		this.pdfHandler = new PdfHandler(this.app, this.terminalService, this.settings, this);
 
@@ -67,7 +64,6 @@ export default class CrystalPlugin extends Plugin {
 		this.marpCommands.onload();
 		this.claudeService.onload();
 		this.geminiService.onload();
-		this.tabSwitcherService.onload();
 		this.editorCommands.onload();
 		this.macroCommands.onload();
 		this.pdfHandler.onload();
