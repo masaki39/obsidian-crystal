@@ -1,4 +1,4 @@
-import { Editor, MarkdownView, Plugin, Notice } from 'obsidian';
+import { Editor, Plugin } from 'obsidian';
 import { CrystalPluginSettings, DEFAULT_SETTINGS, CrystalSettingTab } from './src/settings';
 import { GeminiService } from './src/gemini-service';
 import { BlueskyService } from './src/bluesky-service';
@@ -6,6 +6,7 @@ import { DailyNotesManager } from './src/daily-notes';
 import { PCloudService } from './src/pcloud-service';
 import { ImagePasteAndDropHandler } from './src/clipboard-paste-handler';
 import { EditorCommands } from './src/editor-commands';
+import { SettingEdit } from './src/setting-edit';
 import { QuickAddCommands } from './src/quick-add-commands';
 import { MarpCommands } from './src/marp';
 import { AnkiService } from './src/anki-service';
@@ -35,6 +36,7 @@ export default class CrystalPlugin extends Plugin {
 	private claudeService: ClaudeService;
 	private macroCommands: MacroCommands;
 	private pdfHandler: PdfHandler;
+	private settingEdit: SettingEdit;
 
 	async onload() {
 		await this.loadSettings();
@@ -55,6 +57,7 @@ export default class CrystalPlugin extends Plugin {
 		this.claudeService = new ClaudeService(this.app, this);
 		this.macroCommands = new MacroCommands(this.marpCommands, this.editorCommands, this);
 		this.pdfHandler = new PdfHandler(this.app, this.terminalService, this.settings, this);
+		this.settingEdit = new SettingEdit(this.app, this);
 
 		// Load Services
 		this.blueskyService.onload();
@@ -67,6 +70,7 @@ export default class CrystalPlugin extends Plugin {
 		this.editorCommands.onload();
 		this.macroCommands.onload();
 		this.pdfHandler.onload();
+		this.settingEdit.onload();
 
 		// Always enable image paste and drop handler (processing depends on settings)
 		this.imagePasteAndDropHandler.enable();
@@ -156,7 +160,7 @@ export default class CrystalPlugin extends Plugin {
 		this.imagePasteAndDropHandler.updateSettings(this.settings);
 		this.editorCommands.updateSettings(this.settings);
 		this.quickAddCommands.updateSettings(this.settings);
-		
+
 		// Handler is always enabled, processing behavior depends on autoWebpPaste setting
 		// No need to enable/disable the handler itself
 	}
