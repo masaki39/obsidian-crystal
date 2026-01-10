@@ -113,6 +113,7 @@ BlueSkyへの投稿をアシストする。
 | `Convert Links to Relative Paths` | リンクを相対パスに変換 | ファイル内のWikiリンクやMarkdownリンクを、すべて相対パス形式のMarkdownリンクに一括変換する。 |
 | `Convert Active File to Bullet List` | 本文をバレット化 | アクティブファイルの本文をバレットリストに変換する（フロントマターは保持）。 |
 | `Organize File with Tags` | タグでファイルを整理 | タグを選択し、ファイル名に絵文字プレフィックスや日付を追加、フロントマターを更新し、指定フォルダへ移動させる。 |
+| `Toggle Line Number` | 行番号表示の切り替え | `.obsidian/app.json`の行番号表示設定をトグルする。 |
 
 > [!note]
 > `Organize File with Tags`には設定画面に専用設定UIがある。
