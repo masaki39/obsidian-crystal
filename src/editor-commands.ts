@@ -1,6 +1,6 @@
 import { App, Editor, MarkdownView, Notice, SuggestModal, Plugin } from 'obsidian';
 import { CrystalPluginSettings, FileOrganizationRule } from './settings';
-import { parseFrontmatter } from './utils';
+import { parseFrontmatter, promptForText } from './utils';
 import * as path from 'path';
 
 class RuleSuggestModal extends SuggestModal<FileOrganizationRule> {
@@ -467,6 +467,38 @@ export class EditorCommands {
 		new Notice('コンテンツをバレットリストに変換しました');
 	}
 
+	/**
+	 * Insert OGP link at cursor position
+	 */
+	async insertOgpLink(editor: Editor, view: MarkdownView) {
+		const url = await promptForText(
+			this.app,
+			'URLを入力してください',
+			'https://example.com',
+			'挿入'
+		);
+
+		if (!url) {
+			return;
+		}
+
+		// Validate URL format
+		try {
+			new URL(url);
+		} catch (error) {
+			new Notice('無効なURLです');
+			return;
+		}
+
+		// Create OGP link markdown
+		const ogpLink = `[![](https://ogpf.vercel.app/c?url=${url})](${url})`;
+
+		// Insert at cursor position
+		editor.replaceSelection(ogpLink);
+
+		new Notice('OGPリンクを挿入しました');
+	}
+
 	async onload() {
 		// Editor Commands
 		this.plugin.addCommand({
@@ -547,6 +579,14 @@ export class EditorCommands {
 			name: 'Convert Active File to Bullet List',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.convertActiveFileToBulletList(editor, view);
+			}
+		});
+
+		this.plugin.addCommand({
+			id: 'crystal-insert-ogp-link',
+			name: 'Insert OGP Link',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.insertOgpLink(editor, view);
 			}
 		});
 	}
