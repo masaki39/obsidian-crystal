@@ -1,11 +1,11 @@
 /* Timeline Callout settings */
 body {
     --timeline-title-color: var(--text-normal);
-    --timeline-title-size: 1.0em;
-    --timeline-title-width: 100px;
+    --timeline-title-size: 1em;
+    --timeline-title-width: 30px;
 
     --timeline-line-color: var(--color-base-35);
-    --timeline-line-margin: 16px;
+    --timeline-line-margin: -25px;
     --timeline-line-width: 4px;
     --timeline-line-style: solid;
 
@@ -15,7 +15,7 @@ body {
     --timeline-dot-border-color: var(--background-primary);
     --timeline-dot-border-size: 6px;
     --timeline-dot-offset-x: -18px;
-    --timeline-dot-offset-y: -2px;
+    --timeline-dot-offset-y: 10px;
 
     --timeline-card-margin: 16px;
     --timeline-card-background-color: var(--color-base-30);
@@ -39,10 +39,11 @@ body {
 
     .callout-title-inner {
         width: 100%;
-        text-align: right;
+        text-align: left;
         color: var(--timeline-title-color);
         font-size: var(--timeline-title-size);
-        margin-top: calc(var(--dot-offset) + 0.5em);
+        margin-top: calc(var(--dot-offset) - 1.5em);
+		z-index: 1;
     }
     .callout-icon {
         order: 2;
