@@ -9,7 +9,7 @@ class RuleSuggestModal extends SuggestModal<FileOrganizationRule> {
 	}
 
 	getSuggestions(query: string): FileOrganizationRule[] {
-		return this.rules.filter(rule => 
+		return this.rules.filter(rule =>
 			this.getDisplayText(rule).toLowerCase().includes(query.toLowerCase())
 		);
 	}
@@ -65,7 +65,7 @@ export class EditorCommands {
 		try {
 			// Insert link at cursor position
 			editor.replaceSelection(`[[${basefilename}]] `);
-			
+
 			// Create new file
 			const newFile = await this.app.vault.create(basefilename + '.md', '\n');
 			await this.app.workspace.getLeaf().openFile(newFile);
@@ -83,7 +83,7 @@ export class EditorCommands {
 			new Notice('No file is currently open');
 			return;
 		}
-		
+
 		const fileLink = `[[${view.file.basename}]]`;
 		await navigator.clipboard.writeText(fileLink);
 		new Notice('File link is copied!');
@@ -97,15 +97,15 @@ export class EditorCommands {
 			new Notice('No file is currently open');
 			return;
 		}
-		
+
 		const fileCache = this.app.metadataCache.getFileCache(view.file);
 		const aliases = fileCache?.frontmatter?.aliases;
-		
+
 		if (!aliases || !Array.isArray(aliases) || aliases.length === 0) {
 			new Notice('No aliases found in frontmatter');
 			return;
 		}
-		
+
 		const fileLink = `[[${view.file.basename}|${aliases[0]}]]`;
 		await navigator.clipboard.writeText(fileLink);
 		new Notice('File link with alias is copied!');
@@ -131,24 +131,24 @@ export class EditorCommands {
 	private wrapSelection(tag: string, editor: Editor) {
 		const selection = editor.getSelection();
 		const regex = new RegExp(`<${tag}>(.*?)<\\/${tag}>`, 'g');
-		
+
 		// Case 1: Selection contains complete tags - remove them
 		if (regex.test(selection)) {
 			const unwrappedSelection = selection.replace(regex, '$1');
 			editor.replaceSelection(unwrappedSelection);
 			return;
 		}
-		
+
 		// Case 2: Check if cursor/selection is inside a tag on current line
 		const cursor = editor.getCursor();
 		const line = editor.getLine(cursor.line);
 		const tagRegex = new RegExp(`<${tag}>(.*?)<\\/${tag}>`, 'g');
 		let match;
-		
+
 		while ((match = tagRegex.exec(line)) !== null) {
 			const tagStart = match.index;
 			const tagEnd = match.index + match[0].length;
-			
+
 			// Check if cursor is inside this tag
 			if (cursor.ch >= tagStart && cursor.ch <= tagEnd) {
 				const from = { line: cursor.line, ch: tagStart };
@@ -157,7 +157,7 @@ export class EditorCommands {
 				return;
 			}
 		}
-		
+
 		// Case 3: Add tag to selection
 		const wrappedSelection = `<${tag}>${selection}</${tag}>`;
 		editor.replaceSelection(wrappedSelection);
@@ -170,7 +170,7 @@ export class EditorCommands {
 		const selection = editor.listSelections()[0];
 		const fromLine = Math.min(selection.anchor.line, selection.head.line);
 		const toLine = Math.max(selection.anchor.line, selection.head.line);
-		
+
 		const changes = [];
 		for (let lineNum = fromLine; lineNum <= toLine; lineNum++) {
 			const line = editor.getLine(lineNum);
@@ -181,7 +181,7 @@ export class EditorCommands {
 				text: newLine
 			});
 		}
-		
+
 		editor.transaction({ changes });
 	}
 
@@ -196,7 +196,7 @@ export class EditorCommands {
 		const hour = now.getHours().toString().padStart(2, '0');
 		const minute = now.getMinutes().toString().padStart(2, '0');
 		const second = now.getSeconds().toString().padStart(2, '0');
-		
+
 		return `${year}${month}${day}${hour}${minute}${second}`;
 	}
 
@@ -231,11 +231,11 @@ export class EditorCommands {
 					} else if (!Array.isArray(fm.tags)) {
 						fm.tags = [fm.tags];
 					}
-					
+
 					// 既存のルールのタグを削除
 					const allRuleTags = this.settings.fileOrganizationRules.map(rule => rule.tag).filter(tag => tag.trim());
 					fm.tags = fm.tags.filter((tag: string) => !allRuleTags.includes(tag));
-					
+
 					// 新しいタグを追加（設定されている場合のみ）
 					if (selectedRule.tag.trim()) {
 						fm.tags.push(selectedRule.tag);
@@ -263,10 +263,10 @@ export class EditorCommands {
 	private async processFileNameWithRule(file: any, rule: FileOrganizationRule) {
 		// 既存の装飾を削除してベースファイル名を取得
 		let basename = this.cleanFileName(file.basename);
-		
+
 		// 新しいファイル名を構築
 		let newname = this.buildFileName(basename, rule, file);
-		
+
 		// ファイルの移動とリネーム
 		await this.moveAndRenameFile(file, newname, rule.folder);
 	}
@@ -280,23 +280,23 @@ export class EditorCommands {
 				break;
 			}
 		}
-		
+
 		// 既存の日付を削除
 		return filename.replace(/^\d{4}-\d{2}-\d{2}[_ ]?/, '').trim();
 	}
 
 	private buildFileName(basename: string, rule: FileOrganizationRule, file: any): string {
 		let filename = basename;
-		
+
 		if (rule.includeDate) {
 			const date = this.getFileDate(file);
 			filename = `${date}_${filename}`;
 		}
-		
+
 		if (rule.prefix) {
 			filename = `${rule.prefix}${filename}`;
 		}
-		
+
 		return filename;
 	}
 
@@ -306,14 +306,14 @@ export class EditorCommands {
 		if (fileCache?.frontmatter?.date) {
 			return fileCache.frontmatter.date;
 		}
-		
+
 		const date = new Date(file.stat.ctime);
 		return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
 	}
 
 	private async moveAndRenameFile(file: any, newname: string, folder: string) {
 		const targetPath = folder ? `${folder}/${newname}.md` : `${newname}.md`;
-		
+
 		if (file.path !== targetPath) {
 			try {
 				await this.app.fileManager.renameFile(file, targetPath);
@@ -350,7 +350,7 @@ export class EditorCommands {
 		convertedContent = convertedContent.replace(wikiLinkRegex, (match, embed, filename, alias) => {
 			// Use Obsidian's built-in link resolution logic
 			const targetFile = this.app.metadataCache.getFirstLinkpathDest(filename, currentFile.path);
-			
+
 			if (targetFile && targetFile.path) {
 				// Calculate relative path
 				const relativePath = this.getRelativePath(currentFolder, targetFile.path);
@@ -359,7 +359,7 @@ export class EditorCommands {
 				changeCount++;
 				return `${embed || ''}[${displayText}](${relativePath})`;
 			}
-			
+
 			// If file not found, keep original
 			return match;
 		});
@@ -374,7 +374,7 @@ export class EditorCommands {
 
 			// Try to find the file in vault - first try as absolute path, then as filename
 			let targetFile = this.app.vault.getAbstractFileByPath(url);
-			
+
 			// If not found as absolute path, try to find by filename
 			if (!targetFile) {
 				const filename = url.split('/').pop(); // Get filename from path
@@ -421,13 +421,13 @@ export class EditorCommands {
 	 */
 	private getRelativePath(currentFolder: string, targetPath: string): string {
 		// path.posix.relative を使って相対パスを計算
-    	let relativePath = path.posix.relative(currentFolder, targetPath);
+		let relativePath = path.posix.relative(currentFolder, targetPath);
 
-    	// 同じフォルダ内の場合、'./' を付け加えるとより親切
-    	if (!relativePath.startsWith('../')) {
-      	  relativePath = './' + relativePath;
-    	}
-    	return relativePath;
+		// 同じフォルダ内の場合、'./' を付け加えるとより親切
+		if (!relativePath.startsWith('../')) {
+			relativePath = './' + relativePath;
+		}
+		return relativePath;
 	}
 
 	/**
@@ -470,7 +470,7 @@ export class EditorCommands {
 	/**
 	 * Insert OGP link at cursor position
 	 */
-	async insertOgpLink(editor: Editor, view: MarkdownView) {
+	async insertOgpLink(editor: Editor, view: MarkdownView, layout: 'horizontal' | 'vertical') {
 		const url = await promptForText(
 			this.app,
 			'URLを入力してください',
@@ -490,8 +490,11 @@ export class EditorCommands {
 			return;
 		}
 
+		// Create layout option parameter
+		const layoutOption = layout === 'horizontal' ? '' : `&layout=${layout}`;
+
 		// Create OGP link markdown
-		const ogpLink = `[![](https://ogpf.vercel.app/c?url=${url})](${url})`;
+		const ogpLink = `[![](https://ogpf.vercel.app/c?url=${url}${layoutOption})](${url})`;
 
 		// Insert at cursor position
 		editor.replaceSelection(ogpLink);
@@ -583,10 +586,18 @@ export class EditorCommands {
 		});
 
 		this.plugin.addCommand({
-			id: 'crystal-insert-ogp-link',
-			name: 'Insert OGP Link',
+			id: 'crystal-insert-ogp-link-horizontal',
+			name: 'Insert OGP Link (Horizontal)',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.insertOgpLink(editor, view);
+				this.insertOgpLink(editor, view, 'horizontal');
+			}
+		});
+
+		this.plugin.addCommand({
+			id: 'crystal-insert-ogp-link-vertical',
+			name: 'Insert OGP Link (Vertical)',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.insertOgpLink(editor, view, 'vertical');
 			}
 		});
 	}
