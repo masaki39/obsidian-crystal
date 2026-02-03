@@ -46,7 +46,7 @@ export default class CrystalPlugin extends Plugin {
 		this.dailyNotesManager = new DailyNotesManager(this.app, this.settings, this);
 		this.blueskyService = new BlueskyService(this.app, this, this.settings, this.dailyNotesManager);
 		this.pcloudService = new PCloudService(this.app, this.settings);
-		this.imagePasteAndDropHandler = new ImagePasteAndDropHandler(this.app, this.settings);
+		this.imagePasteAndDropHandler = new ImagePasteAndDropHandler(this.app, this.settings, this);
 		this.editorCommands = new EditorCommands(this.app, this.settings, this);
 		this.quickAddCommands = new QuickAddCommands(this.app, this.settings);
 		this.ankiService = new AnkiService(this.app);

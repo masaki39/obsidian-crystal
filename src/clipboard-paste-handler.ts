@@ -1,9 +1,10 @@
-import { App, Editor, MarkdownView } from 'obsidian';
+import { App, Editor, MarkdownView, Plugin } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
 import { ImageProcessor } from './image-processor';
 
 export class ImagePasteAndDropHandler {
 	private app: App;
+	private plugin: Plugin;
 	private settings: CrystalPluginSettings;
 	private imageProcessor: ImageProcessor;
 	private boundPasteHandler: (event: ClipboardEvent) => Promise<void>;
@@ -11,13 +12,14 @@ export class ImagePasteAndDropHandler {
 	private boundDropHandler: (event: DragEvent) => Promise<void>;
 	private isEnabled: boolean = false;
 
-	constructor(app: App, settings: CrystalPluginSettings) {
+	constructor(app: App, settings: CrystalPluginSettings, plugin: Plugin) {
 		this.app = app;
 		this.settings = settings;
 		this.imageProcessor = new ImageProcessor(settings);
 		this.boundPasteHandler = this.handlePaste.bind(this);
 		this.boundDragOverHandler = this.handleDragOver.bind(this);
 		this.boundDropHandler = this.handleDrop.bind(this);
+		this.plugin = plugin;
 	}
 
 	updateSettings(settings: CrystalPluginSettings) {
@@ -61,7 +63,7 @@ export class ImagePasteAndDropHandler {
 			return;
 		}
 
-		const hasImageFiles = Array.from(dataTransfer.items).some(item => 
+		const hasImageFiles = Array.from(dataTransfer.items).some(item =>
 			item.kind === 'file' && item.type.startsWith('image/')
 		);
 
@@ -140,7 +142,7 @@ export class ImagePasteAndDropHandler {
 			const tempDiv = document.createElement('div');
 			tempDiv.innerHTML = htmlData;
 			const textContent = tempDiv.textContent || tempDiv.innerText || '';
-			
+
 			if (textContent.trim()) {
 				event.preventDefault();
 				event.stopPropagation();
@@ -191,8 +193,8 @@ export class ImagePasteAndDropHandler {
 
 	private async processImagePaste(imageFile: File, editor: Editor): Promise<void> {
 		try {
-			let processed: {blob: Blob, originalType: string, isConverted: boolean};
-			
+			let processed: { blob: Blob, originalType: string, isConverted: boolean };
+
 			if (this.settings.autoWebpPaste) {
 				// Process image using shared processor (without notice since we'll show our own)
 				processed = await this.imageProcessor.processImage(imageFile, false);
@@ -279,7 +281,7 @@ export class ImagePasteAndDropHandler {
 						// Process all images in parallel
 						const results = await Promise.all(
 							fileArray.map(async (imageFile, index) => {
-								let processed: {blob: Blob, originalType: string, isConverted: boolean};
+								let processed: { blob: Blob, originalType: string, isConverted: boolean };
 
 								if (this.settings.autoWebpPaste) {
 									// Process image using shared processor (without notice since we'll show our own)
@@ -359,16 +361,14 @@ export class ImagePasteAndDropHandler {
 	/**
 	 * Register commands (similar to marp.ts pattern)
 	 */
-	onload() {
-		// Wait for workspace to be ready before registering commands
-		this.app.workspace.onLayoutReady(() => {
-			(this.app as any).commands.addCommand({
-				id: 'crystal-paste-multiple-images-from-filesystem',
-				name: 'Paste Multiple Images from File System',
-				editorCallback: (editor: Editor) => {
-					this.promptMultipleImagePaste(editor);
-				}
-			});
+
+	async onload() {
+		this.plugin.addCommand({
+			id: 'crystal-paste-multiple-images-from-filesyste',
+			name: 'Paste Multiple Images from File System',
+			editorCallback: (editor: Editor) => {
+				this.promptMultipleImagePaste(editor);
+			}
 		});
 	}
 } 
