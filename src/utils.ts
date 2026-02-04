@@ -89,8 +89,14 @@ export function promptForText(app: App, title = 'テキストを入力してく�
 						this.close();
 					}
 				});
-				
-				input.focus();
+
+				// Double requestAnimationFrame ensures the modal is fully rendered
+				// and visible before focusing, even when triggered from another window
+				requestAnimationFrame(() => {
+					requestAnimationFrame(() => {
+						input.focus();
+					});
+				});
 			}
 
 			onClose() {
