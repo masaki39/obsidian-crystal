@@ -112,6 +112,31 @@ export class EditorCommands {
 	}
 
 	/**
+	 * Copy file path for Claude Code to clipboard
+	 * Format: @"relative/path/from/vault/root"
+	 */
+	async copyFileLinkForClaudeCode(editor: Editor, view: MarkdownView) {
+		if (!view.file) {
+			new Notice('No file is currently open');
+			return;
+		}
+
+		// Get vault root path
+		const vaultPath = (this.app.vault.adapter as any).basePath;
+		// Get current file's absolute path
+		const filePath = (this.app.vault.adapter as any).getFullPath(view.file.path);
+
+		// Calculate relative path from vault root
+		const relativePath = path.posix.relative(vaultPath, filePath);
+
+		// Format as @"path"
+		const claudeCodeLink = `@"${relativePath}"`;
+
+		await navigator.clipboard.writeText(claudeCodeLink);
+		new Notice('File path for Claude Code is copied!');
+	}
+
+	/**
 	 * Wrap selection with subscript tag or unwrap if already wrapped
 	 */
 	wrapWithSubscript(editor: Editor, view: MarkdownView) {
@@ -533,6 +558,14 @@ export class EditorCommands {
 			name: 'Copy File Link with Alias to Clipboard',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.copyFileLinkWithAlias(editor, view);
+			}
+		});
+
+		this.plugin.addCommand({
+			id: 'crystal-copy-path-for-claude-code',
+			name: 'Copy File Path for Claude Code',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.copyFileLinkForClaudeCode(editor, view);
 			}
 		});
 

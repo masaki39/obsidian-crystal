@@ -107,6 +107,7 @@ BlueSkyへの投稿をアシストする。
 | `Create New File with Link at Cursor` | カーソル位置にリンク付きで新規ファイル作成 | タイムスタンプ名のファイルを作成し、現在のカーソル位置にそのファイルへのリンクを挿入する。 |
 | `Copy File Link to Clipboard` | ファイルリンクをコピー | 現在開いているファイルのWikiリンク（`[[ファイル名]]`）をコピーする。 |
 | `Copy File Link with Alias to Clipboard` | エイリアス付きファイルリンクをコピー | ファイルのフロントマターに`aliases`があれば、それを使ったリンク（`[[ファイル名|エイリアス]]`）をコピーする。 |
+| `Copy File Path for Claude Code` | Claude Code用パスをコピー | Vaultルートからの相対パスを`@"相対パス"`形式でコピーする。Claude Codeでのファイル参照に便利。 |
 | `Wrap Selection with Subscript` | 下付き文字 | 選択テキストを`<sub>`タグで囲む。すでにある場合は解除する。 |
 | `Wrap Selection with Superscript` | 上付き文字 | 選択テキストを`<sup>`タグで囲む。すでにある場合は解除する。 |
 | `Increase Blockquote Level` | ブロッククォートレベル増加 | 選択した行のブロッククォート（`>`）レベルを1段階増加させる。 |
