@@ -78,13 +78,18 @@ export class EditorCommands {
 	/**
 	 * Copy current file link to clipboard
 	 */
-	async copyFileLink(editor: Editor, view: MarkdownView) {
-		if (!view.file) {
+	async copyFileLink(editor?: Editor, view?: MarkdownView) {
+		// Get file from view if available, otherwise try to get active file
+		const file = view?.file || this.app.workspace.getActiveFile();
+
+		if (!file) {
 			new Notice('No file is currently open');
 			return;
 		}
 
-		const fileLink = `[[${view.file.basename}]]`;
+		// For markdown files, use basename (no extension). For other files (images, etc.), use full name with extension
+		const fileName = file.extension === 'md' ? file.basename : file.name;
+		const fileLink = `[[${fileName}]]`;
 		await navigator.clipboard.writeText(fileLink);
 		new Notice('File link is copied!');
 	}
@@ -115,8 +120,11 @@ export class EditorCommands {
 	 * Copy file path for Claude Code to clipboard
 	 * Format: @"relative/path/from/vault/root"
 	 */
-	async copyFileLinkForClaudeCode(editor: Editor, view: MarkdownView) {
-		if (!view.file) {
+	async copyFileLinkForClaudeCode(editor?: Editor, view?: MarkdownView) {
+		// Get file from view if available, otherwise try to get active file
+		const file = view?.file || this.app.workspace.getActiveFile();
+
+		if (!file) {
 			new Notice('No file is currently open');
 			return;
 		}
@@ -124,7 +132,7 @@ export class EditorCommands {
 		// Get vault root path
 		const vaultPath = (this.app.vault.adapter as any).basePath;
 		// Get current file's absolute path
-		const filePath = (this.app.vault.adapter as any).getFullPath(view.file.path);
+		const filePath = (this.app.vault.adapter as any).getFullPath(file.path);
 
 		// Calculate relative path from vault root
 		const relativePath = path.posix.relative(vaultPath, filePath);
@@ -548,8 +556,8 @@ export class EditorCommands {
 		this.plugin.addCommand({
 			id: 'crystal-copy-file-link',
 			name: 'Copy File Link to Clipboard',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.copyFileLink(editor, view);
+			callback: () => {
+				this.copyFileLink();
 			}
 		});
 
@@ -564,8 +572,8 @@ export class EditorCommands {
 		this.plugin.addCommand({
 			id: 'crystal-copy-path-for-claude-code',
 			name: 'Copy File Path for Claude Code',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.copyFileLinkForClaudeCode(editor, view);
+			callback: () => {
+				this.copyFileLinkForClaudeCode();
 			}
 		});
 
