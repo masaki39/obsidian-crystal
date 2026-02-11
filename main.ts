@@ -13,7 +13,6 @@ import { AnkiService } from './src/anki-service';
 import { TerminalService } from './src/terminal-service';
 import { QuartzService } from './src/quartz-service';
 import { ShortcutService } from './src/shorcut-service';
-import { ClaudeService } from './src/claude-service';
 import { MacroCommands } from './src/macro';
 import { PdfHandler } from './src/pdf-handler';
 
@@ -33,7 +32,6 @@ export default class CrystalPlugin extends Plugin {
 	private terminalService: TerminalService;
 	private quartzService: QuartzService;
 	private shortcutService: ShortcutService;
-	private claudeService: ClaudeService;
 	private macroCommands: MacroCommands;
 	private pdfHandler: PdfHandler;
 	private settingEdit: SettingEdit;
@@ -54,7 +52,6 @@ export default class CrystalPlugin extends Plugin {
 		this.marpCommands = new MarpCommands(this.terminalService, this.settings, this);
 		this.quartzService = new QuartzService(this, this.settings, this.terminalService);
 		this.shortcutService = new ShortcutService(this.terminalService, this.settings, this);
-		this.claudeService = new ClaudeService(this.app, this);
 		this.macroCommands = new MacroCommands(this.marpCommands, this.editorCommands, this);
 		this.pdfHandler = new PdfHandler(this.app, this.terminalService, this.settings, this);
 		this.settingEdit = new SettingEdit(this.app, this);
@@ -65,7 +62,6 @@ export default class CrystalPlugin extends Plugin {
 		this.dailyNotesManager.onLoad();
 		this.shortcutService.onLoad();
 		this.marpCommands.onload();
-		this.claudeService.onload();
 		this.geminiService.onload();
 		this.editorCommands.onload();
 		this.macroCommands.onload();
