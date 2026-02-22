@@ -15,11 +15,7 @@ export class OpacityService {
 			id: 'crystal-toggle-window-opacity',
 			name: 'Toggle window opacity',
 			callback: async () => {
-				const current = this.plugin.settings.windowOpacity;
-				let next: number;
-				if (current >= 1.0) next = 0.95;
-				else if (current >= 0.95) next = 0.9;
-				else next = 1.0;
+				const next = this.plugin.settings.windowOpacity < 1.0 ? 1.0 : 0.9;
 				this.plugin.settings.windowOpacity = next;
 				await this.plugin.saveSettings();
 				this.applyOpacity(next);
