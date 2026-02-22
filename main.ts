@@ -15,6 +15,7 @@ import { QuartzService } from './src/quartz-service';
 import { ShortcutService } from './src/shorcut-service';
 import { MacroCommands } from './src/macro';
 import { PdfHandler } from './src/pdf-handler';
+import { OpacityService } from './src/opacity-service';
 
 // Crystal Plugin for Obsidian
 
@@ -35,6 +36,7 @@ export default class CrystalPlugin extends Plugin {
 	private macroCommands: MacroCommands;
 	private pdfHandler: PdfHandler;
 	private settingEdit: SettingEdit;
+	private opacityService: OpacityService;
 
 	async onload() {
 		await this.loadSettings();
@@ -55,6 +57,7 @@ export default class CrystalPlugin extends Plugin {
 		this.macroCommands = new MacroCommands(this.marpCommands, this.editorCommands, this);
 		this.pdfHandler = new PdfHandler(this.app, this.terminalService, this.settings, this);
 		this.settingEdit = new SettingEdit(this.app, this);
+		this.opacityService = new OpacityService(this);
 
 		// Load Services
 		this.blueskyService.onload();
@@ -67,6 +70,7 @@ export default class CrystalPlugin extends Plugin {
 		this.macroCommands.onload();
 		this.pdfHandler.onload();
 		this.settingEdit.onload();
+		this.opacityService.onload();
 
 		// Always enable image paste and drop handler (processing depends on settings)
 		this.imagePasteAndDropHandler.enable();
@@ -138,10 +142,10 @@ export default class CrystalPlugin extends Plugin {
 	}
 
 	onunload() {
-		// Disable image paste and drop handler
 		if (this.imagePasteAndDropHandler) {
 			this.imagePasteAndDropHandler.disable();
 		}
+		this.opacityService.onunload();
 	}
 
 	async loadSettings() {

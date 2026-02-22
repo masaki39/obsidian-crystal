@@ -37,6 +37,7 @@ export interface CrystalPluginSettings {
 	githubUserName: string;
 	shortcutNames: string;
 	fileOrganizationRules: FileOrganizationRule[];
+	windowOpacity: number;
 }
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
@@ -67,7 +68,8 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	quartzSiteName: '',
 	githubUserName: '',
 	shortcutNames: '',
-	fileOrganizationRules: []
+	fileOrganizationRules: [],
+	windowOpacity: 1.0,
 }
 
 export class CrystalSettingTab extends PluginSettingTab {
