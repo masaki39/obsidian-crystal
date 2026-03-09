@@ -46,30 +46,22 @@ export class GitSummaryService {
             const isDailyNote = dateFromFile !== null;
             const targetDate = isDailyNote ? dateFromFile!.toDate() : new Date();
             const dateStr = this.formatDate(targetDate);
+            const isToday = dateStr === this.formatDate(new Date());
+            const useWorkingTree = !isDailyNote || isToday;
 
             new Notice('Gitコミット差分を取得中...');
 
-            // 対象日のコミットを取得
-            const lastCommitResult = await this.terminalService.executeCommand(
-                `git log --format="%H" --after="${dateStr} 00:00:00" --before="${dateStr} 23:59:59" -1`
-            );
-            let lastCommit = lastCommitResult.stdout.trim();
-
-            if (!lastCommit) {
-                if (isDailyNote) {
+            let lastCommit = '';
+            if (!useWorkingTree) {
+                // 過去のデイリーノートのみ: 対象日のlastcommitを取得
+                const lastCommitResult = await this.terminalService.executeCommand(
+                    `git log --format="%H" --after="${dateStr} 00:00:00" --before="${dateStr} 23:59:59" -1`
+                );
+                lastCommit = lastCommitResult.stdout.trim();
+                if (!lastCommit) {
                     new Notice(`${dateStr} のコミットが見つかりませんでした。`);
                     return;
                 }
-                // 非デイリーノートの場合はHEADを使用
-                const headResult = await this.terminalService.executeCommand(
-                    `git log --format="%H" -1`
-                );
-                lastCommit = headResult.stdout.trim();
-            }
-
-            if (!lastCommit) {
-                new Notice('Gitコミットが見つかりませんでした。');
-                return;
             }
 
             // 比較コミット (対象日の 00:00:00 より前の最新コミット)
@@ -80,9 +72,10 @@ export class GitSummaryService {
                 '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
 
             // 差分取得
-            const diffResult = await this.terminalService.executeCommand(
-                `git diff ${beforeCommit} ${lastCommit} -- '*.md'`
-            );
+            const diffCmd = useWorkingTree
+                ? `git diff ${beforeCommit} -- '*.md'`
+                : `git diff ${beforeCommit} ${lastCommit} -- '*.md'`;
+            const diffResult = await this.terminalService.executeCommand(diffCmd);
             const diff = diffResult.stdout.trim();
 
             if (!diff) {
