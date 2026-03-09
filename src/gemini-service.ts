@@ -420,6 +420,14 @@ ${front}`;
 
 	}
 
+	async generateGitSummary(diff: string): Promise<string> {
+		if (!this.genAI) throw new Error('Gemini API Key is not configured');
+		const model = this.genAI.getGenerativeModel({ model: this.getModelName() });
+		const prompt = `以下のgit diffの内容を読んで、変更内容を1〜2文の日本語で簡潔に要約してください。要約のみを出力し、余計な説明は含めないでください。\n\n${diff}`;
+		const result = await model.generateContent(prompt);
+		return result.response.text().trim();
+	}
+
 	async onload() {
 
 		// AI Description Generation Command

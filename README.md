@@ -31,6 +31,7 @@
 | コマンド | 機能 | 説明 |
 |---|---|---|
 | `Generate Description for Current File` | ファイル説明生成 | 現在のファイル内容を解析し、検索に適した`description`をフロントマターに自動生成する。 |
+| `Generate Git Commit Summary` | Gitコミットサマリー生成 | アクティブファイルの日付（デイリーノートの場合はその日、それ以外は今日）のGitコミット差分（`.md`ファイルのみ）をGeminiで要約し、フロントマターの`summary`フィールドに書き込む。 |
 | `Translate Selected Text` | 選択テキスト翻訳 | 選択した日本語テキストを自然な英語に翻訳し、元のテキストと置き換える。 |
 | `Translate Above Cursor Text` | カーソル上翻訳 | カーソルがある行の、一つ上の行のテキストを翻訳し、カーソル位置に挿入する。 |
 | `Translate Below Cursor Text` | カーソル下翻訳 | カーソルがある行の、一つ下の行のテキストを翻訳し、カーソル位置に挿入する。 |
