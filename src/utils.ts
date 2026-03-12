@@ -1,6 +1,9 @@
-import { App, Modal } from 'obsidian';
+import { App, Modal, MarkdownView } from 'obsidian';
 
 export function promptForText(app: App, title = 'テキストを入力してください', placeholder = '', buttonText = '追加', defaultValue = '', multiline = false): Promise<string | null> {
+	const activeView = app.workspace.getActiveViewOfType(MarkdownView);
+	const savedCursor = activeView?.editor.getCursor();
+
 	return new Promise((resolve) => {
 		class GenericInputModal extends Modal {
 			private result: string | null = null;
@@ -101,6 +104,14 @@ export function promptForText(app: App, title = 'テキストを入力してく�
 
 			onClose() {
 				this.resolve(this.result);
+				requestAnimationFrame(() => {
+					if (activeView) {
+						activeView.editor.focus();
+						if (savedCursor) {
+							activeView.editor.setCursor(savedCursor);
+						}
+					}
+				});
 			}
 		}
 		const modal = new GenericInputModal(app, resolve);
