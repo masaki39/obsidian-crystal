@@ -84,7 +84,7 @@ export class GitSummaryService {
             }
 
             new Notice('Geminiでサマリーを生成中...');
-            const summary = await this.geminiService.generateGitSummary(diff);
+            const summary = await this.geminiService.generateGitSummary(diff, dateStr);
 
             // 書き込み先: デイリーノートならそのファイル、そうでなければ今日のデイリーノート
             let targetFile: TFile | null = isDailyNote ? file : null;
