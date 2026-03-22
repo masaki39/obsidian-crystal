@@ -1,4 +1,4 @@
-import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting, SecretStorage } from 'obsidian';
 
 export interface FileOrganizationRule {
 	displayName: string;
@@ -105,6 +105,24 @@ export class CrystalSettingTab extends PluginSettingTab {
 			}));
 	}
 	
+	private secretSetting(containerEl: HTMLElement, name: string, desc: string, secretKey: string, placeholder: string, field: keyof CrystalPluginSettings) {
+		const secretStorage: SecretStorage = this.app.secretStorage;
+		const setting = new Setting(containerEl)
+			.setName(name)
+			.setDesc(desc)
+			.addText(text => {
+				text.setPlaceholder(placeholder)
+					.setValue(this.plugin.settings[field] as string)
+					.onChange(async (value) => {
+						(this.plugin.settings as any)[field] = value;
+						secretStorage.setSecret(secretKey, value ?? '');
+					});
+				text.inputEl.type = 'password';
+				return text;
+			});
+		return setting;
+	}
+
 	display(): void {
 		const {containerEl} = this;
 
@@ -120,19 +138,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 		// Gemini settings
 		containerEl.createEl('h3', { text: 'Gemini Editor Commands' });
 
-		new Setting(containerEl)
-			.setName('Gemini API Key')
-			.setDesc('Enter your Gemini API Key')
-			.addText(text => {
-				text.setPlaceholder('Enter your Gemini API Key')
-					.setValue(this.plugin.settings.GeminiAPIKey)
-					.onChange(async (value) => {
-						this.plugin.settings.GeminiAPIKey = value;
-						await this.plugin.saveSettings();
-					});
-				text.inputEl.type = 'password';
-				return text;
-			});
+		this.secretSetting(containerEl, 'Gemini API Key', 'Enter your Gemini API Key', 'crystal-gemini-api-key', 'Enter your Gemini API Key', 'GeminiAPIKey');
 
 		new Setting(containerEl)
 			.setName('Gemini Model')
@@ -159,30 +165,9 @@ export class CrystalSettingTab extends PluginSettingTab {
 		// Bluesky settings
 		containerEl.createEl('h3', { text: 'Bluesky' });
 
-		new Setting(containerEl)
-			.setName('Bluesky Handle/Email')
-			.setDesc('Your Bluesky handle (e.g., user.bsky.social) or email address')
-			.addText(text => text
-				.setPlaceholder('Enter your Bluesky handle or email')
-				.setValue(this.plugin.settings.blueskyIdentifier)
-				.onChange(async (value) => {
-					this.plugin.settings.blueskyIdentifier = value;
-					await this.plugin.saveSettings();
-				}));
+		this.secretSetting(containerEl, 'Bluesky Handle/Email', 'Your Bluesky handle (e.g., user.bsky.social) or email address', 'crystal-bluesky-identifier', 'Enter your Bluesky handle or email', 'blueskyIdentifier');
 
-		new Setting(containerEl)
-			.setName('Bluesky App Password')
-			.setDesc('Your Bluesky app password (create one in Bluesky Settings > App Passwords)')
-			.addText(text => {
-				text.setPlaceholder('Enter your Bluesky app password')
-					.setValue(this.plugin.settings.blueskyPassword)
-					.onChange(async (value) => {
-						this.plugin.settings.blueskyPassword = value;
-						await this.plugin.saveSettings();
-					});
-				text.inputEl.type = 'password';
-				return text;
-			});
+		this.secretSetting(containerEl, 'Bluesky App Password', 'Your Bluesky app password (create one in Bluesky Settings > App Passwords)', 'crystal-bluesky-password', 'Enter your Bluesky app password', 'blueskyPassword');
 
 		this.toggleSetting(containerEl, 'Append Bluesky posts to Daily Note timeline', 'Add each post to today\'s daily note timeline section', 'blueskyAppendToDailyNote');
 		this.textSetting(containerEl, 'Daily Note timeline heading', 'Heading text that marks the timeline section (exact match)', 'dailyNoteTimelineHeading', '# Time Line');
@@ -251,35 +236,11 @@ export class CrystalSettingTab extends PluginSettingTab {
 		// pCloud settings
 		containerEl.createEl('h4', { text: 'pCloud Uploader' });
 
-		this.textSetting(containerEl, 'pCloud Username', 'Your pCloud username (email)', 'pcloudUsername', 'Enter pCloud Username');
+		this.secretSetting(containerEl, 'pCloud Username', 'Your pCloud username (email)', 'crystal-pcloud-username', 'Enter pCloud Username', 'pcloudUsername');
 
-		new Setting(containerEl)
-			.setName('pCloud Password')
-			.setDesc('Your pCloud password')
-			.addText(text => {
-				text.setPlaceholder('Enter pCloud Password')
-					.setValue(this.plugin.settings.pcloudPassword)
-					.onChange(async (value) => {
-						this.plugin.settings.pcloudPassword = value;
-						await this.plugin.saveSettings();
-					});
-				text.inputEl.type = 'password';
-				return text;
-			});
+		this.secretSetting(containerEl, 'pCloud Password', 'Your pCloud password', 'crystal-pcloud-password', 'Enter pCloud Password', 'pcloudPassword');
 
-		new Setting(containerEl)
-			.setName('pCloud Public Folder ID')
-			.setDesc('Your pCloud Public Folder unique ID (found in Public Folder links)')
-			.addText(text => {
-				text.setPlaceholder('e.g., lF97wFVWosQpHEoDAbvva0h')
-					.setValue(this.plugin.settings.pcloudPublicFolderId)
-					.onChange(async (value) => {
-						this.plugin.settings.pcloudPublicFolderId = value;
-						await this.plugin.saveSettings();
-					});
-				text.inputEl.type = 'password';
-				return text;
-			});
+		this.secretSetting(containerEl, 'pCloud Public Folder ID', 'Your pCloud Public Folder unique ID (found in Public Folder links)', 'crystal-pcloud-public-folder-id', 'e.g., lF97wFVWosQpHEoDAbvva0h', 'pcloudPublicFolderId');
 
 		// Marp settings
 		containerEl.createEl('h3', { text: 'Marp' });

@@ -77,7 +77,7 @@ export class BlueskyService {
 	 * サービスが利用可能かチェックする
 	 */
 	isAvailable(): boolean {
-		return this.agent !== null && this.identifier !== '' && this.password !== '';
+		return this.identifier !== '' && this.password !== '';
 	}
 
 	/**

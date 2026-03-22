@@ -20,6 +20,28 @@ import { GitSummaryService } from './src/git-summary-service';
 
 // Crystal Plugin for Obsidian
 
+const SECRET_FIELDS: (keyof CrystalPluginSettings)[] = [
+	'GeminiAPIKey',
+	'blueskyIdentifier',
+	'blueskyPassword',
+	'pcloudUsername',
+	'pcloudPassword',
+	'pcloudPublicFolderId',
+];
+
+const SECRET_KEY_MAP: Record<keyof CrystalPluginSettings, string> = {
+	GeminiAPIKey: 'crystal-gemini-api-key',
+	blueskyIdentifier: 'crystal-bluesky-identifier',
+	blueskyPassword: 'crystal-bluesky-password',
+	pcloudUsername: 'crystal-pcloud-username',
+	pcloudPassword: 'crystal-pcloud-password',
+	pcloudPublicFolderId: 'crystal-pcloud-public-folder-id',
+} as any;
+
+function secretKey(field: keyof CrystalPluginSettings): string {
+	return SECRET_KEY_MAP[field];
+}
+
 export default class CrystalPlugin extends Plugin {
 	settings: CrystalPluginSettings;
 	private geminiService: GeminiService;
@@ -155,20 +177,49 @@ export default class CrystalPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const stored = await this.loadData();
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, stored);
+
+		// Load secrets from SecretStorage; migrate from old data.json if needed
+		for (const field of SECRET_FIELDS) {
+			const key = secretKey(field);
+			const fromStore = this.app.secretStorage.getSecret(key);
+			if (fromStore !== null) {
+				(this.settings as any)[field] = fromStore;
+			} else if ((this.settings as any)[field]) {
+				// Migrate: move value from data.json into SecretStorage
+				this.app.secretStorage.setSecret(key, (this.settings as any)[field]);
+			}
+		}
+
+		// Remove secrets from data.json
+		const clean: any = Object.assign({}, stored);
+		for (const field of SECRET_FIELDS) {
+			delete clean[field];
+		}
+		await this.saveData(clean);
 	}
 
 	async saveSettings() {
-		await this.saveData(this.settings);
+		// Save non-secret settings to data.json
+		const clean: any = Object.assign({}, this.settings);
+		for (const field of SECRET_FIELDS) {
+			delete clean[field];
+		}
+		await this.saveData(clean);
+
+		// Save secrets to SecretStorage
+		for (const field of SECRET_FIELDS) {
+			const value = (this.settings as any)[field] as string;
+			this.app.secretStorage.setSecret(secretKey(field), value ?? '');
+		}
+
 		this.geminiService.updateSettings(this.settings);
 		await this.blueskyService.updateSettings(this.settings);
 		this.dailyNotesManager.updateSettings(this.settings);
 		this.imagePasteAndDropHandler.updateSettings(this.settings);
 		this.editorCommands.updateSettings(this.settings);
 		this.quickAddCommands.updateSettings(this.settings);
-
-		// Handler is always enabled, processing behavior depends on autoWebpPaste setting
-		// No need to enable/disable the handler itself
 	}
 
 }
