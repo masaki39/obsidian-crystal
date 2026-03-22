@@ -9,28 +9,28 @@
 ## Environment & tooling
 
 - Node.js: use current LTS (Node 18+ recommended).
-- **Package manager: npm** (required for this sample - `package.json` defines npm scripts and dependencies).
+- **Package manager: pnpm** (`pnpm-lock.yaml` is the lockfile; use `pnpm install`, `pnpm run build`, etc.).
 - **Bundler: esbuild** (required for this sample - `esbuild.config.mjs` and build scripts depend on it). Alternative bundlers like Rollup or webpack are acceptable for other projects if they bundle all external dependencies into `main.js`.
 - Types: `obsidian` type definitions.
 
-**Note**: This sample project has specific technical dependencies on npm and esbuild. If you're creating a plugin from scratch, you can choose different tools, but you'll need to replace the build configuration accordingly.
+**Note**: This project uses pnpm and esbuild. `moment` is marked as external in esbuild (provided by Obsidian at runtime) and added as a devDependency for tests.
 
 ### Install
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### Dev (watch)
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 ### Production build
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 ## Linting
