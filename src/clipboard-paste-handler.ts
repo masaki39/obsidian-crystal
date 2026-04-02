@@ -24,6 +24,7 @@ export class ImagePasteAndDropHandler {
 
 	updateSettings(settings: CrystalPluginSettings) {
 		this.settings = settings;
+		this.imageProcessor.updateSettings(settings);
 	}
 
 	enable() {

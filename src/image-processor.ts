@@ -15,6 +15,10 @@ export class ImageProcessor {
 		this.settings = settings;
 	}
 
+	updateSettings(settings: CrystalPluginSettings) {
+		this.settings = settings;
+	}
+
 	/**
 	 * Process image: convert to WebP if applicable, preserve GIF animation
 	 */
@@ -90,6 +94,7 @@ export class ImageProcessor {
 
 				// Convert to WebP blob
 				canvas.toBlob((webpBlob) => {
+					URL.revokeObjectURL(objectUrl);
 					if (webpBlob) {
 						resolve(webpBlob);
 					} else {
@@ -99,11 +104,13 @@ export class ImageProcessor {
 			};
 
 			img.onerror = () => {
+				URL.revokeObjectURL(objectUrl);
 				reject(new Error('Failed to load image for conversion'));
 			};
 
 			// Create object URL for the image
-			img.src = URL.createObjectURL(imageFile);
+			const objectUrl = URL.createObjectURL(imageFile);
+			img.src = objectUrl;
 		});
 	}
 

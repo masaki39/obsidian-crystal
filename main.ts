@@ -220,6 +220,12 @@ export default class CrystalPlugin extends Plugin {
 		this.imagePasteAndDropHandler.updateSettings(this.settings);
 		this.editorCommands.updateSettings(this.settings);
 		this.quickAddCommands.updateSettings(this.settings);
+		this.pcloudService.updateSettings(this.settings);
+		this.marpCommands.updateSettings(this.settings);
+		this.quartzService.updateSettings(this.settings);
+		this.shortcutService.updateSettings(this.settings);
+		this.pdfHandler.updateSettings(this.settings);
+		this.gitSummaryService.updateSettings(this.settings);
 	}
 
 }

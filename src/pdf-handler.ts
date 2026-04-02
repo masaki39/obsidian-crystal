@@ -15,6 +15,10 @@ export class PdfHandler {
         this.plugin = plugin;
     }
 
+    updateSettings(settings: CrystalPluginSettings) {
+        this.settings = settings;
+    }
+
     private checkSettings(view: MarkdownView): { file: TFile, exportFolder: string, pdfPath: string[] } | null {
         // fileの存在確認
         const file = view.file;

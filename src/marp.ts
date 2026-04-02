@@ -17,6 +17,10 @@ export class MarpCommands {
 		this.plugin = plugin;
 	}
 
+	updateSettings(settings: CrystalPluginSettings) {
+		this.settings = settings;
+	}
+
 	/**
 	 * 設定済みのテーマディレクトリからMarp CLIの --theme-set オプションを生成
 	 */

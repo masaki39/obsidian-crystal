@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Notice, SuggestModal, Plugin } from 'obsidian';
+import { App, Editor, MarkdownView, Notice, SuggestModal, Plugin, WorkspaceLeaf } from 'obsidian';
 import { CrystalPluginSettings, FileOrganizationRule } from './settings';
 import { parseFrontmatter, promptForText } from './utils';
 import * as path from 'path';
@@ -51,7 +51,7 @@ export class EditorCommands {
 		try {
 			const newFile = await this.app.vault.create(basefilename + '.md', '\n');
 			await this.app.workspace.getLeaf().openFile(newFile);
-			await (this.app as any).commands.executeCommandById("workspace:edit-file-title");
+			await this.openInInsertModeOrEditTitle();
 		} catch (error) {
 			new Notice('Failed to create new file: ' + error.message);
 		}
@@ -69,10 +69,41 @@ export class EditorCommands {
 			// Create new file
 			const newFile = await this.app.vault.create(basefilename + '.md', '\n');
 			await this.app.workspace.getLeaf().openFile(newFile);
-			await (this.app as any).commands.executeCommandById("workspace:edit-file-title");
+			await this.openInInsertModeOrEditTitle();
 		} catch (error) {
 			new Notice('Failed to create linked file: ' + error.message);
 		}
+	}
+
+	/**
+	 * If vim mode is enabled, focus editor and enter insert mode.
+	 * Otherwise fall back to renaming the file title.
+	 */
+	private async openInInsertModeOrEditTitle() {
+		const isVimMode = (this.app.vault as any).config?.vimMode;
+		if (!isVimMode) {
+			await (this.app as any).commands.executeCommandById("workspace:edit-file-title");
+			return;
+		}
+
+		// Wait for the editor to be ready
+		await new Promise(resolve => setTimeout(resolve, 50));
+
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (!view) return;
+
+		const editor = view.editor;
+		editor.focus();
+
+		// Move cursor to the last line
+		const lastLine = editor.lastLine();
+		editor.setCursor({ line: lastLine, ch: 0 });
+
+		// Enter vim insert mode by dispatching 'i' on the CM6 contentDOM
+		const cm = (editor as any).cm;
+		cm?.contentDOM?.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'i', code: 'KeyI', bubbles: true, cancelable: true })
+		);
 	}
 
 	/**
@@ -536,6 +567,24 @@ export class EditorCommands {
 	}
 
 	async onload() {
+		// Reset vim to normal mode when leaving a leaf
+		let previousLeaf: WorkspaceLeaf | null = null;
+		this.plugin.registerEvent(
+			this.app.workspace.on('active-leaf-change', (leaf) => {
+				const isVimMode = (this.app.vault as any).config?.vimMode;
+				if (isVimMode && previousLeaf && previousLeaf !== leaf) {
+					const view = previousLeaf.view;
+					if (view instanceof MarkdownView) {
+						const cm = (view.editor as any).cm;
+						cm?.contentDOM?.dispatchEvent(
+							new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true, cancelable: true })
+						);
+					}
+				}
+				previousLeaf = leaf;
+			})
+		);
+
 		// Editor Commands
 		this.plugin.addCommand({
 			id: 'crystal-create-timestamp-file',

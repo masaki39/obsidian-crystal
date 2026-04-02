@@ -104,8 +104,8 @@ BlueSkyへの投稿をアシストする。
 
 | コマンド | 機能 | 説明 |
 |---|---|---|
-| `Create New File with Timestamp` | タイムスタンプで新規ファイル作成 | `YYYYMMDDHHmmss`形式のファイル名で新しいノートを作成し、タイトル変更モードで開く。 |
-| `Create New File with Link at Cursor` | カーソル位置にリンク付きで新規ファイル作成 | タイムスタンプ名のファイルを作成し、現在のカーソル位置にそのファイルへのリンクを挿入する。 |
+| `Create New File with Timestamp` | タイムスタンプで新規ファイル作成 | `YYYYMMDDHHmmss`形式のファイル名で新しいノートを作成して開く。Vimモードが有効な場合はエディタのInsertモードで開始し、無効な場合はタイトル変更モードで開く。 |
+| `Create New File with Link at Cursor` | カーソル位置にリンク付きで新規ファイル作成 | タイムスタンプ名のファイルを作成し、現在のカーソル位置にそのファイルへのリンクを挿入して開く。Vimモードが有効な場合はエディタのInsertモードで開始し、無効な場合はタイトル変更モードで開く。 |
 | `Copy File Link to Clipboard` | ファイルリンクをコピー | 現在開いているファイルのWikiリンク（`[[ファイル名]]`）をコピーする。 |
 | `Copy File Link with Alias to Clipboard` | エイリアス付きファイルリンクをコピー | ファイルのフロントマターに`aliases`があれば、それを使ったリンク（`[[ファイル名|エイリアス]]`）をコピーする。 |
 | `Copy File Path for Claude Code` | Claude Code用パスをコピー | Vaultルートからの相対パスを`@"相対パス"`形式でコピーする。Claude Codeでのファイル参照に便利。 |
@@ -116,6 +116,10 @@ BlueSkyへの投稿をアシストする。
 | `Convert Active File to Bullet List` | 本文をバレット化 | アクティブファイルの本文をバレットリストに変換する（フロントマターは保持）。 |
 | `Organize File with Tags` | タグでファイルを整理 | タグを選択し、ファイル名に絵文字プレフィックスや日付を追加、フロントマターを更新し、指定フォルダへ移動させる。 |
 | `Toggle Line Number` | 行番号表示の切り替え | `.obsidian/app.json`の行番号表示設定をトグルする。 |
+
+**自動化機能（Vimモード有効時）：**
+
+- **Auto Reset Vim Mode on Leaf Change:** 別のペインに移動すると、離れたエディタのVimモードが自動でNormalモードにリセットされる。
 
 > [!note]
 > `Organize File with Tags`には設定画面に専用設定UIがある。

@@ -13,6 +13,10 @@ export class QuartzService {
         this.terminalService = terminalService;
     }
 
+    updateSettings(settings: CrystalPluginSettings) {
+        this.settings = settings;
+    }
+
     private async generateQuartzSyncCommand() {
         const quartzPath = this.settings.quartzPath;
         const command = `cd ${quartzPath} && npx quartz sync`;

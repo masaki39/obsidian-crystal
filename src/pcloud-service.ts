@@ -14,6 +14,11 @@ export class PCloudService {
 		this.imageProcessor = new ImageProcessor(settings);
 	}
 
+	updateSettings(settings: CrystalPluginSettings) {
+		this.settings = settings;
+		this.imageProcessor.updateSettings(settings);
+	}
+
 	private async authenticate(): Promise<string> {
 		if (this.authToken) {
 			return this.authToken;

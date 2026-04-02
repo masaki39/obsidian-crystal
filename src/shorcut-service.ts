@@ -12,7 +12,11 @@ export class ShortcutService {
         this.settings = settings;
         this.plugin = plugin;
     }
-    
+
+    updateSettings(settings: CrystalPluginSettings) {
+        this.settings = settings;
+    }
+
     async onLoad() {
         const shortcutNames = this.settings.shortcutNames.split('\n').map(name => name.trim());
         for (const name of shortcutNames) {

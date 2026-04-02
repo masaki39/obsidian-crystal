@@ -20,6 +20,7 @@
 	],
 	"author": "masaki39",
 	"license": "MIT",
+	"packageManager": "pnpm@10.32.1",
 	"devDependencies": {
 		"@types/jest": "^30.0.0",
 		"@types/node": "^16.11.6",
