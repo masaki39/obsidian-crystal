@@ -31,7 +31,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tag="${GITHUB_REF#refs/tags/}"
+          notes_file="changelog/${tag}.md"
 
-          gh release create "$tag" \
-            --title="$tag" \
-            main.js manifest.json styles.css
+          if [ -f "$notes_file" ]; then
+            gh release create "$tag" \
+              --title="$tag" \
+              --notes-file="$notes_file" \
+              main.js manifest.json styles.css
+          else
+            gh release create "$tag" \
+              --title="$tag" \
+              main.js manifest.json styles.css
+          fi

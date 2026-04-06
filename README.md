@@ -136,10 +136,12 @@ BlueSkyへの投稿をアシストする。
 | `Export PDF` | PDFエクスポート | フロントマターの`pdf`フィールドに指定されたPDFファイルをエクスポートフォルダにコピーする。 |
 | `Export PDF Images` | PDF画像抽出 | PDFから画像をPNG形式で抽出する。Popplerの`pdfimages`を使用。出力ファイル名: `pdf1-000.png`, `pdf2-000.png`など。 |
 | `Export PDF Text` | PDFテキスト抽出 | PDFからテキストを抽出する。Popplerの`pdftotext`を使用。出力ファイル名: `pdf1.txt`, `pdf2.txt`など。 |
+| `Export PDF Tables` | PDFテーブル抽出 | PDFからテーブルをCSV形式で抽出する。Camelotの`stream`フレーバーを使用。出力ファイル名: `pdf1.csv`, `pdf2.csv`など。 |
 
 **必要な依存関係:**
 
 - [Poppler](https://poppler.freedesktop.org/)（`pdfimages`, `pdftotext`コマンド）
+- [Camelot](https://camelot-py.readthedocs.io/)（`camelot`コマンド、`uv tool install camelot-py`でインストール）
 
 ### 🎞 Marp
 
