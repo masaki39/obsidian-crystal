@@ -8,7 +8,7 @@
 > [!warning]
 >
 > - デスクトップ版Obsidianでのみ動作する。
-> - 多くの機能は、外部サービス（Gemini, pCloud, Anki, Marp CLI, Poppler, macOS Shortcuts）の事前設定やインストールが必要である。
+> - 多くの機能は、外部サービス（Gemini, Gyazo, Anki, Marp CLI, Poppler, macOS Shortcuts）の事前設定やインストールが必要である。
 > - 個人用途に最適化されているため、利用者の環境に応じた設定調整が必要な場合がある。
 > - 一定以上の規模になったり独立した機能をもつコードは別リポジトリに適宜切り離される
 >   - [Tab Swap](https://github.com/masaki39/tab-swap)
@@ -89,14 +89,15 @@ BlueSkyへの投稿をアシストする。
 
 - **Auto Convert Images to WebP on Paste:** クリップボードからのペーストやドラッグ＆ドロップで画像を貼り付けると、自動でWebP形式に変換し、Vault内の添付ファイルフォルダに保存してリンクを挿入する。GIFアニメはそのまま維持される。
 
-### ☁️ pCloud Uploader
+### ☁️ Gyazo Uploader
 
-クラウドストレージのpCloudの公開フォルダ(Publicフォルダ)に画像を送る。
+[Gyazo](https://gyazo.com)に画像をアップロードし、Markdownリンクを挿入する。
+アクセストークンは[gyazo.com/oauth/applications](https://gyazo.com/oauth/applications)でアプリを作成して取得する。
 
 | コマンド | 機能 | 説明 |
 |---|---|---|
-| `Upload Clipboard Image to pCloud` | ｸﾘｯﾌﾟﾎﾞｰﾄﾞ画像をpCloudにｱｯﾌﾟﾛｰﾄﾞ | クリップボードにある画像をpCloudの公開フォルダにアップロードし、Markdownリンクをカーソル位置に挿入する。 |
-| `Upload Image File to pCloud` | 画像ファイルをpCloudにｱｯﾌﾟﾛｰﾄﾞ | ファイルを選択ダイアログから選び、pCloudにアップロードしてリンクを挿入する。 |
+| `Upload clipboard image to Gyazo` | クリップボード画像をGyazoにアップロード | クリップボードにある画像をGyazoにアップロードし、Markdownリンクをカーソル位置に挿入する。 |
+| `Upload image file to Gyazo` | 画像ファイルをGyazoにアップロード | ファイル選択ダイアログから画像を選び、Gyazoにアップロードしてリンクを挿入する。 |
 
 ### ✍️ Editor Extensions
 

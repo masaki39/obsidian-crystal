@@ -3,7 +3,7 @@ import { CrystalPluginSettings, DEFAULT_SETTINGS, CrystalSettingTab } from './sr
 import { GeminiService } from './src/gemini-service';
 import { BlueskyService } from './src/bluesky-service';
 import { DailyNotesManager } from './src/daily-notes';
-import { PCloudService } from './src/pcloud-service';
+import { GyazoService } from './src/gyazo-service';
 import { ImagePasteAndDropHandler } from './src/clipboard-paste-handler';
 import { EditorCommands } from './src/editor-commands';
 import { SettingEdit } from './src/setting-edit';
@@ -24,18 +24,14 @@ const SECRET_FIELDS: (keyof CrystalPluginSettings)[] = [
 	'GeminiAPIKey',
 	'blueskyIdentifier',
 	'blueskyPassword',
-	'pcloudUsername',
-	'pcloudPassword',
-	'pcloudPublicFolderId',
+	'gyazoAccessToken',
 ];
 
 const SECRET_KEY_MAP: Record<keyof CrystalPluginSettings, string> = {
 	GeminiAPIKey: 'crystal-gemini-api-key',
 	blueskyIdentifier: 'crystal-bluesky-identifier',
 	blueskyPassword: 'crystal-bluesky-password',
-	pcloudUsername: 'crystal-pcloud-username',
-	pcloudPassword: 'crystal-pcloud-password',
-	pcloudPublicFolderId: 'crystal-pcloud-public-folder-id',
+	gyazoAccessToken: 'crystal-gyazo-access-token',
 } as any;
 
 function secretKey(field: keyof CrystalPluginSettings): string {
@@ -47,7 +43,7 @@ export default class CrystalPlugin extends Plugin {
 	private geminiService: GeminiService;
 	private blueskyService: BlueskyService;
 	private dailyNotesManager: DailyNotesManager;
-	private pcloudService: PCloudService;
+	private gyazoService: GyazoService;
 	private imagePasteAndDropHandler: ImagePasteAndDropHandler;
 	private editorCommands: EditorCommands;
 	private quickAddCommands: QuickAddCommands;
@@ -69,7 +65,7 @@ export default class CrystalPlugin extends Plugin {
 		this.geminiService = new GeminiService(this.app, this, this.settings);
 		this.dailyNotesManager = new DailyNotesManager(this.app, this.settings, this);
 		this.blueskyService = new BlueskyService(this.app, this, this.settings, this.dailyNotesManager);
-		this.pcloudService = new PCloudService(this.app, this.settings);
+		this.gyazoService = new GyazoService(this.settings);
 		this.imagePasteAndDropHandler = new ImagePasteAndDropHandler(this.app, this.settings, this);
 		this.editorCommands = new EditorCommands(this.app, this.settings, this);
 		this.quickAddCommands = new QuickAddCommands(this.app, this.settings);
@@ -105,26 +101,26 @@ export default class CrystalPlugin extends Plugin {
 		this.imagePasteAndDropHandler.onload();
 
 
-		// pCloud Upload Command
+		// Gyazo Upload Command
 		this.addCommand({
 			id: 'crystal-upload-clipboard-image',
-			name: 'Upload Clipboard Image to pCloud Public Folder',
+			name: 'Upload clipboard image to Gyazo',
 			editorCallback: async (editor: Editor) => {
 				try {
-					await this.pcloudService.uploadClipboardImage(editor);
+					await this.gyazoService.uploadClipboardImage(editor);
 				} catch (error) {
 					console.error('Failed to upload clipboard image:', error);
 				}
 			}
 		});
 
-		// pCloud File Upload Command
+		// Gyazo File Upload Command
 		this.addCommand({
 			id: 'crystal-upload-file-image',
-			name: 'Upload Image File to pCloud Public Folder',
+			name: 'Upload image file to Gyazo',
 			editorCallback: async (editor: Editor) => {
 				try {
-					await this.pcloudService.promptFileUpload(editor);
+					await this.gyazoService.promptFileUpload(editor);
 				} catch (error) {
 					console.error('Failed to upload image file:', error);
 				}
@@ -220,7 +216,7 @@ export default class CrystalPlugin extends Plugin {
 		this.imagePasteAndDropHandler.updateSettings(this.settings);
 		this.editorCommands.updateSettings(this.settings);
 		this.quickAddCommands.updateSettings(this.settings);
-		this.pcloudService.updateSettings(this.settings);
+		this.gyazoService.updateSettings(this.settings);
 		this.marpCommands.updateSettings(this.settings);
 		this.quartzService.updateSettings(this.settings);
 		this.shortcutService.updateSettings(this.settings);

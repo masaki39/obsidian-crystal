@@ -25,9 +25,7 @@ export interface CrystalPluginSettings {
 	imageResizeScale: number;
 	imageMaxSize: number;
 	autoWebpPaste: boolean;
-	pcloudUsername: string;
-	pcloudPassword: string;
-	pcloudPublicFolderId: string;
+	gyazoAccessToken: string;
 	marpSlideFolderPath: string;
 	marpThemePath: string;
 	marpAttachmentFolderPath: string;
@@ -57,9 +55,7 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	imageResizeScale: 0.8,
 	imageMaxSize: 700,
 	autoWebpPaste: true,
-	pcloudUsername: '',
-	pcloudPassword: '',
-	pcloudPublicFolderId: '',
+	gyazoAccessToken: '',
 	marpSlideFolderPath: '',
 	marpThemePath: '',
 	marpAttachmentFolderPath: '',
@@ -105,7 +101,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 			}));
 	}
 	
-	private secretSetting(containerEl: HTMLElement, name: string, desc: string, secretKey: string, placeholder: string, field: keyof CrystalPluginSettings) {
+	private secretSetting(containerEl: HTMLElement, name: string, desc: string | DocumentFragment, secretKey: string, placeholder: string, field: keyof CrystalPluginSettings) {
 		const secretStorage: SecretStorage = this.app.secretStorage;
 		const setting = new Setting(containerEl)
 			.setName(name)
@@ -233,14 +229,14 @@ export class CrystalSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));				
 
-		// pCloud settings
-		containerEl.createEl('h4', { text: 'pCloud Uploader' });
+		// Gyazo settings
+		containerEl.createEl('h4', { text: 'Gyazo Uploader' });
 
-		this.secretSetting(containerEl, 'pCloud Username', 'Your pCloud username (email)', 'crystal-pcloud-username', 'Enter pCloud Username', 'pcloudUsername');
-
-		this.secretSetting(containerEl, 'pCloud Password', 'Your pCloud password', 'crystal-pcloud-password', 'Enter pCloud Password', 'pcloudPassword');
-
-		this.secretSetting(containerEl, 'pCloud Public Folder ID', 'Your pCloud Public Folder unique ID (found in Public Folder links)', 'crystal-pcloud-public-folder-id', 'e.g., lF97wFVWosQpHEoDAbvva0h', 'pcloudPublicFolderId');
+		const gyazoDesc = document.createDocumentFragment();
+		gyazoDesc.append('Access token from ');
+		gyazoDesc.createEl('a', { text: 'gyazo.com/oauth/applications', href: 'https://gyazo.com/oauth/applications' });
+		gyazoDesc.append(' (create an app → copy the access token)');
+		this.secretSetting(containerEl, 'Gyazo access token', gyazoDesc, 'crystal-gyazo-access-token', 'Enter Gyazo access token', 'gyazoAccessToken');
 
 		// Marp settings
 		containerEl.createEl('h3', { text: 'Marp' });
