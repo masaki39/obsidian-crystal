@@ -183,12 +183,12 @@ export default class CrystalPlugin extends Plugin {
 		// Load secrets from SecretStorage; migrate from old data.json if needed
 		for (const field of SECRET_FIELDS) {
 			const key = secretKey(field);
-			const fromStore = this.app.secretStorage.getSecret(key);
+			const fromStore = await this.app.secretStorage.getSecret(key);
 			if (fromStore !== null) {
 				(this.settings as any)[field] = fromStore;
 			} else if ((this.settings as any)[field]) {
 				// Migrate: move value from data.json into SecretStorage
-				this.app.secretStorage.setSecret(key, (this.settings as any)[field]);
+				await this.app.secretStorage.setSecret(key, (this.settings as any)[field]);
 			}
 		}
 

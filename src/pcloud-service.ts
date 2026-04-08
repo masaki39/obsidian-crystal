@@ -37,6 +37,8 @@ export class PCloudService {
 				body: new URLSearchParams({
 					username: this.settings.pcloudUsername,
 					password: this.settings.pcloudPassword,
+					getauth: '1',
+					logout: '1',
 				}),
 			});
 
@@ -46,7 +48,11 @@ export class PCloudService {
 				throw new Error(`Authentication failed: ${data.error || 'Unknown error'}`);
 			}
 
-			this.authToken = data.auth ? String(data.auth) : 'authenticated';
+			if (!data.auth) {
+				throw new Error('Authentication failed: no auth token returned');
+			}
+
+			this.authToken = String(data.auth);
 			return this.authToken;
 		} catch (error) {
 			console.error('pCloud authentication error:', error);
@@ -64,8 +70,7 @@ export class PCloudService {
 					'Content-Type': 'application/x-www-form-urlencoded',
 				},
 				body: new URLSearchParams({
-					username: this.settings.pcloudUsername,
-					password: this.settings.pcloudPassword,
+					auth: authToken,
 					folderid: '0', // Root folder
 				}),
 			});
@@ -96,13 +101,13 @@ export class PCloudService {
 		// Generate filename with timestamp
 		const filename = this.imageProcessor.generateTimestampFilename('image', imageBlob, originalType);
 
-		// Get Public Folder ID
+		// Get Public Folder ID (also ensures we have a valid auth token)
 		const pcloudFolderId = await this.getPublicFolderId();
+		const authToken = await this.authenticate();
 
 		// Upload file
 		const formData = new FormData();
-		formData.append('username', this.settings.pcloudUsername);
-		formData.append('password', this.settings.pcloudPassword);
+		formData.append('auth', authToken);
 		formData.append('folderid', pcloudFolderId.toString());
 		formData.append('filename', filename);
 		formData.append('file', imageBlob, filename);
