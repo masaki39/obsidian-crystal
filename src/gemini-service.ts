@@ -49,6 +49,15 @@ export class GeminiService {
 		return this.settings?.GeminiModel || DEFAULT_SETTINGS.GeminiModel;
 	}
 
+	private getResponseText(response: any): string {
+		const parts = response.candidates?.[0]?.content?.parts ?? [];
+		if (parts.length === 0) return response.text();
+		return parts
+			.filter((p: any) => !p.thought)
+			.map((p: any) => p.text ?? '')
+			.join('');
+	}
+
 	/**
 	 * ファイルの内容からフロントマターを除去して取得する
 	 */
@@ -93,7 +102,7 @@ ${content}`;
 
 			const result = await model.generateContent(prompt);
 			const response = await result.response;
-			const text = response.text();
+			const text = this.getResponseText(response);
 			
 			return text.trim();
 		} catch (error) {
@@ -164,7 +173,7 @@ ${selectedText}`;
 
 			const result = await model.generateContent(prompt);
 			const response = await result.response;
-			const translatedText = response.text().trim();
+			const translatedText = this.getResponseText(response).trim();
 			
 			// 選択範囲を翻訳結果で置換
 			editor.replaceSelection(translatedText);
@@ -220,7 +229,7 @@ ${targetLinePureText}`;
 
 			const result = await model.generateContent(prompt);
 			const response = await result.response;
-			const translatedText = response.text().trim();
+			const translatedText = this.getResponseText(response).trim();
 			
 
 			if (editor.getSelection()) {
@@ -312,7 +321,7 @@ ${targetText}`;
 
 			const result = await model.generateContent(prompt);
 			const response = await result.response;
-			const rewritten = response.text().trim();
+			const rewritten = this.getResponseText(response).trim();
 
 			if (!rewritten) {
 				new Notice('Geminiから結果が返りませんでした。');
@@ -374,7 +383,7 @@ ${pureText}`;
 
 			const result = await model.generateContent(prompt);
 			const response = await result.response;
-			const correctedText = response.text().trim();
+			const correctedText = this.getResponseText(response).trim();
 
 			// インデントを保持して校正結果を適用
 			const finalText = indent + correctedText;
@@ -409,7 +418,7 @@ ${front}`;
 			return;
 		}
         const response = await result.response;
-        const translatedText = response.text().trim();
+        const translatedText = this.getResponseText(response).trim();
         const back = await promptForText(this.app, '裏面', '日本語を入力してください', '追加', translatedText);
         if (!back) {
 			return;
@@ -425,7 +434,7 @@ ${front}`;
 		const model = this.genAI.getGenerativeModel({ model: this.getModelName() });
 		const prompt = `${date}の活動内容について、以下のgit diffを読んで1〜2文の日本語で簡潔に要約してください。要約のみを出力し、余計な説明は含めないでください。\n\n${diff}`;
 		const result = await model.generateContent(prompt);
-		return result.response.text().trim();
+		return this.getResponseText(result.response).trim();
 	}
 
 	async onload() {

@@ -75,7 +75,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
-	
+
 	private textSetting(containerEl: HTMLElement, name: string, desc: string, key: string, value: string) {
 		return new Setting(containerEl)
 			.setName(name)
@@ -91,16 +91,16 @@ export class CrystalSettingTab extends PluginSettingTab {
 
 	private toggleSetting(containerEl: HTMLElement, name: string, desc: string, key: string) {
 		return new Setting(containerEl)
-		.setName(name)
-		.setDesc(desc)
-		.addToggle(toggle => toggle
-			.setValue((this.plugin.settings as any)[key])
-			.onChange(async (value) => {
-				(this.plugin.settings as any)[key] = value;
-				await this.plugin.saveSettings();
-			}));
+			.setName(name)
+			.setDesc(desc)
+			.addToggle(toggle => toggle
+				.setValue((this.plugin.settings as any)[key])
+				.onChange(async (value) => {
+					(this.plugin.settings as any)[key] = value;
+					await this.plugin.saveSettings();
+				}));
 	}
-	
+
 	private secretSetting(containerEl: HTMLElement, name: string, desc: string | DocumentFragment, secretKey: string, placeholder: string, field: keyof CrystalPluginSettings) {
 		const secretStorage: SecretStorage = this.app.secretStorage;
 		const setting = new Setting(containerEl)
@@ -120,7 +120,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 	}
 
 	display(): void {
-		const {containerEl} = this;
+		const { containerEl } = this;
 
 		containerEl.empty();
 
@@ -146,12 +146,8 @@ export class CrystalSettingTab extends PluginSettingTab {
 				.addOption('gemini-2.5-flash-lite', 'gemini-2.5-flash-lite')
 				.addOption('gemini-2.0-flash', 'gemini-2.0-flash')
 				.addOption('gemini-2.0-flash-lite', 'gemini-2.0-flash-lite')
-				.addOption('gemma-3-27b-it', 'gemma-3-27b-it')
-				.addOption('gemma-3-12b-it', 'gemma-3-12b-it')
-				.addOption('gemma-3-4b-it', 'gemma-3-4b-it')
-				.addOption('gemma-3-1b-it', 'gemma-3-1b-it')
-				.addOption('gemma-3n-e4b-it', 'gemma-3n-e4b-it')
-				.addOption('gemma-3n-e2b-it', 'gemma-3n-e2b-it')
+				.addOption('gemma-4-31b-it', 'gemma-4-31b-it')
+				.addOption('gemma-4-26b-a4b-it', 'gemma-4-26b-a4b-it')
 				.setValue(this.plugin.settings.GeminiModel)
 				.onChange(async (value) => {
 					this.plugin.settings.GeminiModel = value;
@@ -227,7 +223,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.imageMaxSize = parseInt(value) || 1024;
 					await this.plugin.saveSettings();
-				}));				
+				}));
 
 		// Gyazo settings
 		containerEl.createEl('h4', { text: 'Gyazo Uploader' });
@@ -297,7 +293,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 
 		this.plugin.settings.fileOrganizationRules.forEach((rule, index) => {
 			const ruleContainer = container.createDiv({ cls: 'file-organization-rule-row' });
-			
+
 			new Setting(ruleContainer)
 				.setName(`Rule ${index + 1}`)
 				.addText(text => {
