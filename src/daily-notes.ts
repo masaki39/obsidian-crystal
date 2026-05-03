@@ -21,9 +21,18 @@ export function splitByTimeline(content: string, heading: string): { before: str
     return { before, timeline };
 }
 
+function trimTrailingBlankLines(s: string): string {
+    const lines = s.split('\n');
+    let end = lines.length;
+    while (end > 0 && lines[end - 1].trim() === '') {
+        end--;
+    }
+    return lines.slice(0, end).join('\n');
+}
+
 export function recombineSections(before: string, timeline: string): string {
-    const beforeTrimmed = before.trimEnd();
-    const timelineTrimmed = timeline.trimEnd();
+    const beforeTrimmed = trimTrailingBlankLines(before);
+    const timelineTrimmed = trimTrailingBlankLines(timeline);
 
     if (beforeTrimmed.length === 0 && timelineTrimmed.length === 0) {
         return '';
