@@ -8,7 +8,7 @@
 > [!warning]
 >
 > - デスクトップ版Obsidianでのみ動作する。
-> - 多くの機能は、外部サービス（Gemini, Gyazo, Anki, Marp CLI, Poppler, macOS Shortcuts）の事前設定やインストールが必要である。
+> - 多くの機能は、外部サービス（Gemini, Gyazo, Anki, Marp CLI, macOS Shortcuts）の事前設定やインストールが必要である。
 > - 個人用途に最適化されているため、利用者の環境に応じた設定調整が必要な場合がある。
 > - 一定以上の規模になったり独立した機能をもつコードは別リポジトリに適宜切り離される
 >   - [Tab Swap](https://github.com/masaki39/tab-swap)
@@ -134,14 +134,10 @@ BlueSkyへの投稿をアシストする。
 
 | コマンド | 機能 | 説明 |
 |---|---|---|
-| `Export PDF` | PDFエクスポート | フロントマターの`pdf`フィールドに指定されたPDFファイルをエクスポートフォルダにコピーする。 |
-| `Export PDF Images` | PDF画像抽出 | PDFから画像をPNG形式で抽出する。Popplerの`pdfimages`を使用。出力ファイル名: `pdf1-000.png`, `pdf2-000.png`など。 |
-| `Export PDF Text` | PDFテキスト抽出 | PDFからテキストを抽出する。Popplerの`pdftotext`を使用。出力ファイル名: `pdf1.txt`, `pdf2.txt`など。 |
 | `Export PDF Tables` | PDFテーブル抽出 | PDFからテーブルをCSV形式で抽出する。Camelotの`stream`フレーバーを使用。出力ファイル名: `pdf1.csv`, `pdf2.csv`など。 |
 
 **必要な依存関係:**
 
-- [Poppler](https://poppler.freedesktop.org/)（`pdfimages`, `pdftotext`コマンド）
 - [Camelot](https://camelot-py.readthedocs.io/)（`camelot`コマンド、`uv tool install camelot-py`でインストール）
 
 ### 🎞 Marp
@@ -150,11 +146,12 @@ BlueSkyへの投稿をアシストする。
 
 | コマンド | 機能 | 説明 |
 |---|---|---|
-| `Preview Marp Slide` | Marpプレビュー | 内部リンクを相対パスに変換後、Marpのプレビュー用コマンドをクリップボードにコピーする。 |
-| `Export Marp Slide (PPTX)` | Marpエクスポート | 内部リンクを相対パスに変換後、PPTX形式のエクスポート用コマンドをクリップボードにコピーする。 |
-| `Export Marp Slide (PPTX Editable)` | Marpエクスポート（編集可） | スライド内容を編集可能なPPTX形式で書き出すコマンドをクリップボードにコピーする。 |
-| `Export Marp Slide (HTML)` | Marpエクスポート（HTML） | HTML形式でエクスポートするコマンドをクリップボードにコピーする。 |
-| `Export Marp Slide (PDF)` | Marpエクスポート（PDF） | PDF形式でエクスポートするコマンドをクリップボードにコピーする。 |
+| `Preview Marp Slide` | Marpプレビュー | Marpのプレビュー用HTMLをMarkdownと同じフォルダに出力する。 |
+| `Export Marp Slide (PPTX)` | Marpエクスポート | PPTX形式でエクスポートする。 |
+| `Export Marp Slide (PPTX Editable)` | Marpエクスポート（編集可） | スライド内容を編集可能なPPTX形式でエクスポートする。 |
+| `Export Marp Slide (HTML)` | Marpエクスポート（HTML） | HTML形式でエクスポートする。 |
+| `Export Marp Slide (HTML Folder with Attachments)` | Marpエクスポート（HTMLフォルダ） | HTML・Markdownコピー・ローカル画像をひとつのフォルダにまとめてエクスポートする。画像リンクは相対パスに変換されるため、フォルダをそのまま配布・移動しても画像が正常に表示される。 |
+| `Export Marp Slide (PDF)` | Marpエクスポート（PDF） | PDF形式でエクスポートする。 |
 | `Start Marp Server` | Marpサーバー起動 | プレビュー用のMarpサーバーを起動する。 |
 | `Stop Marp Server` | Marpサーバー停止 | 起動中のMarpサーバーを停止する。 |
 | `Move Images to Marp Folder` | 画像をMarpフォルダに移動 | Vault内の画像ファイルをMarp用フォルダに移動し、リンクを更新する。 |

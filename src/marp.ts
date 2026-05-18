@@ -127,6 +127,79 @@ export class MarpCommands {
 	}
 
 	/**
+	 * Marp HTML + 画像をフォルダにまとめてエクスポートする
+	 */
+	async executeMarpExportHtmlFolderCommand(_editor: Editor, view: MarkdownView) {
+		const file = view.file;
+		if (!file) return;
+
+		try {
+			const vaultBase = (this.plugin.app.vault.adapter as any).basePath as string;
+
+			// markdown を読み込み画像リンクを抽出
+			const content = await this.plugin.app.vault.read(file);
+			const imageLinks = this.extractImageLinks(content);
+
+			// 出力フォルダパスの決定
+			const parentPath = file.parent?.path === '/' ? '' : (file.parent?.path || '');
+			const baseExportFolder = this.settings.exportFolderPath || parentPath;
+			const outputFolderVaultRelative = normalizePath(
+				baseExportFolder ? `${baseExportFolder}/${file.basename}-html` : `${file.basename}-html`
+			);
+			const outputFolderAbsPath = path.join(vaultBase, outputFolderVaultRelative);
+
+			// フォルダ作成
+			await fs.mkdir(outputFolderAbsPath, { recursive: true });
+
+			// 画像をフォルダにコピー
+			const allFiles = this.plugin.app.vault.getFiles();
+			for (const imageLink of imageLinks) {
+				const fileName = path.basename(imageLink);
+				const imageFile = allFiles.find(f => f.name === fileName || f.path === imageLink);
+				if (imageFile) {
+					const srcAbsPath = path.join(vaultBase, imageFile.path);
+					const destAbsPath = path.join(outputFolderAbsPath, fileName);
+					await fs.copyFile(srcAbsPath, destAbsPath);
+				}
+			}
+
+			// wikilink・markdownリンクを相対パス（basenameのみ）に変換
+			let modifiedContent = content;
+			modifiedContent = modifiedContent.replace(
+				/!\[\[([^\]]+\.(jpg|jpeg|png|gif|bmp|svg|webp))\]\]/gi,
+				(_match: string, imagePath: string) => `![](${path.basename(imagePath)})`
+			);
+			modifiedContent = modifiedContent.replace(
+				/!\[([^\]]*)\]\(([^)]+\.(jpg|jpeg|png|gif|bmp|svg|webp))\)/gi,
+				(_match: string, alt: string, imagePath: string) => `![${alt}](${path.basename(imagePath)})`
+			);
+
+			// 変換済み markdown をコピーとして書き込み
+			const mdCopyAbsPath = path.join(outputFolderAbsPath, file.name);
+			await fs.writeFile(mdCopyAbsPath, modifiedContent, 'utf-8');
+
+			// marp コマンド実行（vault-relative パス）
+			const mdCopyVaultRelative = normalizePath(`${outputFolderVaultRelative}/${file.name}`);
+			const htmlOutputVaultRelative = normalizePath(`${outputFolderVaultRelative}/${file.basename}.html`);
+			const themeOption = this.getThemeSetOption();
+			const marpCommand = `marp --allow-local-files${themeOption} -o "${htmlOutputVaultRelative}" -- "${mdCopyVaultRelative}"`;
+
+			new Notice('Marp HTML（添付ファイル付き）をエクスポート中...');
+
+			const result = await this.terminalService.executeCommand(marpCommand);
+
+			if (result.exitCode === 0) {
+				new Notice(`エクスポート完了: ${outputFolderVaultRelative}`);
+			} else {
+				new Notice(`Marpエクスポートでエラーが発生しました: ${result.stderr}`);
+			}
+		} catch (error) {
+			console.error('Failed to export Marp HTML with attachments:', error);
+			new Notice('エクスポートに失敗しました: ' + error.message);
+		}
+	}
+
+	/**
 	 * Marp Presenter Notesをテキストファイルとして出力する
 	 */
 	async executeMarpNotesCommand(_editor: Editor, view: MarkdownView) {
@@ -466,6 +539,14 @@ export class MarpCommands {
 			name: 'Export Marp Slide (HTML)',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.executeMarpExportCommand(editor, view, 'html');
+			}
+		});
+
+		this.plugin.addCommand({
+			id: 'crystal-export-marp-slide-html-folder',
+			name: 'Export Marp Slide (HTML Folder with Attachments)',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.executeMarpExportHtmlFolderCommand(editor, view);
 			}
 		});
 
