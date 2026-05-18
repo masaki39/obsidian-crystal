@@ -140,13 +140,19 @@ export class MarpCommands {
 			const content = await this.plugin.app.vault.read(file);
 			const imageLinks = this.extractImageLinks(content);
 
-			// 出力フォルダパスの決定
+			// 出力フォルダの絶対パスを決定（exportFolderPath が絶対/相対どちらでも正しく解決する）
 			const parentPath = file.parent?.path === '/' ? '' : (file.parent?.path || '');
-			const baseExportFolder = this.settings.exportFolderPath || parentPath;
-			const outputFolderVaultRelative = normalizePath(
-				baseExportFolder ? `${baseExportFolder}/${file.basename}-html` : `${file.basename}-html`
-			);
-			const outputFolderAbsPath = path.join(vaultBase, outputFolderVaultRelative);
+			const folderName = `${file.basename}-html`;
+			const exportSetting = this.settings.exportFolderPath;
+			let baseAbsPath: string;
+			if (exportSetting) {
+				baseAbsPath = path.isAbsolute(exportSetting)
+					? exportSetting
+					: path.join(vaultBase, exportSetting);
+			} else {
+				baseAbsPath = parentPath ? path.join(vaultBase, parentPath) : vaultBase;
+			}
+			const outputFolderAbsPath = path.join(baseAbsPath, folderName);
 
 			// フォルダ作成
 			await fs.mkdir(outputFolderAbsPath, { recursive: true });
@@ -178,18 +184,18 @@ export class MarpCommands {
 			const mdCopyAbsPath = path.join(outputFolderAbsPath, file.name);
 			await fs.writeFile(mdCopyAbsPath, modifiedContent, 'utf-8');
 
-			// marp コマンド実行（vault-relative パス）
-			const mdCopyVaultRelative = normalizePath(`${outputFolderVaultRelative}/${file.name}`);
-			const htmlOutputVaultRelative = normalizePath(`${outputFolderVaultRelative}/${file.basename}.html`);
+			// marp コマンド実行（絶対パスを使用）
+			const mdCopyPath = path.join(outputFolderAbsPath, file.name);
+			const htmlOutputPath = path.join(outputFolderAbsPath, `${file.basename}.html`);
 			const themeOption = this.getThemeSetOption();
-			const marpCommand = `marp --allow-local-files${themeOption} -o "${htmlOutputVaultRelative}" -- "${mdCopyVaultRelative}"`;
+			const marpCommand = `marp --allow-local-files${themeOption} -o "${htmlOutputPath}" -- "${mdCopyPath}"`;
 
 			new Notice('Marp HTML（添付ファイル付き）をエクスポート中...');
 
 			const result = await this.terminalService.executeCommand(marpCommand);
 
 			if (result.exitCode === 0) {
-				new Notice(`エクスポート完了: ${outputFolderVaultRelative}`);
+				new Notice(`エクスポート完了: ${outputFolderAbsPath}`);
 			} else {
 				new Notice(`Marpエクスポートでエラーが発生しました: ${result.stderr}`);
 			}
