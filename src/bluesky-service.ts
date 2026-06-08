@@ -1,13 +1,160 @@
 import { AtpAgent, RichText } from '@atproto/api';
-import { App, Notice, requestUrl, Plugin } from 'obsidian';
-import { promptForText } from './utils';
+import { App, Modal, Notice, requestUrl, Plugin } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
 import { DailyNotesManager } from './daily-notes';
+import { GyazoService } from './gyazo-service';
 
 interface UrlMetadata {
 	title: string;
 	description: string;
 	image: string;
+}
+
+interface PostResult {
+	text: string;
+	gyazoUrls: string[];
+	imageFiles: File[];
+}
+
+const MAX_IMAGES = 4;
+
+class PostModal extends Modal {
+	private title: string;
+	private buttonText: string;
+	private gyazoService: GyazoService | null;
+	private selectedFiles: File[] = [];
+	private result: PostResult | null = null;
+	private resolve: (result: PostResult | null) => void;
+
+	constructor(
+		app: App,
+		title: string,
+		buttonText: string,
+		gyazoService: GyazoService | null,
+		resolve: (result: PostResult | null) => void
+	) {
+		super(app);
+		this.title = title;
+		this.buttonText = buttonText;
+		this.gyazoService = gyazoService;
+		this.resolve = resolve;
+	}
+
+	onOpen() {
+		const { contentEl } = this;
+		contentEl.createEl('h3', { text: this.title });
+
+		const textarea = contentEl.createEl('textarea');
+		textarea.style.width = '100%';
+		textarea.style.height = '120px';
+		textarea.style.resize = 'vertical';
+		textarea.style.fontFamily = 'inherit';
+		textarea.style.marginBottom = '8px';
+		textarea.placeholder = '投稿内容を入力してください';
+
+		const imageRow = contentEl.createDiv();
+		imageRow.style.display = 'flex';
+		imageRow.style.alignItems = 'flex-start';
+		imageRow.style.gap = '8px';
+		imageRow.style.marginBottom = '16px';
+
+		const uploadButton = imageRow.createEl('button', { text: `画像を選択 (最大${MAX_IMAGES}枚)` });
+		uploadButton.style.flexShrink = '0';
+
+		const fileListEl = imageRow.createEl('ul');
+		fileListEl.style.margin = '0';
+		fileListEl.style.padding = '0';
+		fileListEl.style.listStyle = 'none';
+		fileListEl.style.fontSize = '0.82em';
+		fileListEl.style.color = 'var(--text-muted)';
+
+		const refreshFileList = () => {
+			fileListEl.empty();
+			if (this.selectedFiles.length === 0) {
+				const li = fileListEl.createEl('li', { text: '未選択' });
+				li.style.color = 'var(--text-muted)';
+			} else {
+				for (const file of this.selectedFiles) {
+					const li = fileListEl.createEl('li', { text: file.name });
+					li.style.color = 'var(--text-normal)';
+				}
+			}
+		};
+		refreshFileList();
+
+		uploadButton.addEventListener('click', () => {
+			const input = document.createElement('input');
+			input.type = 'file';
+			input.accept = 'image/*';
+			input.multiple = true;
+			input.addEventListener('change', () => {
+				const files = Array.from(input.files || []).slice(0, MAX_IMAGES);
+				this.selectedFiles = files;
+				refreshFileList();
+			});
+			input.click();
+		});
+
+		const buttonContainer = contentEl.createDiv();
+		buttonContainer.style.display = 'flex';
+		buttonContainer.style.gap = '8px';
+		buttonContainer.style.justifyContent = 'flex-end';
+
+		const cancelButton = buttonContainer.createEl('button', { text: 'キャンセル' });
+		const submitButton = buttonContainer.createEl('button', { text: this.buttonText });
+		submitButton.addClass('mod-cta');
+
+		const submit = async () => {
+			const text = textarea.value.trim();
+			if (!text) {
+				this.result = null;
+				this.close();
+				return;
+			}
+
+			const gyazoUrls: string[] = [];
+			if (this.selectedFiles.length > 0 && this.gyazoService) {
+				submitButton.disabled = true;
+				submitButton.textContent = 'アップロード中...';
+				for (const file of this.selectedFiles) {
+					try {
+						const url = await this.gyazoService.uploadForUrl(file);
+						gyazoUrls.push(url);
+					} catch (e) {
+						console.error('Gyazo upload failed:', e);
+					}
+				}
+			}
+
+			this.result = { text, gyazoUrls, imageFiles: this.selectedFiles };
+			this.close();
+		};
+
+		cancelButton.addEventListener('click', () => {
+			this.result = null;
+			this.close();
+		});
+		submitButton.addEventListener('click', submit);
+
+		let isComposing = false;
+		textarea.addEventListener('compositionstart', () => { isComposing = true; });
+		textarea.addEventListener('compositionend', () => { isComposing = false; });
+		textarea.addEventListener('keydown', (e) => {
+			if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !isComposing) {
+				e.preventDefault();
+				submit();
+			} else if (e.key === 'Escape') {
+				this.result = null;
+				this.close();
+			}
+		});
+
+		requestAnimationFrame(() => requestAnimationFrame(() => textarea.focus()));
+	}
+
+	onClose() {
+		this.resolve(this.result);
+	}
 }
 
 export class BlueskyService {
@@ -16,25 +163,24 @@ export class BlueskyService {
     private plugin: Plugin;
 	private settings: CrystalPluginSettings;
 	private dailyNotesManager: DailyNotesManager;
+	private gyazoService: GyazoService | null;
 	private identifier: string;
 	private password: string;
 
-	constructor(app: App, plugin: Plugin, settings: CrystalPluginSettings, dailyNotesManager: DailyNotesManager) {
+	constructor(app: App, plugin: Plugin, settings: CrystalPluginSettings, dailyNotesManager: DailyNotesManager, gyazoService: GyazoService | null = null) {
 		this.app = app;
         this.plugin = plugin;
 		this.settings = settings;
 		this.dailyNotesManager = dailyNotesManager;
+		this.gyazoService = gyazoService;
 		this.identifier = settings.blueskyIdentifier || '';
 		this.password = settings.blueskyPassword || '';
-		
+
 		if (this.identifier && this.password) {
 			this.initializeAgent();
 		}
 	}
 
-	/**
-	 * エージェントを初期化してログインする
-	 */
 	private async initializeAgent(): Promise<void> {
 		try {
 			this.agent = new AtpAgent({
@@ -52,15 +198,12 @@ export class BlueskyService {
 		}
 	}
 
-	/**
-	 * 認証情報を更新してサービスを再初期化する
-	 */
 	async updateCredentials(identifier: string, password: string): Promise<void> {
 		this.identifier = identifier;
 		this.password = password;
 		this.settings.blueskyIdentifier = identifier;
 		this.settings.blueskyPassword = password;
-		
+
 		if (identifier && password) {
 			await this.initializeAgent();
 		} else {
@@ -73,19 +216,12 @@ export class BlueskyService {
 		await this.updateCredentials(settings.blueskyIdentifier, settings.blueskyPassword);
 	}
 
-	/**
-	 * サービスが利用可能かチェックする
-	 */
 	isAvailable(): boolean {
 		return this.identifier !== '' && this.password !== '';
 	}
 
-	/**
-	 * HTMLからOpen Graphメタデータを抽出する
-	 */
 	private extractMetadataFromHtml(html: string): UrlMetadata | null {
 		try {
-			// タイトルを抽出
 			let title = '';
 			const ogTitleMatch = html.match(/<meta[^>]*property=["\']og:title["\'][^>]*content=["\']([^"\']*)["\'][^>]*>/i);
 			if (ogTitleMatch) {
@@ -97,7 +233,6 @@ export class BlueskyService {
 				}
 			}
 
-			// 説明を抽出
 			let description = '';
 			const ogDescMatch = html.match(/<meta[^>]*property=["\']og:description["\'][^>]*content=["\']([^"\']*)["\'][^>]*>/i);
 			if (ogDescMatch) {
@@ -109,14 +244,12 @@ export class BlueskyService {
 				}
 			}
 
-			// 画像を抽出
 			let image = '';
 			const ogImageMatch = html.match(/<meta[^>]*property=["\']og:image["\'][^>]*content=["\']([^"\']*)["\'][^>]*>/i);
 			if (ogImageMatch) {
 				image = ogImageMatch[1];
 			}
 
-			// HTMLエンティティをデコード
 			title = this.decodeHtmlEntities(title);
 			description = this.decodeHtmlEntities(description);
 
@@ -131,9 +264,6 @@ export class BlueskyService {
 		}
 	}
 
-	/**
-	 * HTMLエンティティをデコードする
-	 */
 	private decodeHtmlEntities(text: string): string {
 		const entities: { [key: string]: string } = {
 			'&amp;': '&',
@@ -143,20 +273,14 @@ export class BlueskyService {
 			'&#39;': "'",
 			'&apos;': "'",
 		};
-		
+
 		return text.replace(/&[#\w]+;/g, (entity) => {
 			return entities[entity] || entity;
 		});
 	}
 
-	/**
-	 * URLのメタデータを取得する
-	 */
 	private async getUrlMetadata(url: string): Promise<UrlMetadata | null> {
 		try {
-			console.log(`URLのメタデータを取得中: ${url}`);
-			
-			// 直接URLにアクセスしてHTMLを取得
 			const response = await requestUrl({
 				url: url,
 				method: 'GET',
@@ -164,51 +288,31 @@ export class BlueskyService {
 					'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
 				}
 			});
-			
+
 			if (response.status !== 200) {
-				console.warn(`Failed to fetch URL: ${response.status}`);
 				return null;
 			}
-			
-			const html = response.text;
-			console.log(`HTML取得完了、文字数: ${html.length}`);
-			
-			// HTMLからメタデータを抽出
-			const metadata = this.extractMetadataFromHtml(html);
-			
-			if (!metadata) {
-				console.warn('No valid metadata found in HTML');
-				return null;
-			}
-			
-			console.log('メタデータ抽出成功:', metadata);
-			return metadata;
+
+			return this.extractMetadataFromHtml(response.text);
 		} catch (error) {
 			console.error('Error fetching URL metadata:', error);
 			return null;
 		}
 	}
 
-	/**
-	 * URLからembedカードを作成する
-	 */
 	private async createEmbedCard(url: string): Promise<any | null> {
 		if (!this.agent) return null;
 
 		try {
 			const metadata = await this.getUrlMetadata(url);
-			
-			// メタデータが取得できなかった場合は基本的なembedカードを作成
+
 			let title, description;
 			if (!metadata) {
-				console.log('メタデータ取得失敗、基本embedカードを作成');
-				// URLからドメインを抽出してタイトルにする
 				try {
 					const urlObj = new URL(url);
 					title = urlObj.hostname;
-					description = ''; // 説明なし
+					description = '';
 				} catch (urlError) {
-					console.warn('Invalid URL format:', urlError);
 					return null;
 				}
 			} else {
@@ -216,7 +320,6 @@ export class BlueskyService {
 				description = metadata.description || '';
 			}
 
-			// 画像がある場合はBlueskyにアップロード
 			let thumb;
 			if (metadata?.image) {
 				try {
@@ -224,22 +327,16 @@ export class BlueskyService {
 						url: metadata.image,
 						method: 'GET',
 					});
-					
+
 					if (imageResponse.status === 200) {
-						const arrayBuffer = imageResponse.arrayBuffer;
-						const uint8Array = new Uint8Array(arrayBuffer);
-						
-						// コンテンツタイプを推測（拡張子から）
+						const uint8Array = new Uint8Array(imageResponse.arrayBuffer);
 						let encoding = 'image/jpeg';
 						if (metadata.image.toLowerCase().includes('.png')) {
 							encoding = 'image/png';
 						} else if (metadata.image.toLowerCase().includes('.webp')) {
 							encoding = 'image/webp';
 						}
-						
-						const { data } = await this.agent.uploadBlob(uint8Array, { 
-							encoding: encoding
-						});
+						const { data } = await this.agent.uploadBlob(uint8Array, { encoding });
 						thumb = data.blob;
 					}
 				} catch (imageError) {
@@ -262,21 +359,13 @@ export class BlueskyService {
 		}
 	}
 
-	/**
-	 * テキストからURLを検出する
-	 */
 	private extractUrls(text: string): string[] {
 		const urlRegex = /https?:\/\/[^\s]+/g;
-		const urls = text.match(urlRegex) || [];
-		console.log(`Text: "${text}"`);
-		console.log(`Detected URLs:`, urls);
-		return urls;
+		return text.match(urlRegex) || [];
 	}
 
-	/**
-	 * Blueskyに投稿する
-	 */
-	async post(text: string): Promise<void> {
+	// imageFiles: up to 4 images; gyazoUrls: corresponding Gyazo URLs for daily note
+	async post(text: string, gyazoUrls: string[] = [], imageFiles: File[] = []): Promise<void> {
 		if (!this.isAvailable()) {
 			throw new Error('Bluesky認証情報が設定されていません');
 		}
@@ -286,33 +375,35 @@ export class BlueskyService {
 		}
 
 		try {
-			// RichTextを使ってリンクを自動検出
 			const rt = new RichText({ text });
 			await rt.detectFacets(this.agent!);
 
-			// URLを検出してembedカードを作成
-			const urls = this.extractUrls(text);
 			let embed;
-			if (urls.length > 0) {
-				console.log(`最初のURLでembedカードを作成中: ${urls[0]}`);
-				// 最初のURLでembedカードを作成
-				embed = await this.createEmbedCard(urls[0]);
-				if (embed) {
-					console.log('embedカード作成成功');
-				} else {
-					console.warn('embedカード作成失敗');
+			if (imageFiles.length > 0) {
+				const images = [];
+				for (const file of imageFiles.slice(0, MAX_IMAGES)) {
+					const arrayBuffer = await file.arrayBuffer();
+					const uint8Array = new Uint8Array(arrayBuffer);
+					const { data } = await this.agent!.uploadBlob(uint8Array, { encoding: file.type });
+					images.push({ image: data.blob, alt: '' });
 				}
+				embed = {
+					$type: 'app.bsky.embed.images',
+					images,
+				};
 			} else {
-				console.log('テキストにURLが見つかりませんでした');
+				const urls = this.extractUrls(text);
+				if (urls.length > 0) {
+					embed = await this.createEmbedCard(urls[0]);
+				}
 			}
 
-			// 投稿実行
 			const postRecord = {
 				$type: 'app.bsky.feed.post',
 				text: rt.text,
 				facets: rt.facets,
 				createdAt: new Date().toISOString(),
-				langs: ['ja'], // 日本語設定
+				langs: ['ja'],
 				...(embed && { embed }),
 			};
 
@@ -322,7 +413,7 @@ export class BlueskyService {
 				record: postRecord,
 			});
 
-			await this.appendPostToDailyNote(text);
+			await this.appendPostToDailyNote(text, gyazoUrls);
 
 		} catch (error) {
 			console.error('Error posting to Bluesky:', error);
@@ -330,7 +421,7 @@ export class BlueskyService {
 		}
 	}
 
-	private async appendPostToDailyNote(text: string): Promise<void> {
+	private async appendPostToDailyNote(text: string, gyazoUrls: string[]): Promise<void> {
 		if (!this.settings.blueskyAppendToDailyNote) {
 			return;
 		}
@@ -338,32 +429,28 @@ export class BlueskyService {
 			return;
 		}
 		try {
-			await this.dailyNotesManager.appendToTimeline(text, new Date(), 'blue');
+			const imagePart = gyazoUrls.map(url => `![](${url})`).join('\n');
+			const fullText = imagePart ? `${text}\n${imagePart}` : text;
+			await this.dailyNotesManager.appendToTimeline(fullText, new Date(), 'blue');
 		} catch (error) {
 			console.error('Failed to append Bluesky post to daily note:', error);
 		}
 	}
 
-	/**
-	 * Blueskyへ投稿せず、デイリーノートのタイムラインにだけ書き込む
-	 */
 	async promptAndAppendToDailyNote(): Promise<void> {
 		try {
-			const text = await promptForText(
-				this.app,
-				'デイリーノートに追加',
-				'投稿内容を入力してください',
-				'追加',
-				'',
-				true
-			);
+			const result = await new Promise<PostResult | null>((resolve) => {
+				new PostModal(this.app, 'デイリーノートに追加', '追加', this.gyazoService, resolve).open();
+			});
 
-			if (!text || !text.trim()) {
+			if (!result || !result.text.trim()) {
 				new Notice('内容が空のため、追加をキャンセルしました。');
 				return;
 			}
 
-			await this.dailyNotesManager.appendToTimeline(text);
+			const imagePart = result.gyazoUrls.map(url => `![](${url})`).join('\n');
+			const fullText = imagePart ? `${result.text}\n${imagePart}` : result.text;
+			await this.dailyNotesManager.appendToTimeline(fullText);
 			new Notice('デイリーノートのタイムラインに追加しました。');
 		} catch (error) {
 			console.error('Error in promptAndAppendToDailyNote:', error);
@@ -371,9 +458,6 @@ export class BlueskyService {
 		}
 	}
 
-	/**
-	 * テキスト入力ダイアログを表示してBlueskyに投稿する
-	 */
 	async promptAndPost(): Promise<void> {
 		if (!this.isAvailable()) {
 			new Notice('Bluesky認証情報が設定されていません。設定からユーザー名とアプリパスワードを入力してください。');
@@ -381,22 +465,17 @@ export class BlueskyService {
 		}
 
 		try {
-			const text = await promptForText(
-				this.app,
-				'Blueskyに投稿',
-				'投稿内容を入力してください（URLも自動でembedされます）',
-				'投稿',
-				'',
-                true
-			);
+			const result = await new Promise<PostResult | null>((resolve) => {
+				new PostModal(this.app, 'Blueskyに投稿', '投稿', this.gyazoService, resolve).open();
+			});
 
-			if (!text || !text.trim()) {
+			if (!result || !result.text.trim()) {
 				new Notice('投稿内容が空のため、投稿をキャンセルしました。');
 				return;
 			}
 
 			new Notice('Blueskyに投稿中...');
-			await this.post(text);
+			await this.post(result.text, result.gyazoUrls, result.imageFiles);
 			new Notice('Blueskyに投稿が完了しました！');
 
 		} catch (error) {
@@ -407,20 +486,20 @@ export class BlueskyService {
 
     async onload() {
         this.plugin.addCommand({
-        id: 'crystal-post-to-bluesky',
-        name: 'Post to Bluesky',
-        callback: () => {
-            this.promptAndPost();
-        }
-    });
+            id: 'crystal-post-to-bluesky',
+            name: 'Post to Bluesky',
+            callback: () => {
+                this.promptAndPost();
+            }
+        });
 
-    this.plugin.addCommand({
-        id: 'crystal-post-to-daily-note',
-        name: 'Post to Daily Note Timeline',
-        callback: () => {
-            this.promptAndAppendToDailyNote();
-        }
-    });
+        this.plugin.addCommand({
+            id: 'crystal-post-to-daily-note',
+            name: 'Post to Daily Note Timeline',
+            callback: () => {
+                this.promptAndAppendToDailyNote();
+            }
+        });
     }
 
 }

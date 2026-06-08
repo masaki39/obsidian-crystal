@@ -16,33 +16,31 @@ export class GyazoService {
 		this.imageProcessor.updateSettings(settings);
 	}
 
-	private async uploadBlob(blob: Blob, originalType: string, editor?: Editor): Promise<string> {
+	private async uploadToGyazo(blob: Blob, originalType: string): Promise<string> {
 		if (!this.settings.gyazoAccessToken) {
 			throw new Error('Gyazo access token is not configured. Please set it in plugin settings.');
 		}
-
 		const filename = this.imageProcessor.generateTimestampFilename('image', blob, originalType);
-
 		const formData = new FormData();
 		formData.append('access_token', this.settings.gyazoAccessToken);
 		formData.append('imagedata', blob, filename);
-
 		const response = await fetch('https://upload.gyazo.com/api/upload', {
 			method: 'POST',
 			body: formData,
 		});
-
 		if (!response.ok) {
 			throw new Error(`Gyazo upload failed: ${response.status} ${response.statusText}`);
 		}
-
 		const data = await response.json();
 		const url: string = data.url;
-
 		if (!url) {
 			throw new Error('Gyazo upload failed: no URL returned');
 		}
+		return url;
+	}
 
+	private async uploadBlob(blob: Blob, originalType: string, editor?: Editor): Promise<string> {
+		const url = await this.uploadToGyazo(blob, originalType);
 		if (editor) {
 			editor.replaceSelection(`![](${url})`);
 			new Notice('Image uploaded and inserted.');
@@ -50,8 +48,31 @@ export class GyazoService {
 			await navigator.clipboard.writeText(url);
 			new Notice('Image uploaded. URL copied to clipboard.');
 		}
-
 		return url;
+	}
+
+	async uploadForUrl(file: File): Promise<string> {
+		if (!file.type.startsWith('image/')) {
+			throw new Error('Only image files are supported');
+		}
+		let blob: Blob;
+		let originalType: string;
+		if (this.settings.autoWebpPaste) {
+			const processed = await this.imageProcessor.processImage(file);
+			blob = processed.blob;
+			originalType = processed.originalType;
+		} else {
+			blob = file;
+			originalType = file.type;
+		}
+		try {
+			const url = await this.uploadToGyazo(blob, originalType);
+			new Notice('Image uploaded to Gyazo.');
+			return url;
+		} catch (error) {
+			new Notice(`Upload failed: ${error.message}`);
+			throw error;
+		}
 	}
 
 	async uploadFile(file: File, editor?: Editor): Promise<string> {

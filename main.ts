@@ -64,8 +64,8 @@ export default class CrystalPlugin extends Plugin {
 		// Initialize services
 		this.geminiService = new GeminiService(this.app, this, this.settings);
 		this.dailyNotesManager = new DailyNotesManager(this.app, this.settings, this);
-		this.blueskyService = new BlueskyService(this.app, this, this.settings, this.dailyNotesManager);
 		this.gyazoService = new GyazoService(this.settings);
+		this.blueskyService = new BlueskyService(this.app, this, this.settings, this.dailyNotesManager, this.gyazoService);
 		this.imagePasteAndDropHandler = new ImagePasteAndDropHandler(this.app, this.settings, this);
 		this.editorCommands = new EditorCommands(this.app, this.settings, this);
 		this.quickAddCommands = new QuickAddCommands(this.app, this.settings);
