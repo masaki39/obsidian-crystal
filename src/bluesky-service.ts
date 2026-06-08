@@ -18,6 +18,22 @@ interface PostResult {
 
 const MAX_IMAGES = 4;
 
+function getImageDimensions(file: File): Promise<{ width: number; height: number }> {
+	return new Promise((resolve, reject) => {
+		const img = new Image();
+		const url = URL.createObjectURL(file);
+		img.onload = () => {
+			URL.revokeObjectURL(url);
+			resolve({ width: img.naturalWidth, height: img.naturalHeight });
+		};
+		img.onerror = () => {
+			URL.revokeObjectURL(url);
+			reject(new Error('Failed to load image'));
+		};
+		img.src = url;
+	});
+}
+
 class PostModal extends Modal {
 	private title: string;
 	private buttonText: string;
@@ -385,7 +401,13 @@ export class BlueskyService {
 					const arrayBuffer = await file.arrayBuffer();
 					const uint8Array = new Uint8Array(arrayBuffer);
 					const { data } = await this.agent!.uploadBlob(uint8Array, { encoding: file.type });
-					images.push({ image: data.blob, alt: '' });
+					let aspectRatio: { width: number; height: number } | undefined;
+					try {
+						aspectRatio = await getImageDimensions(file);
+					} catch {
+						// aspectRatio省略でも投稿可能
+					}
+					images.push({ image: data.blob, alt: '', ...(aspectRatio && { aspectRatio }) });
 				}
 				embed = {
 					$type: 'app.bsky.embed.images',
