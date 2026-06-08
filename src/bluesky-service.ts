@@ -73,21 +73,25 @@ class PostModal extends Modal {
 		imageRow.style.alignItems = 'flex-start';
 		imageRow.style.gap = '8px';
 		imageRow.style.marginBottom = '16px';
+		imageRow.style.flexWrap = 'wrap';
 
-		const uploadButton = imageRow.createEl('button', { text: `画像を選択 (最大${MAX_IMAGES}枚)` });
+		const uploadButton = imageRow.createEl('button', { text: `ファイルを選択` });
 		uploadButton.style.flexShrink = '0';
 
+		const clipboardButton = imageRow.createEl('button', { text: 'クリップボードから貼り付け' });
+		clipboardButton.style.flexShrink = '0';
+
 		const fileListEl = imageRow.createEl('ul');
+		fileListEl.style.width = '100%';
 		fileListEl.style.margin = '0';
 		fileListEl.style.padding = '0';
 		fileListEl.style.listStyle = 'none';
 		fileListEl.style.fontSize = '0.82em';
-		fileListEl.style.color = 'var(--text-muted)';
 
 		const refreshFileList = () => {
 			fileListEl.empty();
 			if (this.selectedFiles.length === 0) {
-				const li = fileListEl.createEl('li', { text: '未選択' });
+				const li = fileListEl.createEl('li', { text: `未選択 (最大${MAX_IMAGES}枚)` });
 				li.style.color = 'var(--text-muted)';
 			} else {
 				for (const file of this.selectedFiles) {
@@ -104,11 +108,39 @@ class PostModal extends Modal {
 			input.accept = 'image/*';
 			input.multiple = true;
 			input.addEventListener('change', () => {
-				const files = Array.from(input.files || []).slice(0, MAX_IMAGES);
-				this.selectedFiles = files;
+				const incoming = Array.from(input.files || []);
+				const remaining = MAX_IMAGES - this.selectedFiles.length;
+				this.selectedFiles = [...this.selectedFiles, ...incoming.slice(0, remaining)];
 				refreshFileList();
 			});
 			input.click();
+		});
+
+		clipboardButton.addEventListener('click', async () => {
+			if (this.selectedFiles.length >= MAX_IMAGES) {
+				new Notice(`画像は最大${MAX_IMAGES}枚まで選択できます`);
+				return;
+			}
+			try {
+				const items = await navigator.clipboard.read();
+				const imageTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+				for (const item of items) {
+					for (const type of item.types) {
+						if (imageTypes.includes(type)) {
+							const blob = await item.getType(type);
+							const ext = type.split('/')[1];
+							const file = new File([blob], `clipboard.${ext}`, { type });
+							this.selectedFiles = [...this.selectedFiles, file].slice(0, MAX_IMAGES);
+							refreshFileList();
+							return;
+						}
+					}
+				}
+				new Notice('クリップボードに画像が見つかりません');
+			} catch (e) {
+				new Notice('クリップボードの読み取りに失敗しました');
+				console.error('Clipboard read failed:', e);
+			}
 		});
 
 		const buttonContainer = contentEl.createDiv();
