@@ -34,11 +34,35 @@ function getImageDimensions(file: File): Promise<{ width: number; height: number
 	});
 }
 
+class ImagePreviewModal extends Modal {
+	private src: string;
+	constructor(app: App, src: string) {
+		super(app);
+		this.src = src;
+	}
+	onOpen() {
+		const { contentEl } = this;
+		contentEl.style.padding = '0';
+		this.modalEl.style.width = 'auto';
+		this.modalEl.style.maxWidth = '90vw';
+		const img = contentEl.createEl('img');
+		img.src = this.src;
+		img.style.width = 'auto';
+		img.style.maxWidth = '90vw';
+		img.style.maxHeight = '85vh';
+		img.style.display = 'block';
+	}
+	onClose() {
+		this.contentEl.empty();
+	}
+}
+
 class PostModal extends Modal {
 	private title: string;
 	private buttonText: string;
 	private gyazoService: GyazoService | null;
 	private selectedFiles: File[] = [];
+	private objectUrls: string[] = [];
 	private result: PostResult | null = null;
 	private resolve: (result: PostResult | null) => void;
 
@@ -68,12 +92,14 @@ class PostModal extends Modal {
 		textarea.style.marginBottom = '8px';
 		textarea.placeholder = '投稿内容を入力してください';
 
-		const imageRow = contentEl.createDiv();
+		const imageSection = contentEl.createDiv();
+		imageSection.style.marginBottom = '16px';
+
+		const imageRow = imageSection.createDiv();
 		imageRow.style.display = 'flex';
 		imageRow.style.alignItems = 'flex-start';
 		imageRow.style.gap = '8px';
-		imageRow.style.marginBottom = '16px';
-		imageRow.style.flexWrap = 'wrap';
+		imageRow.style.marginBottom = '8px';
 
 		const uploadButton = imageRow.createEl('button', { text: `ファイルを選択` });
 		uploadButton.style.flexShrink = '0';
@@ -81,26 +107,76 @@ class PostModal extends Modal {
 		const clipboardButton = imageRow.createEl('button', { text: 'クリップボードから貼り付け' });
 		clipboardButton.style.flexShrink = '0';
 
-		const fileListEl = imageRow.createEl('ul');
-		fileListEl.style.width = '100%';
-		fileListEl.style.margin = '0';
-		fileListEl.style.padding = '0';
-		fileListEl.style.listStyle = 'none';
-		fileListEl.style.fontSize = '0.82em';
+		const previewEl = imageSection.createDiv();
+		previewEl.style.display = 'flex';
+		previewEl.style.flexWrap = 'wrap';
+		previewEl.style.gap = '6px';
+		previewEl.style.alignItems = 'flex-start';
 
-		const refreshFileList = () => {
-			fileListEl.empty();
+		const refreshPreview = () => {
+			for (const url of this.objectUrls) {
+				URL.revokeObjectURL(url);
+			}
+			this.objectUrls = [];
+			previewEl.empty();
+
 			if (this.selectedFiles.length === 0) {
-				const li = fileListEl.createEl('li', { text: `未選択 (最大${MAX_IMAGES}枚)` });
-				li.style.color = 'var(--text-muted)';
-			} else {
-				for (const file of this.selectedFiles) {
-					const li = fileListEl.createEl('li', { text: file.name });
-					li.style.color = 'var(--text-normal)';
-				}
+				const placeholder = previewEl.createEl('span', { text: `未選択 (最大${MAX_IMAGES}枚)` });
+				placeholder.style.color = 'var(--text-muted)';
+				placeholder.style.fontSize = '0.82em';
+				placeholder.style.alignSelf = 'center';
+				return;
+			}
+
+			for (let i = 0; i < this.selectedFiles.length; i++) {
+				const file = this.selectedFiles[i];
+				const url = URL.createObjectURL(file);
+				this.objectUrls.push(url);
+
+				const wrapper = previewEl.createDiv();
+				wrapper.style.position = 'relative';
+				wrapper.style.width = '64px';
+				wrapper.style.height = '64px';
+				wrapper.style.flexShrink = '0';
+				wrapper.style.cursor = 'pointer';
+
+				const img = wrapper.createEl('img');
+				img.src = url;
+				img.style.width = '64px';
+				img.style.height = '64px';
+				img.style.objectFit = 'cover';
+				img.style.borderRadius = '4px';
+				img.style.display = 'block';
+
+				img.addEventListener('click', (e) => {
+					e.stopPropagation();
+					new ImagePreviewModal(this.app, url).open();
+				});
+
+				const removeBtn = wrapper.createEl('button', { text: '×' });
+				removeBtn.style.position = 'absolute';
+				removeBtn.style.top = '2px';
+				removeBtn.style.right = '2px';
+				removeBtn.style.width = '18px';
+				removeBtn.style.height = '18px';
+				removeBtn.style.padding = '0';
+				removeBtn.style.lineHeight = '1';
+				removeBtn.style.fontSize = '12px';
+				removeBtn.style.cursor = 'pointer';
+				removeBtn.style.background = 'rgba(0,0,0,0.55)';
+				removeBtn.style.color = '#fff';
+				removeBtn.style.border = 'none';
+				removeBtn.style.borderRadius = '50%';
+
+				const capturedIndex = i;
+				removeBtn.addEventListener('click', (e) => {
+					e.stopPropagation();
+					this.selectedFiles = this.selectedFiles.filter((_, idx) => idx !== capturedIndex);
+					refreshPreview();
+				});
 			}
 		};
-		refreshFileList();
+		refreshPreview();
 
 		uploadButton.addEventListener('click', () => {
 			const input = document.createElement('input');
@@ -111,7 +187,7 @@ class PostModal extends Modal {
 				const incoming = Array.from(input.files || []);
 				const remaining = MAX_IMAGES - this.selectedFiles.length;
 				this.selectedFiles = [...this.selectedFiles, ...incoming.slice(0, remaining)];
-				refreshFileList();
+				refreshPreview();
 			});
 			input.click();
 		});
@@ -131,7 +207,7 @@ class PostModal extends Modal {
 							const ext = type.split('/')[1];
 							const file = new File([blob], `clipboard.${ext}`, { type });
 							this.selectedFiles = [...this.selectedFiles, file].slice(0, MAX_IMAGES);
-							refreshFileList();
+							refreshPreview();
 							return;
 						}
 					}
@@ -201,6 +277,10 @@ class PostModal extends Modal {
 	}
 
 	onClose() {
+		for (const url of this.objectUrls) {
+			URL.revokeObjectURL(url);
+		}
+		this.objectUrls = [];
 		this.resolve(this.result);
 	}
 }

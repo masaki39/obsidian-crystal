@@ -6,6 +6,16 @@ import * as path from 'path';
 class RuleSuggestModal extends SuggestModal<FileOrganizationRule> {
 	constructor(app: App, private rules: FileOrganizationRule[], private onChoose: (rule: FileOrganizationRule) => void) {
 		super(app);
+		this.scope.register(["Ctrl"], "j", () => {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			(this as any).chooser.moveDown(1);
+			return false;
+		});
+		this.scope.register(["Ctrl"], "k", () => {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			(this as any).chooser.moveUp(1);
+			return false;
+		});
 	}
 
 	getSuggestions(query: string): FileOrganizationRule[] {
