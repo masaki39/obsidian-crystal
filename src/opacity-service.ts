@@ -13,7 +13,7 @@ export class OpacityService {
 
 		this.plugin.addCommand({
 			id: 'crystal-toggle-window-opacity',
-			name: 'Toggle window opacity',
+			name: 'Window: Toggle opacity',
 			callback: async () => {
 				const next = this.plugin.settings.windowOpacity < 1.0 ? 1.0 : 0.9;
 				this.plugin.settings.windowOpacity = next;

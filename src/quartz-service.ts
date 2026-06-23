@@ -47,7 +47,7 @@ export class QuartzService {
     async onload() {
         this.plugin.addCommand({
             id: 'crystal-quartz-sync',
-            name: 'Quartz Sync',
+            name: 'Quartz: Sync',
             callback: () => {
                 this.quartzSync();
             }
@@ -55,7 +55,7 @@ export class QuartzService {
 
         this.plugin.addCommand({
             id: 'crystal-quartz-open-site',
-            name: `Open Quartz Site (${this.settings.quartzSiteName})`,
+            name: `Quartz: Open site (${this.settings.quartzSiteName})`,
             callback: () => {
                 this.openQuartzSite();
             }
@@ -63,7 +63,7 @@ export class QuartzService {
 
         this.plugin.addCommand({
             id: 'crystal-quartz-sync-and-open-site',
-            name: `Quartz Sync and Open Site (${this.settings.quartzSiteName})`,
+            name: `Quartz: Sync and open site (${this.settings.quartzSiteName})`,
             callback: () => {
                 this.quartzSyncAndOpenSite();
             }

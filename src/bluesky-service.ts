@@ -621,7 +621,7 @@ export class BlueskyService {
     async onload() {
         this.plugin.addCommand({
             id: 'crystal-post-to-bluesky',
-            name: 'Post to Bluesky',
+            name: 'Bluesky: Post to Bluesky',
             callback: () => {
                 this.promptAndPost();
             }
@@ -629,7 +629,7 @@ export class BlueskyService {
 
         this.plugin.addCommand({
             id: 'crystal-post-to-daily-note',
-            name: 'Post to Daily Note Timeline',
+            name: 'Bluesky: Post to daily note timeline',
             callback: () => {
                 this.promptAndAppendToDailyNote();
             }

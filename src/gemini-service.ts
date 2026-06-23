@@ -1,61 +1,33 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { App, Editor, MarkdownView, Notice, TFile, Plugin } from 'obsidian';
-import { CrystalPluginSettings, DEFAULT_SETTINGS } from './settings';
+import { CrystalPluginSettings } from './settings';
+import { AIService } from './ai-service';
 import { promptForText } from './utils';
-import { AnkiService } from './anki-service';
+
+const AI_KEY_MISSING_NOTICE = 'AIのAPIキーが設定されていません。設定でプロバイダーとAPIキーを確認してください。';
 
 export class GeminiService {
-	private genAI: GoogleGenerativeAI | null = null;
+	private ai: AIService;
 	private app: App;
 	private plugin: Plugin;
-	private settings: CrystalPluginSettings | null = null;
 
 	constructor(app: App, plugin: Plugin, settings: CrystalPluginSettings) {
 		this.app = app;
 		this.plugin = plugin;
-		this.updateSettings(settings);
-	}
-
-	/**
-	 * APIキーを更新してサービスを再初期化する
-	 */
-	updateApiKey(apiKey: string): void {
-		if (apiKey) {
-			this.genAI = new GoogleGenerativeAI(apiKey);
-		} else {
-			this.genAI = null;
-		}
+		this.ai = new AIService(settings);
 	}
 
 	/**
 	 * 設定に基づいてサービスを更新する
 	 */
 	updateSettings(settings: CrystalPluginSettings): void {
-		this.settings = settings;
-		this.updateApiKey(settings.GeminiAPIKey || '');
+		this.ai.updateSettings(settings);
 	}
 
 	/**
-	 * Geminiサービスが利用可能かチェックする
+	 * 選択中のAIプロバイダーが利用可能かチェックする
 	 */
 	isAvailable(): boolean {
-		return this.genAI !== null;
-	}
-
-	/**
-	 * 設定からモデル名を取得する（設定がない場合はデフォルトモデルを返す）
-	 */
-	private getModelName(): string {
-		return this.settings?.GeminiModel || DEFAULT_SETTINGS.GeminiModel;
-	}
-
-	private getResponseText(response: any): string {
-		const parts = response.candidates?.[0]?.content?.parts ?? [];
-		if (parts.length === 0) return response.text();
-		return parts
-			.filter((p: any) => !p.thought)
-			.map((p: any) => p.text ?? '')
-			.join('');
+		return this.ai.isAvailable();
 	}
 
 	/**
@@ -84,30 +56,20 @@ export class GeminiService {
 	}
 
 	/**
-	 * Gemini APIを使用してdescriptionを生成する
+	 * AIを使用してdescriptionを生成する
 	 */
 	async generateDescription(title: string, content: string): Promise<string> {
-		if (!this.genAI) {
-			throw new Error('Gemini API Key is not configured');
-		}
-
 		try {
-			const model = this.genAI.getGenerativeModel({ model: this.getModelName() });
-			
 			const prompt = `以下のMarkdownファイルの内容を読んで、一文で簡潔な説明（description）を日本語で生成してください。検索用のキーワードを意識した説明にしてください。説明のみを出力し、余計な文言は含めないでください。
 ファイル名:
 ${title}
 ファイル内容:
 ${content}`;
 
-			const result = await model.generateContent(prompt);
-			const response = await result.response;
-			const text = this.getResponseText(response);
-			
-			return text.trim();
+			return await this.ai.generateText(prompt);
 		} catch (error) {
 			console.error('Error generating description:', error);
-			throw new Error('Failed to generate description with Gemini API');
+			throw new Error('Failed to generate description');
 		}
 	}
 
@@ -115,11 +77,11 @@ ${content}`;
 	 * 現在のファイルでdescription生成を実行する
 	 */
 	async generateDescriptionForCurrentFile(
-		editor: Editor, 
+		editor: Editor,
 		view: MarkdownView
 	): Promise<void> {
 		if (!this.isAvailable()) {
-			new Notice('Gemini API Keyが設定されていません。設定からAPIキーを入力してください。');
+			new Notice(AI_KEY_MISSING_NOTICE);
 			return;
 		}
 
@@ -135,7 +97,7 @@ ${content}`;
 			const titleForAnalysis = view.file.basename;
 			const contentForAnalysis = await this.getContentWithoutFrontmatter(view.file);
 
-			// Geminiを使用してdescriptionを生成
+			// AIを使用してdescriptionを生成
 			const description = await this.generateDescription(titleForAnalysis, contentForAnalysis);
 
 			// フロントマターを更新
@@ -151,34 +113,30 @@ ${content}`;
 
 	async translateSelectedText(editor: Editor, view: MarkdownView): Promise<void> {
 		if (!this.isAvailable()) {
-			new Notice('Gemini API Keyが設定されていません。設定からAPIキーを入力してください。');
+			new Notice(AI_KEY_MISSING_NOTICE);
 			return;
 		}
 
 		const selectedText = editor.getSelection();
-		
+
 		if (!selectedText.trim()) {
 			new Notice('選択されたテキストが空のため、翻訳できません。');
 			return;
 		}
-		
+
 		try {
 			new Notice('翻訳中...');
-			
-			const model = this.genAI!.getGenerativeModel({ model: this.getModelName() });
-			
+
 			const prompt = `以下のテキストを翻訳してください。日本語の場合は英語に、英語の場合は日本語に翻訳してください。翻訳結果のみを出力し、余計な説明は含めないでください。
 
 ${selectedText}`;
 
-			const result = await model.generateContent(prompt);
-			const response = await result.response;
-			const translatedText = this.getResponseText(response).trim();
-			
+			const translatedText = await this.ai.generateText(prompt);
+
 			// 選択範囲を翻訳結果で置換
 			editor.replaceSelection(translatedText);
 			new Notice(`翻訳完了: ${translatedText}`);
-			
+
 		} catch (error) {
 			console.error('Error translating text:', error);
 			new Notice(`翻訳エラー: ${error.message}`);
@@ -187,25 +145,25 @@ ${selectedText}`;
 
 	async translateAdjacentText(editor: Editor, view: MarkdownView, direction: 'above' | 'below'): Promise<void> {
 		if (!this.isAvailable()) {
-			new Notice('Gemini API Keyが設定されていません。設定からAPIキーを入力してください。');
+			new Notice(AI_KEY_MISSING_NOTICE);
 			return;
 		}
-		
+
 		const cursor = editor.getCursor();
 		const currentLine = cursor.line;
 		const totalLines = editor.lineCount();
-		
+
 		// 境界チェック
 		if (direction === 'above' && currentLine === 0) {
 			new Notice('カーソルが最初の行にあるため、上の行が存在しません。');
 			return;
 		}
-		
+
 		if (direction === 'below' && currentLine === totalLines - 1) {
 			new Notice('カーソルが最後の行にあるため、下の行が存在しません。');
 			return;
 		}
-		
+
 		// 隣接行のテキストを取得
 		const targetLineIndex = direction === 'above' ? currentLine - 1 : currentLine + 1;
 		const targetLineText = editor.getLine(targetLineIndex);
@@ -216,21 +174,17 @@ ${selectedText}`;
 			new Notice(`${directionText}の行が空行のため、翻訳できません。`);
 			return;
 		}
-		
+
 		try {
 			const directionText = direction === 'above' ? '上' : '下';
 			new Notice(`${directionText}の行を翻訳中...`);
-			
-			const model = this.genAI!.getGenerativeModel({ model: this.getModelName() });
-			
+
 			const prompt = `以下のテキストを翻訳してください。日本語の場合は英語に、英語の場合は日本語に翻訳してください。翻訳結果のみを出力し、余計な説明は含めないでください。
 
 ${targetLinePureText}`;
 
-			const result = await model.generateContent(prompt);
-			const response = await result.response;
-			const translatedText = this.getResponseText(response).trim();
-			
+			const translatedText = await this.ai.generateText(prompt);
+
 
 			if (editor.getSelection()) {
 				// 選択範囲を翻訳結果で置換
@@ -239,9 +193,9 @@ ${targetLinePureText}`;
 				// カーソル位置に翻訳結果を挿入
 				editor.replaceRange(translatedText, cursor);
 			}
-			
+
 			new Notice(`翻訳完了: ${translatedText}`);
-			
+
 		} catch (error) {
 			console.error('Error translating text:', error);
 			new Notice(`翻訳エラー: ${error.message}`);
@@ -257,7 +211,7 @@ ${targetLinePureText}`;
 	}
 
 	private async promptRewriteInstruction(mode: 'replace' | 'append'): Promise<string | null> {
-		const title = mode === 'append' ? 'Geminiへの追記指示' : 'Geminiへの書き換え指示';
+		const title = mode === 'append' ? 'AIへの追記指示' : 'AIへの書き換え指示';
 		const placeholder =
 			mode === 'append'
 				? '例: 要約を3行で追加してください / 次の手順を書いてください'
@@ -279,7 +233,7 @@ ${targetLinePureText}`;
 		mode: 'replace' | 'append'
 	): Promise<void> {
 		if (!this.isAvailable()) {
-			new Notice('Gemini API Keyが設定されていません。設定からAPIキーを入力してください。');
+			new Notice(AI_KEY_MISSING_NOTICE);
 			return;
 		}
 
@@ -315,16 +269,13 @@ ${instruction}
 ${targetText}`;
 
 		try {
-			new Notice('Geminiで書き換え中...');
-			const model = this.genAI!.getGenerativeModel({ model: this.getModelName() });
+			new Notice('AIで書き換え中...');
 			const prompt = mode === 'replace' ? basePromptReplace : basePromptAppend;
 
-			const result = await model.generateContent(prompt);
-			const response = await result.response;
-			const rewritten = this.getResponseText(response).trim();
+			const rewritten = await this.ai.generateText(prompt);
 
 			if (!rewritten) {
-				new Notice('Geminiから結果が返りませんでした。');
+				new Notice('AIから結果が返りませんでした。');
 				return;
 			}
 
@@ -349,7 +300,7 @@ ${targetText}`;
 
 	async grammarCheckCurrentLine(editor: Editor, view: MarkdownView): Promise<void> {
 		if (!this.isAvailable()) {
-			new Notice('Gemini API Keyが設定されていません。設定からAPIキーを入力してください。');
+			new Notice(AI_KEY_MISSING_NOTICE);
 			return;
 		}
 
@@ -375,15 +326,11 @@ ${targetText}`;
 		try {
 			new Notice('文法チェック中...');
 
-			const model = this.genAI!.getGenerativeModel({ model: this.getModelName() });
-
 			const prompt = `以下のテキストの文法をチェックして、より自然で正しい文に校正してください。言語は変更せず、日本語の場合は日本語のまま、英語の場合は英語のまま校正してください。校正結果のみを出力し、余計な説明は含めないでください。
 
 ${pureText}`;
 
-			const result = await model.generateContent(prompt);
-			const response = await result.response;
-			const correctedText = this.getResponseText(response).trim();
+			const correctedText = await this.ai.generateText(prompt);
 
 			// インデントを保持して校正結果を適用
 			const finalText = indent + correctedText;
@@ -399,42 +346,9 @@ ${pureText}`;
 		}
 	}
 
-	async addNoteToAnki() {
-		if (!this.isAvailable()) {
-			new Notice('Gemini API Keyが設定されていません。設定からAPIキーを入力してください。');
-			return;
-		}
-		const front = await promptForText(this.app, '表面', '英単語を入力してください', '追加', this.app.workspace.getActiveViewOfType(MarkdownView)?.editor?.getSelection() || '');
-        if (!front) {
-			return;
-        }
-		const model = this.genAI!.getGenerativeModel({ model: this.getModelName() });
-		const prompt = `以下のテキストの日本語訳を出力してください。日本語訳のみを出力し、余計な説明は含めないでください。複数の意味がある場合はコンマ+半角スペース区切り(, )にしてください。不明の場合は何も返さないでください('')。
-		
-${front}`;
-        const result = await model.generateContent(prompt);
-		if (!result){
-			new Notice(`不明な英単語`);
-			return;
-		}
-        const response = await result.response;
-        const translatedText = this.getResponseText(response).trim();
-        const back = await promptForText(this.app, '裏面', '日本語を入力してください', '追加', translatedText);
-        if (!back) {
-			return;
-        }
-		const ankiService = new AnkiService(this.app);
-		await ankiService.addNote(front, back);
-        new Notice('Note added to Anki');
-
-	}
-
 	async generateGitSummary(diff: string, date: string): Promise<string> {
-		if (!this.genAI) throw new Error('Gemini API Key is not configured');
-		const model = this.genAI.getGenerativeModel({ model: this.getModelName() });
 		const prompt = `${date}の活動内容について、以下のgit diffを読んで1〜2文の日本語で簡潔に要約してください。要約のみを出力し、余計な説明は含めないでください。\n\n${diff}`;
-		const result = await model.generateContent(prompt);
-		return this.getResponseText(result.response).trim();
+		return await this.ai.generateText(prompt);
 	}
 
 	async onload() {
@@ -442,7 +356,7 @@ ${front}`;
 		// AI Description Generation Command
 		this.plugin.addCommand({
 			id: 'crystal-generate-description',
-			name: 'Generate Description for Current File',
+			name: 'AI: Generate description for current file',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.generateDescriptionForCurrentFile(editor, view);
 			}
@@ -451,7 +365,7 @@ ${front}`;
 		// AI Translate Selected Text Command
 		this.plugin.addCommand({
 			id: 'crystal-translate-selected-text',
-			name: 'Translate Selected Text',
+			name: 'AI: Translate selected text',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.translateSelectedText(editor, view);
 			}
@@ -460,7 +374,7 @@ ${front}`;
 		// AI Translate Above Cursor Text Command
 		this.plugin.addCommand({
 			id: 'crystal-translate-above-cursor-text',
-			name: 'Translate Above Cursor Text',
+			name: 'AI: Translate above cursor text',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.translateAboveCursorText(editor, view);
 			}
@@ -469,7 +383,7 @@ ${front}`;
 		// AI Grammar Check Command
 		this.plugin.addCommand({
 			id: 'crystal-grammar-check-current-line',
-			name: 'Grammar Check Current Line',
+			name: 'AI: Grammar check current line',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.grammarCheckCurrentLine(editor, view);
 			}
@@ -478,7 +392,7 @@ ${front}`;
 
 		this.plugin.addCommand({
 			id: 'crystal-translate-below-cursor-text',
-			name: 'Translate Below Cursor Text',
+			name: 'AI: Translate below cursor text',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.translateBelowCursorText(editor, view);
 			}
@@ -487,7 +401,7 @@ ${front}`;
 		// Rewrite selected text or whole note (replace)
 		this.plugin.addCommand({
 			id: 'crystal-gemini-rewrite-replace',
-			name: 'Gemini Rewrite (Replace selection or whole note)',
+			name: 'AI: Rewrite (replace selection or whole note)',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.rewriteWithInstruction(editor, view, 'replace');
 			}
@@ -496,10 +410,10 @@ ${front}`;
 		// Rewrite selected text or whole note (append result)
 		this.plugin.addCommand({
 			id: 'crystal-gemini-rewrite-append',
-			name: 'Gemini Rewrite (Append result at end)',
+			name: 'AI: Rewrite (append result at end)',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.rewriteWithInstruction(editor, view, 'append');
 			}
 		});
 	}
-} 
+}

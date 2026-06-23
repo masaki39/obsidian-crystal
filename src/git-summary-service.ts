@@ -39,7 +39,7 @@ export class GitSummaryService {
 
     async generateSummary(): Promise<void> {
         if (!this.geminiService.isAvailable()) {
-            new Notice('Gemini API Keyが設定されていません。設定からAPIキーを入力してください。');
+            new Notice('AIのAPIキーが設定されていません。設定でプロバイダーとAPIキーを確認してください。');
             return;
         }
 
@@ -87,7 +87,7 @@ export class GitSummaryService {
                 return;
             }
 
-            new Notice('Geminiでサマリーを生成中...');
+            new Notice('AIでサマリーを生成中...');
             const summary = await this.geminiService.generateGitSummary(diff, dateStr);
 
             // 書き込み先: デイリーノートならそのファイル、そうでなければ今日のデイリーノート
@@ -116,7 +116,7 @@ export class GitSummaryService {
     onload(): void {
         this.plugin.addCommand({
             id: 'crystal-generate-git-commit-summary',
-            name: 'Generate Git Commit Summary',
+            name: 'AI: Generate git commit summary',
             callback: () => {
                 this.generateSummary();
             }

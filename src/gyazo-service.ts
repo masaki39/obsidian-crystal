@@ -1,6 +1,16 @@
-import { Notice, Editor } from 'obsidian';
+import { Notice, Editor, requestUrl } from 'obsidian';
 import { ImageProcessor } from './image-processor';
 import { CrystalPluginSettings } from './settings';
+
+export const EXTENSION_TO_MIME: Record<string, string> = {
+	png: 'image/png',
+	jpg: 'image/jpeg',
+	jpeg: 'image/jpeg',
+	gif: 'image/gif',
+	webp: 'image/webp',
+	bmp: 'image/bmp',
+	svg: 'image/svg+xml',
+};
 
 export class GyazoService {
 	private settings: CrystalPluginSettings;
@@ -49,6 +59,64 @@ export class GyazoService {
 			new Notice('Image uploaded. URL copied to clipboard.');
 		}
 		return url;
+	}
+
+	/**
+	 * Fetch a remote image by URL and upload it to Gyazo.
+	 * Uses Obsidian's requestUrl to bypass CORS restrictions.
+	 * Returns the resulting Gyazo URL.
+	 */
+	async uploadFromUrl(imageUrl: string): Promise<string> {
+		const response = await requestUrl({ url: imageUrl, method: 'GET' });
+		if (response.status < 200 || response.status >= 300) {
+			throw new Error(`Failed to fetch image: ${response.status}`);
+		}
+
+		const type = this.resolveImageType(response.headers, imageUrl);
+		if (!type) {
+			throw new Error('Fetched resource is not a recognized image');
+		}
+
+		return await this.uploadRawBlob(new Blob([response.arrayBuffer], { type }), type);
+	}
+
+	/**
+	 * Upload raw binary image data (e.g. a local vault file) to Gyazo.
+	 * Returns the resulting Gyazo URL.
+	 */
+	async uploadBinary(data: ArrayBuffer, mimeType: string): Promise<string> {
+		return await this.uploadRawBlob(new Blob([data], { type: mimeType }), mimeType);
+	}
+
+	/**
+	 * Apply WebP conversion (when enabled) and upload a blob to Gyazo.
+	 */
+	private async uploadRawBlob(blob: Blob, type: string): Promise<string> {
+		let finalBlob = blob;
+		let originalType = type;
+
+		if (this.settings.autoWebpPaste) {
+			const processed = await this.imageProcessor.processImage(blob, false);
+			finalBlob = processed.blob;
+			originalType = processed.originalType;
+		}
+
+		return await this.uploadToGyazo(finalBlob, originalType);
+	}
+
+	/**
+	 * Determine the image MIME type from response headers, falling back to the URL extension.
+	 */
+	private resolveImageType(headers: Record<string, string>, imageUrl: string): string | null {
+		const headerValue = Object.keys(headers).find(key => key.toLowerCase() === 'content-type');
+		const contentType = headerValue ? headers[headerValue].split(';')[0].trim().toLowerCase() : '';
+		if (contentType.startsWith('image/')) {
+			return contentType;
+		}
+
+		const pathname = imageUrl.split(/[?#]/)[0];
+		const extension = pathname.split('.').pop()?.toLowerCase() ?? '';
+		return EXTENSION_TO_MIME[extension] ?? null;
 	}
 
 	async uploadForUrl(file: File): Promise<string> {

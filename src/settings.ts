@@ -10,8 +10,11 @@ export interface FileOrganizationRule {
 
 export interface CrystalPluginSettings {
 	exportFolderPath: string;
+	aiProvider: 'gemini' | 'openai';
 	GeminiAPIKey: string;
 	GeminiModel: string;
+	OpenAIAPIKey: string;
+	OpenAIModel: string;
 	blueskyIdentifier: string;
 	blueskyPassword: string;
 	blueskyAppendToDailyNote: boolean;
@@ -33,15 +36,17 @@ export interface CrystalPluginSettings {
 	quartzPath: string;
 	quartzSiteName: string;
 	githubUserName: string;
-	shortcutNames: string;
 	fileOrganizationRules: FileOrganizationRule[];
 	windowOpacity: number;
 }
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	exportFolderPath: '',
+	aiProvider: 'openai',
 	GeminiAPIKey: '',
 	GeminiModel: 'gemini-flash-latest',
+	OpenAIAPIKey: '',
+	OpenAIModel: 'gpt-4o-mini',
 	blueskyIdentifier: '',
 	blueskyPassword: '',
 	blueskyAppendToDailyNote: false,
@@ -63,7 +68,6 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	quartzPath: '',
 	quartzSiteName: '',
 	githubUserName: '',
-	shortcutNames: '',
 	fileOrganizationRules: [],
 	windowOpacity: 1.0,
 }
@@ -131,8 +135,39 @@ export class CrystalSettingTab extends PluginSettingTab {
 
 		this.textSetting(containerEl, 'Export Folder Path', 'Folder where this plugin exports files (used by PDF and Marp features)', 'exportFolderPath', 'Enter Export Folder Path');
 
-		// Gemini settings
-		containerEl.createEl('h3', { text: 'Gemini Editor Commands' });
+		// AI settings
+		containerEl.createEl('h3', { text: 'AI Editor Commands' });
+
+		new Setting(containerEl)
+			.setName('AI Provider')
+			.setDesc('Select which AI provider to use for editor commands')
+			.addDropdown(dropdown => dropdown
+				.addOption('openai', 'OpenAI')
+				.addOption('gemini', 'Gemini')
+				.setValue(this.plugin.settings.aiProvider)
+				.onChange(async (value) => {
+					this.plugin.settings.aiProvider = value as 'gemini' | 'openai';
+					await this.plugin.saveSettings();
+				}));
+
+		this.secretSetting(containerEl, 'OpenAI API Key', 'Enter your OpenAI API Key', 'crystal-openai-api-key', 'Enter your OpenAI API Key', 'OpenAIAPIKey');
+
+		new Setting(containerEl)
+			.setName('OpenAI Model')
+			.setDesc('Select the OpenAI model to use')
+			.addDropdown(dropdown => dropdown
+				.addOption('gpt-5', 'gpt-5')
+				.addOption('gpt-5-mini', 'gpt-5-mini')
+				.addOption('gpt-5-nano', 'gpt-5-nano')
+				.addOption('gpt-4.1', 'gpt-4.1')
+				.addOption('gpt-4.1-mini', 'gpt-4.1-mini')
+				.addOption('gpt-4o', 'gpt-4o')
+				.addOption('gpt-4o-mini', 'gpt-4o-mini')
+				.setValue(this.plugin.settings.OpenAIModel)
+				.onChange(async (value) => {
+					this.plugin.settings.OpenAIModel = value;
+					await this.plugin.saveSettings();
+				}));
 
 		this.secretSetting(containerEl, 'Gemini API Key', 'Enter your Gemini API Key', 'crystal-gemini-api-key', 'Enter your Gemini API Key', 'GeminiAPIKey');
 
@@ -248,20 +283,6 @@ export class CrystalSettingTab extends PluginSettingTab {
 		this.textSetting(containerEl, 'Path to Local Repository of Quartz', 'Path to Quartz (absolute path)', 'quartzPath', 'Enter Quartz Folder Path');
 		this.textSetting(containerEl, 'Quartz Site Name', 'Name of the Quartz site', 'quartzSiteName', 'Enter Quartz Site Name');
 		this.textSetting(containerEl, 'Github User Name', 'Github user name', 'githubUserName', 'Enter Github User Name');
-
-		// Shortcut settings
-		containerEl.createEl('h3', { text: 'Shortcuts' });
-
-		new Setting(containerEl)
-			.setName('Shortcut Names')
-			.setDesc('Names of the shortcuts (one per line). Restart Obsidian to apply changes.')
-			.addTextArea(textarea => textarea
-				.setPlaceholder('Enter Shortcut Names (one per line)')
-				.setValue(this.plugin.settings.shortcutNames)
-				.onChange(async (value) => {
-					this.plugin.settings.shortcutNames = value;
-					await this.plugin.saveSettings();
-				}));
 
 		// File Organization Rules settings
 		containerEl.createEl('h3', { text: 'File Organization Rules' });

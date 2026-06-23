@@ -30,7 +30,7 @@ export class MacroCommands {
 	onload() {
 		this.plugin.addCommand({
 			id: 'crystal-move-images-and-convert-links',
-			name: 'Move Images to Marp Folder and Convert Links to Relative Paths',
+			name: 'Marp: Move images and convert links to relative paths',
 			editorCallback: (editor: Editor, view: MarkdownView) =>
 				this.moveImagesAndConvertLinks(editor, view)
 		});

@@ -12,7 +12,7 @@ export class SettingEdit {
 	async onload() {
 		this.plugin.addCommand({
 			id: 'crystal-toggle-line-number',
-			name: 'Toggle Line Number',
+			name: 'Editor: Toggle line number',
 			callback: () => {
 				this.toggleLineNumber();
 			}

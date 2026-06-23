@@ -598,7 +598,7 @@ export class EditorCommands {
 		// Editor Commands
 		this.plugin.addCommand({
 			id: 'crystal-create-timestamp-file',
-			name: 'Create New File with Timestamp',
+			name: 'Editor: Create new file with timestamp',
 			callback: () => {
 				this.createTimestampFile();
 			}
@@ -606,7 +606,7 @@ export class EditorCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-create-linked-timestamp-file',
-			name: 'Create New File with Link at Cursor',
+			name: 'Editor: Create new file with link at cursor',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.createLinkedTimestampFile(editor, view);
 			}
@@ -614,7 +614,7 @@ export class EditorCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-copy-file-link',
-			name: 'Copy File Link to Clipboard',
+			name: 'Editor: Copy file link',
 			callback: () => {
 				this.copyFileLink();
 			}
@@ -622,7 +622,7 @@ export class EditorCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-copy-file-link-with-alias',
-			name: 'Copy File Link with Alias to Clipboard',
+			name: 'Editor: Copy file link with alias',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.copyFileLinkWithAlias(editor, view);
 			}
@@ -630,7 +630,7 @@ export class EditorCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-copy-path-for-claude-code',
-			name: 'Copy File Path for Claude Code',
+			name: 'Editor: Copy file path for Claude Code',
 			callback: () => {
 				this.copyFileLinkForClaudeCode();
 			}
@@ -638,7 +638,7 @@ export class EditorCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-wrap-subscript',
-			name: 'Wrap Selection with Subscript',
+			name: 'Editor: Wrap selection with subscript',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.wrapWithSubscript(editor, view);
 			}
@@ -646,7 +646,7 @@ export class EditorCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-wrap-superscript',
-			name: 'Wrap Selection with Superscript',
+			name: 'Editor: Wrap selection with superscript',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.wrapWithSuperscript(editor, view);
 			}
@@ -654,7 +654,7 @@ export class EditorCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-increase-blockquote',
-			name: 'Increase Blockquote Level',
+			name: 'Editor: Increase blockquote level',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.increaseBlockquote(editor, view);
 			}
@@ -662,7 +662,7 @@ export class EditorCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-organize-file-with-tags',
-			name: 'Organize File with Prefix and Tags',
+			name: 'Editor: Organize file with prefix and tags',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.organizeFileWithTags(editor, view);
 			}
@@ -671,7 +671,7 @@ export class EditorCommands {
 		// Convert Links Command
 		this.plugin.addCommand({
 			id: 'crystal-convert-links-to-relative-paths',
-			name: 'Convert Links to Relative Paths',
+			name: 'Editor: Convert links to relative paths',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.convertLinksToRelativePaths(editor, view);
 			}
@@ -679,7 +679,7 @@ export class EditorCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-convert-active-file-to-bullet-list',
-			name: 'Convert Active File to Bullet List',
+			name: 'Editor: Convert active file to bullet list',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.convertActiveFileToBulletList(editor, view);
 			}
@@ -687,7 +687,7 @@ export class EditorCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-insert-ogp-link-horizontal',
-			name: 'Insert OGP Link (Horizontal)',
+			name: 'Editor: Insert OGP link (horizontal)',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.insertOgpLink(editor, view, 'horizontal');
 			}
@@ -695,7 +695,7 @@ export class EditorCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-insert-ogp-link-vertical',
-			name: 'Insert OGP Link (Vertical)',
+			name: 'Editor: Insert OGP link (vertical)',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.insertOgpLink(editor, view, 'vertical');
 			}

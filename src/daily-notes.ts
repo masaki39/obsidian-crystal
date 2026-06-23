@@ -321,25 +321,25 @@ export class DailyNotesManager {
     async onLoad() {
         this.plugin.addCommand({
             id: 'crystal-open-today',
-            name: 'Open Today\'s Daily Note',
+            name: 'Daily: Open today\'s note',
             callback: () => this.openToday()
         });
 
         this.plugin.addCommand({
             id: 'crystal-open-yesterday',
-            name: 'Open Yesterday\'s Daily Note',
+            name: 'Daily: Open yesterday\'s note',
             callback: () => this.openYesterday()
         });
 
         this.plugin.addCommand({
             id: 'crystal-open-tomorrow',
-            name: 'Open Tomorrow\'s Daily Note',
+            name: 'Daily: Open tomorrow\'s note',
             callback: () => this.openTomorrow()
         });
 
         this.plugin.addCommand({
             id: 'crystal-roll-over-tasks',
-            name: 'Roll Over Yesterday Undo Task List',
+            name: 'Daily: Roll over yesterday\'s undone tasks',
             editorCallback: (editor) => this.rollOverYesterdayUndoTaskList(editor)
         });
 

@@ -366,7 +366,7 @@ export class ImagePasteAndDropHandler {
 	async onload() {
 		this.plugin.addCommand({
 			id: 'crystal-paste-multiple-images-from-filesyste',
-			name: 'Paste Multiple Images from File System',
+			name: 'Image: Paste multiple images from file system',
 			editorCallback: (editor: Editor) => {
 				this.promptMultipleImagePaste(editor);
 			}

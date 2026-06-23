@@ -10,6 +10,7 @@ export class MarpCommands {
 	private terminalService: TerminalService;
 	private settings: CrystalPluginSettings;
 	private plugin: Plugin;
+	private serverMonitorId: number | null = null;
 
 	constructor(terminalService: TerminalService, settings: CrystalPluginSettings, plugin: Plugin) {
 		this.terminalService = terminalService;
@@ -280,9 +281,12 @@ export class MarpCommands {
 	async stopMarpServerCommand() {
 		try {
 			new Notice('Marpサーバーを停止中...');
-			
+
+			// プロセス監視を停止
+			this.stopServerMonitor();
+
 			// ポート8080を使用しているプロセスのみを終了
-			const killCommand = process.platform === 'win32' 
+			const killCommand = process.platform === 'win32'
 				? 'for /f "tokens=5" %a in (\'netstat -ano ^| findstr :8080\') do taskkill /F /PID %a'
 				: 'lsof -ti:8080 | xargs kill -9';
 			
@@ -301,36 +305,39 @@ export class MarpCommands {
 	}
 
 	/**
+	 * Marpサーバー(localhost:8080)が応答するか確認する
+	 */
+	private async isServerAlive(): Promise<boolean> {
+		return new Promise((resolve) => {
+			const req = http.get('http://localhost:8080', (res: any) => {
+				resolve(res.statusCode === 200);
+			});
+
+			req.on('error', () => {
+				resolve(false);
+			});
+
+			req.setTimeout(1000, () => {
+				req.destroy();
+				resolve(false);
+			});
+		});
+	}
+
+	/**
 	 * サーバーの応答を確認してからブラウザを開く
 	 */
 	private async waitForServerAndOpen(): Promise<void> {
 		const maxAttempts = 30; // 最大30回試行（30秒）
 		let attempts = 0;
 
-		const checkServer = async (): Promise<boolean> => {
-			return new Promise((resolve) => {
-				const req = http.get('http://localhost:8080', (res: any) => {
-					resolve(res.statusCode === 200);
-				});
-
-				req.on('error', () => {
-					resolve(false);
-				});
-
-				req.setTimeout(1000, () => {
-					req.destroy();
-					resolve(false);
-				});
-			});
-		};
-
 		const tryOpenBrowser = async () => {
 			attempts++;
-			
-			if (await checkServer()) {
+
+			if (await this.isServerAlive()) {
 				// サーバーが応答したらブラウザを開く
 				const isWebViewerEnabled = (this.plugin.app as any).internalPlugins.getEnabledPluginById?.('webviewer');
-				
+
 				if (isWebViewerEnabled) {
 					try {
 						const leaf = this.plugin.app.workspace.getLeaf("tab");
@@ -351,8 +358,10 @@ export class MarpCommands {
 					console.log('WebViewer core plugin is disabled, opening in external browser');
 					shell.openExternal('http://localhost:8080');
 				}
-				
+
 				new Notice('Marpサーバーが起動しました');
+				// 起動を確認できたらプロセス監視を開始する
+				this.startServerMonitor();
 				return;
 			}
 
@@ -367,6 +376,35 @@ export class MarpCommands {
 		};
 
 		tryOpenBrowser();
+	}
+
+	/**
+	 * サーバープロセスを定期的にポーリングし、停止を検知したら通知する
+	 */
+	private startServerMonitor(): void {
+		// 既存の監視があればクリアしてから開始（二重起動防止）
+		this.stopServerMonitor();
+
+		const intervalId = window.setInterval(async () => {
+			if (!(await this.isServerAlive())) {
+				this.stopServerMonitor();
+				new Notice('Marpサーバーが停止しました');
+			}
+		}, 5000);
+
+		// unload 時に確実にクリーンアップされるよう登録
+		this.plugin.registerInterval(intervalId);
+		this.serverMonitorId = intervalId;
+	}
+
+	/**
+	 * サーバープロセスの監視を停止する
+	 */
+	private stopServerMonitor(): void {
+		if (this.serverMonitorId !== null) {
+			window.clearInterval(this.serverMonitorId);
+			this.serverMonitorId = null;
+		}
 	}
 
 	/**
@@ -518,7 +556,7 @@ export class MarpCommands {
 	async onload() {
 		this.plugin.addCommand({
 			id: 'crystal-preview-marp-slide',
-			name: 'Preview Marp Slide',
+			name: 'Marp: Preview slide',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.executeMarpPreviewCommand(editor, view);
 			}
@@ -526,7 +564,7 @@ export class MarpCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-export-marp-slide',
-			name: 'Export Marp Slide (PPTX)',
+			name: 'Marp: Export slide (PPTX)',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.executeMarpExportCommand(editor, view, 'pptx');
 			}
@@ -534,7 +572,7 @@ export class MarpCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-export-marp-slide-editable',
-			name: 'Export Marp Slide (PPTX Editable)',
+			name: 'Marp: Export slide (PPTX editable)',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.executeMarpExportCommand(editor, view, 'pptx', true);
 			}
@@ -542,7 +580,7 @@ export class MarpCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-export-marp-slide-html',
-			name: 'Export Marp Slide (HTML)',
+			name: 'Marp: Export slide (HTML)',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.executeMarpExportCommand(editor, view, 'html');
 			}
@@ -550,7 +588,7 @@ export class MarpCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-export-marp-slide-html-folder',
-			name: 'Export Marp Slide (HTML Folder with Attachments)',
+			name: 'Marp: Export slide (HTML folder with attachments)',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.executeMarpExportHtmlFolderCommand(editor, view);
 			}
@@ -558,7 +596,7 @@ export class MarpCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-export-marp-slide-pdf',
-			name: 'Export Marp Slide (PDF)',
+			name: 'Marp: Export slide (PDF)',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.executeMarpExportCommand(editor, view, 'pdf');
 			}
@@ -566,7 +604,7 @@ export class MarpCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-marp-server',
-			name: 'Start Marp Server',
+			name: 'Marp: Start server',
 			callback: () => {
 				this.executeMarpServerCommand();
 			}
@@ -574,7 +612,7 @@ export class MarpCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-stop-marp-server',
-			name: 'Stop Marp Server',
+			name: 'Marp: Stop server',
 			callback: () => {
 				this.stopMarpServerCommand();
 			}
@@ -582,7 +620,7 @@ export class MarpCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-move-images-to-marp-folder',
-			name: 'Move Images to Marp Folder',
+			name: 'Marp: Move images to Marp folder',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.moveImagesToMarpFolder(editor, view);
 			}
@@ -590,7 +628,7 @@ export class MarpCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-export-marp-notes',
-			name: 'Export Marp Presenter Notes',
+			name: 'Marp: Export presenter notes',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.executeMarpNotesCommand(editor, view);
 			}

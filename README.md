@@ -8,7 +8,7 @@
 > [!warning]
 >
 > - デスクトップ版Obsidianでのみ動作する。
-> - 多くの機能は、外部サービス（Gemini, Gyazo, Anki, Marp CLI, macOS Shortcuts）の事前設定やインストールが必要である。
+> - 多くの機能は、外部サービス（OpenAI, Gemini, Gyazo, Marp CLI）の事前設定やインストールが必要である。
 > - 個人用途に最適化されているため、利用者の環境に応じた設定調整が必要な場合がある。
 > - 一定以上の規模になったり独立した機能をもつコードは別リポジトリに適宜切り離される
 >   - [Tab Swap](https://github.com/masaki39/tab-swap)
@@ -20,25 +20,24 @@
 
 1. BRATをインストールし、有効化する。
 2. BRATの設定で `Add Beta plugin` を選択する。
-3. このリポジトリのURL `https://github.com/your-username/obsidian-crystal` を入力する。
+3. このリポジトリのURL `https://github.com/masaki39/obsidian-crystal` を入力する。
 
 ## 機能一覧
 
-### 🤖 Gemini Editor Commands
+### 🤖 AI Editor Commands
 
-[Gemini API](https://aistudio.google.com/api-keys)を利用して、文章作成や翻訳を強力にサポートする。
+[OpenAI API](https://platform.openai.com/api-keys)または[Gemini API](https://aistudio.google.com/api-keys)を利用して、文章作成や翻訳を強力にサポートする。設定の `AI Provider` でどちらを使うか選択でき（既定はOpenAI）、全AIコマンドが選択中のプロバイダーを使用する。
 
 | コマンド | 機能 | 説明 |
 |---|---|---|
-| `Generate Description for Current File` | ファイル説明生成 | 現在のファイル内容を解析し、検索に適した`description`をフロントマターに自動生成する。 |
-| `Generate Git Commit Summary` | Gitコミットサマリー生成 | アクティブファイルの日付（デイリーノートの場合はその日、それ以外は今日）のGitコミット差分（`.md`ファイルのみ）をGeminiで要約し、フロントマターの`summary`フィールドに書き込む。 |
-| `Translate Selected Text` | 選択テキスト翻訳 | 選択した日本語テキストを自然な英語に翻訳し、元のテキストと置き換える。 |
-| `Translate Above Cursor Text` | カーソル上翻訳 | カーソルがある行の、一つ上の行のテキストを翻訳し、カーソル位置に挿入する。 |
-| `Translate Below Cursor Text` | カーソル下翻訳 | カーソルがある行の、一つ下の行のテキストを翻訳し、カーソル位置に挿入する。 |
-| `Grammar Check Current Line` | 文法チェック | 現在のカーソル行の文章（日/英）をチェックし、より自然で正確な表現に校正する。 |
-| `Add Note to Anki Assisted by Gemini` | AI支援Anki追加 | 選択した英単語からGeminiが日本語訳を生成し、Ankiカード作成を支援する。 |
-| `Gemini Rewrite (Replace selection or whole note)` | 指示に沿って置換 | 入力した指示に従い、選択範囲またはノート全体をGeminiで書き換えて置換する。 |
-| `Gemini Rewrite (Append result at end)` | 指示に沿って追記 | 入力した指示に従い、選択範囲またはノート全体を参照して生成したMarkdown断片を末尾に追記する。 |
+| `AI: Generate description for current file` | ファイル説明生成 | 現在のファイル内容を解析し、検索に適した`description`をフロントマターに自動生成する。 |
+| `AI: Generate git commit summary` | Gitコミットサマリー生成 | アクティブファイルの日付（デイリーノートの場合はその日、それ以外は今日）のGitコミット差分（`.md`ファイルのみ）をAIで要約し、フロントマターの`summary`フィールドに書き込む。 |
+| `AI: Translate selected text` | 選択テキスト翻訳 | 選択した日本語テキストを自然な英語に翻訳し、元のテキストと置き換える。 |
+| `AI: Translate above cursor text` | カーソル上翻訳 | カーソルがある行の、一つ上の行のテキストを翻訳し、カーソル位置に挿入する。 |
+| `AI: Translate below cursor text` | カーソル下翻訳 | カーソルがある行の、一つ下の行のテキストを翻訳し、カーソル位置に挿入する。 |
+| `AI: Grammar check current line` | 文法チェック | 現在のカーソル行の文章（日/英）をチェックし、より自然で正確な表現に校正する。 |
+| `AI: Rewrite (replace selection or whole note)` | 指示に沿って置換 | 入力した指示に従い、選択範囲またはノート全体をAIで書き換えて置換する。 |
+| `AI: Rewrite (append result at end)` | 指示に沿って追記 | 入力した指示に従い、選択範囲またはノート全体を参照して生成したMarkdown断片を末尾に追記する。 |
 
 ### 🦋 Bluesky
 
@@ -46,8 +45,8 @@ BlueSkyへの投稿をアシストする。
 
 | コマンド | 機能 | 説明 |
 |---|---|---|
-| `Post to Bluesky` | Blueskyに投稿 | テキストやURLを入力し、メタデータ付きでBlueskyに投稿する。 |
-| `Post to Daily Note Timeline` | デイリーノートへ投稿 | 入力したメモをデイリーノートのタイムラインセクションにコールアウト形式で追記する。 |
+| `Bluesky: Post to Bluesky` | Blueskyに投稿 | テキストやURLを入力し、メタデータ付きでBlueskyに投稿する。 |
+| `Bluesky: Post to daily note timeline` | デイリーノートへ投稿 | 入力したメモをデイリーノートのタイムラインセクションにコールアウト形式で追記する。 |
 
 ### 📅 Daily Notes
 
@@ -55,12 +54,11 @@ BlueSkyへの投稿をアシストする。
 
 | コマンド | 機能 | 説明 |
 |---|---|---|
-| `Open Today's Daily Note` | 今日のノート | 今日の日付のデイリーノートを開く。存在しない場合は自動で作成する。 |
-| `Open Yesterday's Daily Note` | 昨日のノート | 現在のノートの日付を基準に、前日のデイリーノートを開く。 |
-| `Open Tomorrow's Daily Note` | 明日のノート | 現在のノートの日付を基準に、翌日のデイリーノートを開く。 |
-| `Add Task to Daily Note` | ﾀｽｸを今日のDNに追加 | 入力したタスクを今日のデイリーノートの末尾に追記する。 |
-| `Roll Over Yesterday Undo Task List` | 前日の未完了タスクを引き継ぎ | アクティブファイルの日付を基準に前日のデイリーノートから未完了タスクを抽出し、現在のカーソル位置に挿入する。前日ファイルからは未完了タスクを削除する。 |
-| `Post to Daily Note Time Line` | メモを投稿 | デイリーノートにセクションを作成(デフォルト:`# Time Line`)して、コールアウト形式でメモを投稿する。このコールアウトはタイムライン状に見えるCSSが適応される。 |
+| `Daily: Open today's note` | 今日のノート | 今日の日付のデイリーノートを開く。存在しない場合は自動で作成する。 |
+| `Daily: Open yesterday's note` | 昨日のノート | 現在のノートの日付を基準に、前日のデイリーノートを開く。 |
+| `Daily: Open tomorrow's note` | 明日のノート | 現在のノートの日付を基準に、翌日のデイリーノートを開く。 |
+| `Daily: Add task to daily note` | ﾀｽｸを今日のDNに追加 | 入力したタスクを今日のデイリーノートの末尾に追記する。 |
+| `Daily: Roll over yesterday's undone tasks` | 前日の未完了タスクを引き継ぎ | アクティブファイルの日付を基準に前日のデイリーノートから未完了タスクを抽出し、現在のカーソル位置に挿入する。前日ファイルからは未完了タスクを削除する。 |
 
 **自動化機能（設定で有効化が必要）：**
 
@@ -74,7 +72,7 @@ BlueSkyへの投稿をアシストする。
 
 | コマンド | 機能 | 説明 |
 |---|---|---|
-| `Add Task to ToDo List` | ToDoリストにタスク追加 | 設定で指定したToDoリストファイルのInboxセクションにタスクを追加する。 |
+| `Quick add: Add task to todo list` | ToDoリストにタスク追加 | 設定で指定したToDoリストファイルのInboxセクションにタスクを追加する。 |
 
 ### 🖼️ Image Processor
 
@@ -83,7 +81,7 @@ BlueSkyへの投稿をアシストする。
 
 | コマンド | 機能 | 説明 |
 |---|---|---|
-| `Paste Multiple Images from File System` | ファイルシステムから複数画像をペースト | ファイル選択ダイアログから複数の画像を選択し、一括でVaultに保存してリンクを挿入する。WebP変換にも対応。 |
+| `Image: Paste multiple images from file system` | ファイルシステムから複数画像をペースト | ファイル選択ダイアログから複数の画像を選択し、一括でVaultに保存してリンクを挿入する。WebP変換にも対応。 |
 
 **自動化機能（設定で有効化が必要）：**
 
@@ -96,8 +94,10 @@ BlueSkyへの投稿をアシストする。
 
 | コマンド | 機能 | 説明 |
 |---|---|---|
-| `Upload clipboard image to Gyazo` | クリップボード画像をGyazoにアップロード | クリップボードにある画像をGyazoにアップロードし、Markdownリンクをカーソル位置に挿入する。 |
-| `Upload image file to Gyazo` | 画像ファイルをGyazoにアップロード | ファイル選択ダイアログから画像を選び、Gyazoにアップロードしてリンクを挿入する。 |
+| `Gyazo: Upload clipboard image` | クリップボード画像をGyazoにアップロード | クリップボードにある画像をGyazoにアップロードし、Markdownリンクをカーソル位置に挿入する。 |
+| `Gyazo: Upload image file` | 画像ファイルをGyazoにアップロード | ファイル選択ダイアログから画像を選び、Gyazoにアップロードしてリンクを挿入する。 |
+| `Gyazo: Replace image URLs in active note` | 外部画像URLをGyazoに置換 | アクティブノート内の外部画像URLをGyazoにアップロードし直し、Gyazoのリンクに置き換える。 |
+| `Gyazo: Replace local images in active note` | ローカル画像をGyazoに置換 | アクティブノートに埋め込まれたVault内のローカル画像をGyazoにアップロードし、ノート全体（他ノートの参照を含む）のリンクをGyazo URLに更新して元ファイルをゴミ箱へ移動する。wikiリンクのエイリアスやMarkdown画像リンクにも対応。 |
 
 ### ✍️ Editor Extensions
 
@@ -105,40 +105,28 @@ BlueSkyへの投稿をアシストする。
 
 | コマンド | 機能 | 説明 |
 |---|---|---|
-| `Create New File with Timestamp` | タイムスタンプで新規ファイル作成 | `YYYYMMDDHHmmss`形式のファイル名で新しいノートを作成して開く。Vimモードが有効な場合はエディタのInsertモードで開始し、無効な場合はタイトル変更モードで開く。 |
-| `Create New File with Link at Cursor` | カーソル位置にリンク付きで新規ファイル作成 | タイムスタンプ名のファイルを作成し、現在のカーソル位置にそのファイルへのリンクを挿入して開く。Vimモードが有効な場合はエディタのInsertモードで開始し、無効な場合はタイトル変更モードで開く。 |
-| `Copy File Link to Clipboard` | ファイルリンクをコピー | 現在開いているファイルのWikiリンク（`[[ファイル名]]`）をコピーする。 |
-| `Copy File Link with Alias to Clipboard` | エイリアス付きファイルリンクをコピー | ファイルのフロントマターに`aliases`があれば、それを使ったリンク（`[[ファイル名|エイリアス]]`）をコピーする。 |
-| `Copy File Path for Claude Code` | Claude Code用パスをコピー | Vaultルートからの相対パスを`@"相対パス"`形式でコピーする。Claude Codeでのファイル参照に便利。 |
-| `Wrap Selection with Subscript` | 下付き文字 | 選択テキストを`<sub>`タグで囲む。すでにある場合は解除する。 |
-| `Wrap Selection with Superscript` | 上付き文字 | 選択テキストを`<sup>`タグで囲む。すでにある場合は解除する。 |
-| `Increase Blockquote Level` | ブロッククォートレベル増加 | 選択した行のブロッククォート（`>`）レベルを1段階増加させる。 |
-| `Convert Links to Relative Paths` | リンクを相対パスに変換 | ファイル内のWikiリンクやMarkdownリンクを、すべて相対パス形式のMarkdownリンクに一括変換する。 |
-| `Convert Active File to Bullet List` | 本文をバレット化 | アクティブファイルの本文をバレットリストに変換する（フロントマターは保持）。 |
-| `Organize File with Tags` | タグでファイルを整理 | タグを選択し、ファイル名に絵文字プレフィックスや日付を追加、フロントマターを更新し、指定フォルダへ移動させる。 |
-| `Toggle Line Number` | 行番号表示の切り替え | `.obsidian/app.json`の行番号表示設定をトグルする。 |
+| `Editor: Create new file with timestamp` | タイムスタンプで新規ファイル作成 | `YYYYMMDDHHmmss`形式のファイル名で新しいノートを作成して開く。Vimモードが有効な場合はエディタのInsertモードで開始し、無効な場合はタイトル変更モードで開く。 |
+| `Editor: Create new file with link at cursor` | カーソル位置にリンク付きで新規ファイル作成 | タイムスタンプ名のファイルを作成し、現在のカーソル位置にそのファイルへのリンクを挿入して開く。Vimモードが有効な場合はエディタのInsertモードで開始し、無効な場合はタイトル変更モードで開く。 |
+| `Editor: Copy file link` | ファイルリンクをコピー | 現在開いているファイルのWikiリンク（`[[ファイル名]]`）をコピーする。 |
+| `Editor: Copy file link with alias` | エイリアス付きファイルリンクをコピー | ファイルのフロントマターに`aliases`があれば、それを使ったリンク（`[[ファイル名|エイリアス]]`）をコピーする。 |
+| `Editor: Copy file path for Claude Code` | Claude Code用パスをコピー | Vaultルートからの相対パスを`@"相対パス"`形式でコピーする。Claude Codeでのファイル参照に便利。 |
+| `Editor: Wrap selection with subscript` | 下付き文字 | 選択テキストを`<sub>`タグで囲む。すでにある場合は解除する。 |
+| `Editor: Wrap selection with superscript` | 上付き文字 | 選択テキストを`<sup>`タグで囲む。すでにある場合は解除する。 |
+| `Editor: Increase blockquote level` | ブロッククォートレベル増加 | 選択した行のブロッククォート（`>`）レベルを1段階増加させる。 |
+| `Editor: Convert links to relative paths` | リンクを相対パスに変換 | ファイル内のWikiリンクやMarkdownリンクを、すべて相対パス形式のMarkdownリンクに一括変換する。 |
+| `Editor: Convert active file to bullet list` | 本文をバレット化 | アクティブファイルの本文をバレットリストに変換する（フロントマターは保持）。 |
+| `Editor: Organize file with prefix and tags` | タグでファイルを整理 | タグを選択し、ファイル名に絵文字プレフィックスや日付を追加、フロントマターを更新し、指定フォルダへ移動させる。 |
+| `Editor: Insert OGP link (horizontal)` | OGPリンク挿入（横） | URLからOGP情報を取得し、横並びレイアウトのリンクカードを挿入する。 |
+| `Editor: Insert OGP link (vertical)` | OGPリンク挿入（縦） | URLからOGP情報を取得し、縦並びレイアウトのリンクカードを挿入する。 |
+| `Editor: Toggle line number` | 行番号表示の切り替え | `.obsidian/app.json`の行番号表示設定をトグルする。 |
+| `Window: Toggle opacity` | ウィンドウ不透明度の切り替え | Obsidianウィンドウの不透明度をトグルする。 |
 
 **自動化機能（Vimモード有効時）：**
 
 - **Auto Reset Vim Mode on Leaf Change:** 別のペインに移動すると、離れたエディタのVimモードが自動でNormalモードにリセットされる。
 
 > [!note]
-> `Organize File with Tags`には設定画面に専用設定UIがある。
-
-### 📄 PDF Export
-
-文献ノートのフロントマター`pdf`フィールドに記載されたPDFファイルパスを活用する。
-
-> [!warning]
-> [Simple Citations](https://github.com/masaki39/simple-citations)のoptional fields機能で`pdf`フィールドにPDFファイルパス出力しているという前提に基づく。
-
-| コマンド | 機能 | 説明 |
-|---|---|---|
-| `Export PDF Tables` | PDFテーブル抽出 | PDFからテーブルをCSV形式で抽出する。Camelotの`stream`フレーバーを使用。出力ファイル名: `pdf1.csv`, `pdf2.csv`など。 |
-
-**必要な依存関係:**
-
-- [Camelot](https://camelot-py.readthedocs.io/)（`camelot`コマンド、`uv tool install camelot-py`でインストール）
+> `Editor: Organize file with prefix and tags`には設定画面に専用設定UIがある。
 
 ### 🎞 Marp
 
@@ -146,54 +134,21 @@ BlueSkyへの投稿をアシストする。
 
 | コマンド | 機能 | 説明 |
 |---|---|---|
-| `Preview Marp Slide` | Marpプレビュー | Marpのプレビュー用HTMLをMarkdownと同じフォルダに出力する。 |
-| `Export Marp Slide (PPTX)` | Marpエクスポート | PPTX形式でエクスポートする。 |
-| `Export Marp Slide (PPTX Editable)` | Marpエクスポート（編集可） | スライド内容を編集可能なPPTX形式でエクスポートする。 |
-| `Export Marp Slide (HTML)` | Marpエクスポート（HTML） | HTML形式でエクスポートする。 |
-| `Export Marp Slide (HTML Folder with Attachments)` | Marpエクスポート（HTMLフォルダ） | HTML・Markdownコピー・ローカル画像をひとつのフォルダにまとめてエクスポートする。画像リンクは相対パスに変換されるため、フォルダをそのまま配布・移動しても画像が正常に表示される。 |
-| `Export Marp Slide (PDF)` | Marpエクスポート（PDF） | PDF形式でエクスポートする。 |
-| `Start Marp Server` | Marpサーバー起動 | プレビュー用のMarpサーバーを起動する。 |
-| `Stop Marp Server` | Marpサーバー停止 | 起動中のMarpサーバーを停止する。 |
-| `Move Images to Marp Folder` | 画像をMarpフォルダに移動 | Vault内の画像ファイルをMarp用フォルダに移動し、リンクを更新する。 |
-| `Export Marp Presenter Notes` | Marpノート出力 | Marp Presenter Notesをテキストファイルとして出力する。 |
-| `Move Images to Marp Folder and Convert Links to Relative Paths` | 画像移動＋リンク変換 | Marp用フォルダに画像を移動した後、リンクを相対パスに変換する処理を連続で行う（Marp関連マクロ）。 |
+| `Marp: Preview slide` | Marpプレビュー | Marpのプレビュー用HTMLをMarkdownと同じフォルダに出力する。 |
+| `Marp: Export slide (PPTX)` | Marpエクスポート | PPTX形式でエクスポートする。 |
+| `Marp: Export slide (PPTX editable)` | Marpエクスポート（編集可） | スライド内容を編集可能なPPTX形式でエクスポートする。 |
+| `Marp: Export slide (HTML)` | Marpエクスポート（HTML） | HTML形式でエクスポートする。 |
+| `Marp: Export slide (HTML folder with attachments)` | Marpエクスポート（HTMLフォルダ） | HTML・Markdownコピー・ローカル画像をひとつのフォルダにまとめてエクスポートする。画像リンクは相対パスに変換されるため、フォルダをそのまま配布・移動しても画像が正常に表示される。 |
+| `Marp: Export slide (PDF)` | Marpエクスポート（PDF） | PDF形式でエクスポートする。 |
+| `Marp: Start server` | Marpサーバー起動 | プレビュー用のMarpサーバーを起動する。起動後はサーバーの稼働を定期的に監視し、停止を検知すると通知する。 |
+| `Marp: Stop server` | Marpサーバー停止 | 起動中のMarpサーバーを停止する。 |
+| `Marp: Move images to Marp folder` | 画像をMarpフォルダに移動 | Vault内の画像ファイルをMarp用フォルダに移動し、リンクを更新する。 |
+| `Marp: Export presenter notes` | Marpノート出力 | Marp Presenter Notesをテキストファイルとして出力する。 |
+| `Marp: Move images and convert links to relative paths` | 画像移動＋リンク変換 | Marp用フォルダに画像を移動した後、リンクを相対パスに変換する処理を連続で行う（Marp関連マクロ）。 |
 
 **必要な依存関係:**
 
 - [Marp-cli](https://github.com/marp-team/marp-cli)
-
-### 🃏 Anki
-
-| コマンド | 機能 | 説明 |
-|---|---|---|
-| `Add Note to Anki` | Ankiノート追加 | 表面・裏面のテキストを入力して、Ankiに新しいノートを追加する。 |
-
-> [!warning]
-> ノートタイプ`基本`、デッキ`Default`にのみカードを追加する。
-
-**必要な依存関係**
-
-- [Anki](https://apps.ankiweb.net)
-  - [Anki Connect](https://github.com/amikey/anki-connect)
-
-AnkiにAnki Connectというアドオンを追加する。
-この時設定に`app://obsidian.md`を加えてObsidianからのアクセスを許可する。
-
-設定例：
-
-```json
-{
-    "apiKey": null,
-    "apiLogPath": null,
-    "ignoreOriginList": [],
-    "webBindAddress": "127.0.0.1",
-    "webBindPort": 8765,
-    "webCorsOriginList": [
-        "http://localhost",
-        "app://obsidian.md"
-    ]
-}
-```
 
 ### 🌐 Quartz
 
@@ -201,12 +156,6 @@ AnkiにAnki Connectというアドオンを追加する。
 
 | コマンド | 機能 | 説明 |
 |---|---|---|
-| `Quartz Sync` | Quartzと同期 | 設定した公開用フォルダの内容を、指定したQuartzリポジトリに同期する。 |
-| `Open Quartz Site` | Quartzサイトを開く | 設定したQuartzサイトのURLをブラウザで開く。 |
-| `Quartz Sync and Open Site` | Quartzと同期してサイトを開く | 同期コマンドを実行後、サイトとGitHub Actionsのページを開く。 |
-
-### ⌨️ macOS Shortcuts
-
-| コマンド | 機能 | 説明 |
-|---|---|---|
-| `Run Shortcut: {設定した名前}` | ショートカット実行 | macOSの「ショートカット」アプリで作成したショートカットをObsidianから直接実行する。 |
+| `Quartz: Sync` | Quartzと同期 | 設定した公開用フォルダの内容を、指定したQuartzリポジトリに同期する。 |
+| `Quartz: Open site ({サイト名})` | Quartzサイトを開く | 設定したQuartzサイトのURLをブラウザで開く。 |
+| `Quartz: Sync and open site ({サイト名})` | Quartzと同期してサイトを開く | 同期コマンドを実行後、サイトとGitHub Actionsのページを開く。 |
