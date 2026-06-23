@@ -303,10 +303,7 @@ export class BlueskyService {
 		this.gyazoService = gyazoService;
 		this.identifier = settings.blueskyIdentifier || '';
 		this.password = settings.blueskyPassword || '';
-
-		if (this.identifier && this.password) {
-			this.initializeAgent();
-		}
+		// Log in lazily on the first post; avoids a network call on startup.
 	}
 
 	private async initializeAgent(): Promise<void> {
@@ -327,16 +324,21 @@ export class BlueskyService {
 	}
 
 	async updateCredentials(identifier: string, password: string): Promise<void> {
+		const changed = identifier !== this.identifier || password !== this.password;
 		this.identifier = identifier;
 		this.password = password;
 		this.settings.blueskyIdentifier = identifier;
 		this.settings.blueskyPassword = password;
 
-		if (identifier && password) {
-			await this.initializeAgent();
-		} else {
-			this.agent = null;
+		// Credentials unchanged: keep any existing session as-is. This prevents a
+		// network login from firing on every saveSettings() (e.g. each keystroke
+		// or slider step in the settings tab).
+		if (!changed) {
+			return;
 		}
+
+		// Invalidate the cached session; post() re-authenticates lazily on demand.
+		this.agent = null;
 	}
 
 	async updateSettings(settings: CrystalPluginSettings): Promise<void> {

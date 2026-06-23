@@ -27,6 +27,20 @@ export class ImagePasteAndDropHandler {
 		this.imageProcessor.updateSettings(settings);
 	}
 
+	/**
+	 * Resolve the vault-relative folder where attachments should be saved, honoring
+	 * Obsidian's "attachment folder path" setting (absolute "/", same-folder ".",
+	 * or note-relative "./sub" forms). Returns '' for the vault root.
+	 */
+	private async resolveAttachmentFolder(): Promise<string> {
+		const sourcePath = this.app.workspace.getActiveFile()?.path ?? '';
+		// Probe Obsidian's resolver with a throwaway filename; the parent of the
+		// returned path is the actual attachment folder. The probe file is never created.
+		const probePath = await this.app.fileManager.getAvailablePathForAttachment('__crystal_probe__.tmp', sourcePath);
+		const slash = probePath.lastIndexOf('/');
+		return slash === -1 ? '' : probePath.substring(0, slash);
+	}
+
 	enable() {
 		if (this.isEnabled) {
 			return; // Already enabled
@@ -211,13 +225,12 @@ export class ImagePasteAndDropHandler {
 			// Generate filename for the vault
 			const filename = this.imageProcessor.generateTimestampFilename('pasted-image', processed.blob, processed.originalType);
 
-			// Get attachments folder or use default
-			const attachmentFolder = (this.app.vault as any).config?.attachmentFolderPath || 'attachments';
-			const attachmentPath = `${attachmentFolder}/${filename}`;
+			// Resolve the configured attachment folder ("/", ".", "./sub" forms)
+			const attachmentFolder = await this.resolveAttachmentFolder();
+			const attachmentPath = attachmentFolder ? `${attachmentFolder}/${filename}` : filename;
 
 			// Ensure attachment folder exists
-			const folderExists = await this.app.vault.adapter.exists(attachmentFolder);
-			if (!folderExists) {
+			if (attachmentFolder && !(await this.app.vault.adapter.exists(attachmentFolder))) {
 				await this.app.vault.createFolder(attachmentFolder);
 			}
 
@@ -267,12 +280,11 @@ export class ImagePasteAndDropHandler {
 
 				if (files && files.length > 0) {
 					try {
-						// Get attachments folder or use default
-						const attachmentFolder = (this.app.vault as any).config?.attachmentFolderPath || 'attachments';
+						// Resolve the configured attachment folder ("/", ".", "./sub" forms)
+						const attachmentFolder = await this.resolveAttachmentFolder();
 
 						// Ensure attachment folder exists
-						const folderExists = await this.app.vault.adapter.exists(attachmentFolder);
-						if (!folderExists) {
+						if (attachmentFolder && !(await this.app.vault.adapter.exists(attachmentFolder))) {
 							await this.app.vault.createFolder(attachmentFolder);
 						}
 
@@ -301,7 +313,7 @@ export class ImagePasteAndDropHandler {
 								const filename = fileArray.length > 1
 									? baseFilename.replace(/(\.[^.]+)$/, `_${index + 1}$1`)
 									: baseFilename;
-								const attachmentPath = `${attachmentFolder}/${filename}`;
+								const attachmentPath = attachmentFolder ? `${attachmentFolder}/${filename}` : filename;
 
 								// Convert blob to array buffer
 								const arrayBuffer = await processed.blob.arrayBuffer();

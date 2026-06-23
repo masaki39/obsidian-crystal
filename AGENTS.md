@@ -100,6 +100,11 @@ pnpm run build
 - Attach `manifest.json`, `main.js`, and `styles.css` (if present) to the release as individual assets.
 - After the initial release, follow the process to add/update your plugin in the community catalog as required.
 
+### Changelog
+
+- Write changelogs as one Markdown file per version under the `changelog/` directory: `changelog/<version>.md` (e.g. `changelog/0.6.1.md`). Do **not** add or maintain a `CHANGELOG.md` in the repo root.
+- Each file starts with a `## What's Changed` heading, followed by `###` sections such as `Bug Fixes`, `New Features`, `Added`, `Changed`, `Removed`. Bullets are written in Japanese with a bold lead-in, e.g. `- **Bluesky の再ログイン連発を修正**: ...`.
+
 ## Security, privacy, and compliance
 
 Follow Obsidian's **Developer Policies** and **Plugin Guidelines**. In particular:

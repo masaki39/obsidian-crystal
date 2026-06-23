@@ -19,7 +19,7 @@ export class QuartzService {
 
     private async generateQuartzSyncCommand() {
         const quartzPath = this.settings.quartzPath;
-        const command = `cd ${quartzPath} && npx quartz sync`;
+        const command = `cd "${quartzPath}" && npx quartz sync`;
         console.log(command);
         return command;
     }
@@ -38,7 +38,6 @@ export class QuartzService {
 
     async quartzSyncAndOpenSite() {
         await this.quartzSync();
-        new Notice('Quartz Sync executed');
         this.openQuartzSite();
         const githubActionsUrl = `https://github.com/${this.settings.githubUserName}/${this.settings.githubUserName}.github.io/actions`;
         open (githubActionsUrl);

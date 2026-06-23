@@ -371,6 +371,10 @@ export class DailyNotesManager {
                         return;
                     }
                     const todayNotePath = this.getDailyNoteFilePath(new Date());
+                    // Skip when the created file is today's note itself (avoids a self-link).
+                    if (todayNotePath && file.path === todayNotePath) {
+                        return;
+                    }
                     const todayNote = todayNotePath ? this.app.vault.getAbstractFileByPath(todayNotePath) : null;
                     if (!todayNote) {
                         return;

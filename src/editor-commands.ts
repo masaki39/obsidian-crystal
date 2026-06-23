@@ -220,7 +220,7 @@ export class EditorCommands {
 		const changes = [];
 		for (let lineNum = fromLine; lineNum <= toLine; lineNum++) {
 			const line = editor.getLine(lineNum);
-			const newLine = line.startsWith('>') ? `> ${line}` : `> ${line}`;
+			const newLine = `> ${line}`;
 			changes.push({
 				from: { line: lineNum, ch: 0 },
 				to: { line: lineNum, ch: line.length },

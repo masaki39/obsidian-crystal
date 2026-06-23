@@ -1,4 +1,4 @@
-import { App, Plugin, PluginSettingTab, Setting, SecretStorage } from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 export interface FileOrganizationRule {
 	displayName: string;
@@ -103,9 +103,10 @@ export class CrystalSettingTab extends PluginSettingTab {
 				}));
 	}
 
-	private secretSetting(containerEl: HTMLElement, name: string, desc: string | DocumentFragment, secretKey: string, placeholder: string, field: keyof CrystalPluginSettings) {
-		const secretStorage: SecretStorage = this.app.secretStorage;
-		const setting = new Setting(containerEl)
+	private secretSetting(containerEl: HTMLElement, name: string, desc: string | DocumentFragment, placeholder: string, field: keyof CrystalPluginSettings) {
+		// Persist through saveSettings() so the secret is written to SecretStorage
+		// and the affected services are refreshed immediately (no reload required).
+		return new Setting(containerEl)
 			.setName(name)
 			.setDesc(desc)
 			.addText(text => {
@@ -113,12 +114,11 @@ export class CrystalSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings[field] as string)
 					.onChange(async (value) => {
 						(this.plugin.settings as any)[field] = value;
-						secretStorage.setSecret(secretKey, value ?? '');
+						await this.plugin.saveSettings();
 					});
 				text.inputEl.type = 'password';
 				return text;
 			});
-		return setting;
 	}
 
 	display(): void {
@@ -148,7 +148,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
-		this.secretSetting(containerEl, 'OpenAI API Key', 'Enter your OpenAI API Key', 'crystal-openai-api-key', 'Enter your OpenAI API Key', 'OpenAIAPIKey');
+		this.secretSetting(containerEl, 'OpenAI API Key', 'Enter your OpenAI API Key', 'Enter your OpenAI API Key', 'OpenAIAPIKey');
 
 		new Setting(containerEl)
 			.setName('OpenAI Model')
@@ -167,7 +167,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
-		this.secretSetting(containerEl, 'Gemini API Key', 'Enter your Gemini API Key', 'crystal-gemini-api-key', 'Enter your Gemini API Key', 'GeminiAPIKey');
+		this.secretSetting(containerEl, 'Gemini API Key', 'Enter your Gemini API Key', 'Enter your Gemini API Key', 'GeminiAPIKey');
 
 		new Setting(containerEl)
 			.setName('Gemini Model')
@@ -190,9 +190,9 @@ export class CrystalSettingTab extends PluginSettingTab {
 		// Bluesky settings
 		containerEl.createEl('h3', { text: 'Bluesky' });
 
-		this.secretSetting(containerEl, 'Bluesky Handle/Email', 'Your Bluesky handle (e.g., user.bsky.social) or email address', 'crystal-bluesky-identifier', 'Enter your Bluesky handle or email', 'blueskyIdentifier');
+		this.secretSetting(containerEl, 'Bluesky Handle/Email', 'Your Bluesky handle (e.g., user.bsky.social) or email address', 'Enter your Bluesky handle or email', 'blueskyIdentifier');
 
-		this.secretSetting(containerEl, 'Bluesky App Password', 'Your Bluesky app password (create one in Bluesky Settings > App Passwords)', 'crystal-bluesky-password', 'Enter your Bluesky app password', 'blueskyPassword');
+		this.secretSetting(containerEl, 'Bluesky App Password', 'Your Bluesky app password (create one in Bluesky Settings > App Passwords)', 'Enter your Bluesky app password', 'blueskyPassword');
 
 		this.toggleSetting(containerEl, 'Append Bluesky posts to Daily Note timeline', 'Add each post to today\'s daily note timeline section', 'blueskyAppendToDailyNote');
 		this.textSetting(containerEl, 'Daily Note timeline heading', 'Heading text that marks the timeline section (exact match)', 'dailyNoteTimelineHeading', '# Time Line');
@@ -265,7 +265,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 		gyazoDesc.append('Access token from ');
 		gyazoDesc.createEl('a', { text: 'gyazo.com/oauth/applications', href: 'https://gyazo.com/oauth/applications' });
 		gyazoDesc.append(' (create an app → copy the access token)');
-		this.secretSetting(containerEl, 'Gyazo access token', gyazoDesc, 'crystal-gyazo-access-token', 'Enter Gyazo access token', 'gyazoAccessToken');
+		this.secretSetting(containerEl, 'Gyazo access token', gyazoDesc, 'Enter Gyazo access token', 'gyazoAccessToken');
 
 		// Marp settings
 		containerEl.createEl('h3', { text: 'Marp' });

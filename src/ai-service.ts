@@ -93,7 +93,14 @@ export class AIService {
 		});
 
 		if (response.status < 200 || response.status >= 300) {
-			const message = response.json?.error?.message || `HTTP ${response.status}`;
+			let message = `HTTP ${response.status}`;
+			// response.json throws if the error body is not JSON (e.g. an HTML
+			// error page); fall back to the status code in that case.
+			try {
+				message = response.json?.error?.message || message;
+			} catch {
+				// keep the HTTP status message
+			}
 			throw new Error(`OpenAI API error: ${message}`);
 		}
 

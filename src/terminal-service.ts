@@ -32,7 +32,9 @@ export class TerminalService {
                 resolve({
                     stdout: stdout.trim(),
                     stderr: stderr.trim(),
-                    exitCode: code || 0
+                    // code is null when the process was terminated by a signal;
+                    // report a non-zero code so callers don't treat it as success.
+                    exitCode: code ?? 1
                 });
             });
             child.on('error', (error) => {
