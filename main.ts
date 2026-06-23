@@ -8,7 +8,6 @@ import { GyazoImageMigrator } from './src/gyazo-image-migrator';
 import { GyazoLocalImageMigrator } from './src/gyazo-local-image-migrator';
 import { ImagePasteAndDropHandler } from './src/clipboard-paste-handler';
 import { EditorCommands } from './src/editor-commands';
-import { QuickAddCommands } from './src/quick-add-commands';
 import { MarpCommands } from './src/marp';
 import { TerminalService } from './src/terminal-service';
 import { QuartzService } from './src/quartz-service';
@@ -47,7 +46,6 @@ export default class CrystalPlugin extends Plugin {
 	private gyazoLocalImageMigrator: GyazoLocalImageMigrator;
 	private imagePasteAndDropHandler: ImagePasteAndDropHandler;
 	private editorCommands: EditorCommands;
-	private quickAddCommands: QuickAddCommands;
 	private marpCommands: MarpCommands;
 	private terminalService: TerminalService;
 	private quartzService: QuartzService;
@@ -66,7 +64,6 @@ export default class CrystalPlugin extends Plugin {
 		this.blueskyService = new BlueskyService(this.app, this, this.settings, this.dailyNotesManager, this.gyazoService);
 		this.imagePasteAndDropHandler = new ImagePasteAndDropHandler(this.app, this.settings, this);
 		this.editorCommands = new EditorCommands(this.app, this.settings, this);
-		this.quickAddCommands = new QuickAddCommands(this.app, this.settings);
 		this.terminalService = new TerminalService(this.app);
 		this.marpCommands = new MarpCommands(this.terminalService, this.settings, this);
 		this.quartzService = new QuartzService(this, this.settings, this.terminalService);
@@ -142,23 +139,6 @@ export default class CrystalPlugin extends Plugin {
 			}
 		});
 
-		// Quick Add Commands
-		this.addCommand({
-			id: 'crystal-add-task-to-daily-note',
-			name: 'Daily: Add task to daily note',
-			callback: () => {
-				this.quickAddCommands.addTaskToDailyNote();
-			}
-		});
-
-		this.addCommand({
-			id: 'crystal-add-task-to-todo',
-			name: 'Quick add: Add task to todo list',
-			callback: () => {
-				this.quickAddCommands.addTaskToTodo();
-			}
-		});
-
 		this.addSettingTab(new CrystalSettingTab(this.app, this));
 	}
 
@@ -211,7 +191,6 @@ export default class CrystalPlugin extends Plugin {
 		this.dailyNotesManager.updateSettings(this.settings);
 		this.imagePasteAndDropHandler.updateSettings(this.settings);
 		this.editorCommands.updateSettings(this.settings);
-		this.quickAddCommands.updateSettings(this.settings);
 		this.gyazoService.updateSettings(this.settings);
 		this.marpCommands.updateSettings(this.settings);
 		this.quartzService.updateSettings(this.settings);

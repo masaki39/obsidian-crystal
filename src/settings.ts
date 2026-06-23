@@ -22,8 +22,6 @@ export interface CrystalPluginSettings {
 	dailyNoteAutoSort: boolean;
 	dailyNoteAutoLink: boolean;
 	dailyNoteNewestFirst: boolean;
-	todoFileName: string;
-	inboxName: string;
 	webpQuality: number;
 	imageResizeScale: number;
 	imageMaxSize: number;
@@ -53,8 +51,6 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	dailyNoteAutoSort: true,
 	dailyNoteAutoLink: true,
 	dailyNoteNewestFirst: false,
-	todoFileName: 'ToDo',
-	inboxName: 'Inbox',
 	webpQuality: 0.85,
 	imageResizeScale: 0.8,
 	imageMaxSize: 700,
@@ -203,12 +199,6 @@ export class CrystalSettingTab extends PluginSettingTab {
 		this.toggleSetting(containerEl, 'Auto Sort Tasks', 'Sort tasks in daily notes automatically', 'dailyNoteAutoSort');
 		this.toggleSetting(containerEl, 'Auto Link Notes', 'Add link to today\'s daily note when create any note', 'dailyNoteAutoLink');
 		this.toggleSetting(containerEl, 'Newest First (Daily Notes)', 'Place new daily note entries at the top (tasks, links, timeline)', 'dailyNoteNewestFirst');
-
-		// quick add settings
-		containerEl.createEl('h3', { text: 'Quick Add' });
-
-		this.textSetting(containerEl, 'ToDo File Name', 'File name for ToDo list (relative path from Obsidian Vault root)', 'todoFileName', 'Enter ToDo File Name');
-		this.textSetting(containerEl, 'Inbox Name', 'Name of the Inbox list', 'inboxName', 'Enter Inbox Name');
 
 		// Image settings
 		containerEl.createEl('h3', { text: 'Image Procesor' });

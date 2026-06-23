@@ -1,6 +1,6 @@
 import { App, Plugin, TFile, MarkdownView, Notice } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
-import { parseFrontmatter } from './utils';
+import { parseFrontmatter, promptForText } from './utils';
 import {
     appHasDailyNotesPluginLoaded,
     createDailyNote,
@@ -273,6 +273,40 @@ export class DailyNotesManager {
         }
     }
 
+    /**
+     * 入力したタスクを今日のデイリーノートのタイムライン上部に追記する
+     */
+    async addTaskToDailyNote(): Promise<void> {
+        const task = await promptForText(this.app, 'タスクを入力してください', 'タスクの内容...', '追加');
+        if (!task || task.trim() === '') {
+            return;
+        }
+
+        try {
+            const file = await this.ensureDailyNoteFile(new Date());
+            if (!file) {
+                return;
+            }
+            const heading = this.settings.dailyNoteTimelineHeading || '# Time Line';
+            await this.app.vault.process(file, (content) => {
+                const { frontmatter, content: body } = parseFrontmatter(content);
+                const { before, timeline } = splitByTimeline(body, heading);
+                const beforeTrimmed = before.trimEnd();
+                const taskLine = `- [ ] ${task}`;
+                const updatedBefore = this.settings.dailyNoteNewestFirst
+                    ? (beforeTrimmed.length > 0 ? `${taskLine}\n${beforeTrimmed}` : taskLine)
+                    : (beforeTrimmed.length > 0 ? `${beforeTrimmed}\n${taskLine}` : taskLine);
+                const newBody = recombineSections(updatedBefore, timeline);
+                const newContent = `${frontmatter}${newBody}`;
+                return newContent.endsWith('\n') ? newContent : `${newContent}\n`;
+            });
+            new Notice('デイリーノートにタスクを追加しました');
+        } catch (error) {
+            new Notice('タスクの追加に失敗しました: ' + error.message);
+            console.error('Add task to daily note error:', error);
+        }
+    }
+
     private async rollOverYesterdayUndoTaskList(editor: any): Promise<void> {
         const baseDate = this.getBaseDateFromActiveFile();
         const yesterday = new Date(baseDate);
@@ -335,6 +369,12 @@ export class DailyNotesManager {
             id: 'crystal-open-tomorrow',
             name: 'Daily: Open tomorrow\'s note',
             callback: () => this.openTomorrow()
+        });
+
+        this.plugin.addCommand({
+            id: 'crystal-add-task-to-daily-note',
+            name: 'Daily: Add task to daily note',
+            callback: () => this.addTaskToDailyNote()
         });
 
         this.plugin.addCommand({
