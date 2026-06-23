@@ -18,9 +18,12 @@
 
 - 既定のAIプロバイダーをOpenAIに変更し、設定画面でOpenAIの項目をGeminiより上に配置。
 - すべてのコマンド名に「グループ名: 動作」形式の接頭辞を付与し、コマンドパレットでグループ単位に並ぶようにした（コマンドIDは不変）。
+- ターミナル実行に使うシェルを、固定の `zsh` からユーザーのログインシェル（`$SHELL`、未設定時は `zsh`）に追従するよう変更（Marp / Quartz が bash などの環境でも動作）。
 
 ### Removed
 
 - Anki連携（`Add Note to Anki` / `Add Note to Anki Assisted by AI`）。
 - macOS Shortcuts連携（`Run Shortcut: ...`）と関連設定。
 - PDFテーブル抽出（Camelot利用の `Export PDF Tables`）。
+- 単発UIコマンド（`Window: Toggle opacity` / `Editor: Toggle line number`）と関連設定（保守範囲の縮小）。
+- `Editor: Copy file path for Claude Code`（特定ツール専用のため整理）。

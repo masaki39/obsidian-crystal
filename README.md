@@ -2,7 +2,7 @@
 
 [![GitHub Release](https://img.shields.io/github/v/release/masaki39/obsidian-crystal?sort=semver&label=latest&color=%237c3aed)](https://github.com/masaki39/obsidian-crystal/releases/latest) [![Total Downloads](https://img.shields.io/github/downloads/masaki39/obsidian-crystal/main.js?logo=obsidian&label=total%20downloads&color=%237c3aed)](https://github.com/masaki39/obsidian-crystal/releases)
 
-このプラグインは、Obsidianでの作業効率を劇的に向上させるための、多岐にわたる機能を統合したオールインワン・プラグインである。
+このプラグインは、Obsidianを起点に「**書く → 整える → 発信する**」というワークフローを一気通貫で支援するためのものである。AIによる執筆補助、画像の取り込み・整形、そしてBluesky・Marp（スライド）・Quartz（サイト）への発信までをカバーする。
 個人用に作成したが、誰でも使用可能だ。
 
 > [!warning]
@@ -109,7 +109,6 @@ BlueSkyへの投稿をアシストする。
 | `Editor: Create new file with link at cursor` | カーソル位置にリンク付きで新規ファイル作成 | タイムスタンプ名のファイルを作成し、現在のカーソル位置にそのファイルへのリンクを挿入して開く。Vimモードが有効な場合はエディタのInsertモードで開始し、無効な場合はタイトル変更モードで開く。 |
 | `Editor: Copy file link` | ファイルリンクをコピー | 現在開いているファイルのWikiリンク（`[[ファイル名]]`）をコピーする。 |
 | `Editor: Copy file link with alias` | エイリアス付きファイルリンクをコピー | ファイルのフロントマターに`aliases`があれば、それを使ったリンク（`[[ファイル名|エイリアス]]`）をコピーする。 |
-| `Editor: Copy file path for Claude Code` | Claude Code用パスをコピー | Vaultルートからの相対パスを`@"相対パス"`形式でコピーする。Claude Codeでのファイル参照に便利。 |
 | `Editor: Wrap selection with subscript` | 下付き文字 | 選択テキストを`<sub>`タグで囲む。すでにある場合は解除する。 |
 | `Editor: Wrap selection with superscript` | 上付き文字 | 選択テキストを`<sup>`タグで囲む。すでにある場合は解除する。 |
 | `Editor: Increase blockquote level` | ブロッククォートレベル増加 | 選択した行のブロッククォート（`>`）レベルを1段階増加させる。 |
@@ -118,8 +117,6 @@ BlueSkyへの投稿をアシストする。
 | `Editor: Organize file with prefix and tags` | タグでファイルを整理 | タグを選択し、ファイル名に絵文字プレフィックスや日付を追加、フロントマターを更新し、指定フォルダへ移動させる。 |
 | `Editor: Insert OGP link (horizontal)` | OGPリンク挿入（横） | URLからOGP情報を取得し、横並びレイアウトのリンクカードを挿入する。 |
 | `Editor: Insert OGP link (vertical)` | OGPリンク挿入（縦） | URLからOGP情報を取得し、縦並びレイアウトのリンクカードを挿入する。 |
-| `Editor: Toggle line number` | 行番号表示の切り替え | `.obsidian/app.json`の行番号表示設定をトグルする。 |
-| `Window: Toggle opacity` | ウィンドウ不透明度の切り替え | Obsidianウィンドウの不透明度をトグルする。 |
 
 **自動化機能（Vimモード有効時）：**
 

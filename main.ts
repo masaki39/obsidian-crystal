@@ -8,13 +8,11 @@ import { GyazoImageMigrator } from './src/gyazo-image-migrator';
 import { GyazoLocalImageMigrator } from './src/gyazo-local-image-migrator';
 import { ImagePasteAndDropHandler } from './src/clipboard-paste-handler';
 import { EditorCommands } from './src/editor-commands';
-import { SettingEdit } from './src/setting-edit';
 import { QuickAddCommands } from './src/quick-add-commands';
 import { MarpCommands } from './src/marp';
 import { TerminalService } from './src/terminal-service';
 import { QuartzService } from './src/quartz-service';
 import { MacroCommands } from './src/macro';
-import { OpacityService } from './src/opacity-service';
 import { GitSummaryService } from './src/git-summary-service';
 
 // Crystal Plugin for Obsidian
@@ -54,8 +52,6 @@ export default class CrystalPlugin extends Plugin {
 	private terminalService: TerminalService;
 	private quartzService: QuartzService;
 	private macroCommands: MacroCommands;
-	private settingEdit: SettingEdit;
-	private opacityService: OpacityService;
 	private gitSummaryService: GitSummaryService;
 
 	async onload() {
@@ -75,8 +71,6 @@ export default class CrystalPlugin extends Plugin {
 		this.marpCommands = new MarpCommands(this.terminalService, this.settings, this);
 		this.quartzService = new QuartzService(this, this.settings, this.terminalService);
 		this.macroCommands = new MacroCommands(this.marpCommands, this.editorCommands, this);
-		this.settingEdit = new SettingEdit(this.app, this);
-		this.opacityService = new OpacityService(this);
 		this.gitSummaryService = new GitSummaryService(
 			this.app, this, this.settings, this.terminalService, this.geminiService
 		);
@@ -89,8 +83,6 @@ export default class CrystalPlugin extends Plugin {
 		this.geminiService.onload();
 		this.editorCommands.onload();
 		this.macroCommands.onload();
-		this.settingEdit.onload();
-		this.opacityService.onload();
 		this.gitSummaryService.onload();
 
 		// Always enable image paste and drop handler (processing depends on settings)
@@ -174,7 +166,6 @@ export default class CrystalPlugin extends Plugin {
 		if (this.imagePasteAndDropHandler) {
 			this.imagePasteAndDropHandler.disable();
 		}
-		this.opacityService.onunload();
 	}
 
 	async loadSettings() {

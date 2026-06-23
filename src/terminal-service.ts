@@ -9,9 +9,10 @@ export class TerminalService {
     }
     async executeCommand(command: string, workingDirectory?: string): Promise<{ stdout: string; stderr: string; exitCode: number }> {
         return new Promise((resolve, reject) => {
-            // ログインシェル(-l)を使用してコマンドを実行
-            // 標準入力を無視してCLIツールの標準入力待ちを防ぐ
-            const child = spawn('zsh', ['-l', '-c', command], {
+            // ユーザーのログインシェルを使用（未設定時は zsh にフォールバック）
+            // ログインシェル(-l)で実行し、標準入力を無視してCLIツールの入力待ちを防ぐ
+            const shell = process.env.SHELL || 'zsh';
+            const child = spawn(shell, ['-l', '-c', command], {
                 stdio: ['ignore', 'pipe', 'pipe'],
                 cwd: workingDirectory || this.vaultPath || undefined
             });
