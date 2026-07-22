@@ -96,8 +96,10 @@ pnpm run build
 ## Versioning & releases
 
 - Bump `version` in `manifest.json` (SemVer) and update `versions.json` to map plugin version → minimum app version.
-- Create a GitHub release whose tag exactly matches `manifest.json`'s `version`. Do not use a leading `v`.
-- Attach `manifest.json`, `main.js`, and `styles.css` (if present) to the release as individual assets.
+- **Releases are automated**: `.github/workflows/release.yml` triggers on any pushed tag (`push: tags: "*"`). It builds the plugin (`pnpm install && pnpm run build`) and runs `gh release create` itself, attaching `main.js`, `manifest.json`, and `styles.css` (only if non-empty) as assets, using `changelog/<tag>.md` as release notes when present. **Do not manually run `gh release create`** — it's redundant with (and can conflict with) this workflow.
+- To cut a release: bump the version, add the `changelog/<version>.md` file, commit, create a git tag matching `manifest.json`'s `version` exactly (no leading `v` — enforced by `.npmrc`'s `tag-version-prefix=""`), and **push the tag** (`git push --follow-tags` or `git push origin <tag>`). The workflow does the rest.
+  - Simplest path: `git add -A && pnpm version <patch|minor|major> && git push --follow-tags` (this both commits and tags in one step, as long as everything you want in that commit — including the changelog file — is already staged first).
+  - If you bump the version without letting `pnpm version`/`npm version` create the tag (e.g. via `--no-git-tag-version`), no tag exists to push, the workflow never fires, and no release gets created — you'd then have to create the tag and release manually as a fallback.
 - After the initial release, follow the process to add/update your plugin in the community catalog as required.
 
 ### Changelog
