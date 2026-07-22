@@ -1,4 +1,5 @@
-import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Notice, Plugin, PluginSettingTab, Setting, requestUrl } from 'obsidian';
+import { AtpAgent } from '@atproto/api';
 
 export interface FileOrganizationRule {
 	displayName: string;
@@ -117,6 +118,64 @@ export class CrystalSettingTab extends PluginSettingTab {
 			});
 	}
 
+	private addVerifyButton(setting: Setting, verify: () => Promise<void>) {
+		setting.addButton(button => button
+			.setButtonText('Verify')
+			.onClick(async () => {
+				button.setDisabled(true);
+				button.setButtonText('Verifying…');
+				try {
+					await verify();
+					new Notice('✅ Valid: the credential works.');
+				} catch (error) {
+					new Notice(`❌ Invalid: ${error.message}`);
+				} finally {
+					button.setDisabled(false);
+					button.setButtonText('Verify');
+				}
+			}));
+	}
+
+	private async verifyGyazoToken(token: string): Promise<void> {
+		if (!token) throw new Error('Access token is empty');
+		const response = await requestUrl({
+			url: `https://api.gyazo.com/api/images?access_token=${encodeURIComponent(token)}&per_page=1`,
+			method: 'GET',
+			throw: false,
+		});
+		if (response.status === 401) throw new Error('Invalid access token');
+		if (response.status < 200 || response.status >= 300) throw new Error(`HTTP ${response.status}`);
+	}
+
+	private async verifyOpenAIKey(key: string): Promise<void> {
+		if (!key) throw new Error('API key is empty');
+		const response = await requestUrl({
+			url: 'https://api.openai.com/v1/models',
+			method: 'GET',
+			headers: { 'Authorization': `Bearer ${key}` },
+			throw: false,
+		});
+		if (response.status === 401) throw new Error('Invalid API key');
+		if (response.status < 200 || response.status >= 300) throw new Error(`HTTP ${response.status}`);
+	}
+
+	private async verifyGeminiKey(key: string): Promise<void> {
+		if (!key) throw new Error('API key is empty');
+		const response = await requestUrl({
+			url: `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`,
+			method: 'GET',
+			throw: false,
+		});
+		if (response.status === 400 || response.status === 401 || response.status === 403) throw new Error('Invalid API key');
+		if (response.status < 200 || response.status >= 300) throw new Error(`HTTP ${response.status}`);
+	}
+
+	private async verifyBlueskyCredentials(identifier: string, password: string): Promise<void> {
+		if (!identifier || !password) throw new Error('Handle/email and app password are required');
+		const agent = new AtpAgent({ service: 'https://bsky.social' });
+		await agent.login({ identifier, password });
+	}
+
 	display(): void {
 		const { containerEl } = this;
 
@@ -144,7 +203,10 @@ export class CrystalSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
-		this.secretSetting(containerEl, 'OpenAI API Key', 'Enter your OpenAI API Key', 'Enter your OpenAI API Key', 'OpenAIAPIKey');
+		this.addVerifyButton(
+			this.secretSetting(containerEl, 'OpenAI API Key', 'Enter your OpenAI API Key', 'Enter your OpenAI API Key', 'OpenAIAPIKey'),
+			() => this.verifyOpenAIKey(this.plugin.settings.OpenAIAPIKey)
+		);
 
 		new Setting(containerEl)
 			.setName('OpenAI Model')
@@ -163,7 +225,10 @@ export class CrystalSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
-		this.secretSetting(containerEl, 'Gemini API Key', 'Enter your Gemini API Key', 'Enter your Gemini API Key', 'GeminiAPIKey');
+		this.addVerifyButton(
+			this.secretSetting(containerEl, 'Gemini API Key', 'Enter your Gemini API Key', 'Enter your Gemini API Key', 'GeminiAPIKey'),
+			() => this.verifyGeminiKey(this.plugin.settings.GeminiAPIKey)
+		);
 
 		new Setting(containerEl)
 			.setName('Gemini Model')
@@ -188,7 +253,10 @@ export class CrystalSettingTab extends PluginSettingTab {
 
 		this.secretSetting(containerEl, 'Bluesky Handle/Email', 'Your Bluesky handle (e.g., user.bsky.social) or email address', 'Enter your Bluesky handle or email', 'blueskyIdentifier');
 
-		this.secretSetting(containerEl, 'Bluesky App Password', 'Your Bluesky app password (create one in Bluesky Settings > App Passwords)', 'Enter your Bluesky app password', 'blueskyPassword');
+		this.addVerifyButton(
+			this.secretSetting(containerEl, 'Bluesky App Password', 'Your Bluesky app password (create one in Bluesky Settings > App Passwords)', 'Enter your Bluesky app password', 'blueskyPassword'),
+			() => this.verifyBlueskyCredentials(this.plugin.settings.blueskyIdentifier, this.plugin.settings.blueskyPassword)
+		);
 
 		this.toggleSetting(containerEl, 'Append Bluesky posts to Daily Note timeline', 'Add each post to today\'s daily note timeline section', 'blueskyAppendToDailyNote');
 		this.textSetting(containerEl, 'Daily Note timeline heading', 'Heading text that marks the timeline section (exact match)', 'dailyNoteTimelineHeading', '# Time Line');
@@ -255,7 +323,10 @@ export class CrystalSettingTab extends PluginSettingTab {
 		gyazoDesc.append('Access token from ');
 		gyazoDesc.createEl('a', { text: 'gyazo.com/oauth/applications', href: 'https://gyazo.com/oauth/applications' });
 		gyazoDesc.append(' (create an app → copy the access token)');
-		this.secretSetting(containerEl, 'Gyazo access token', gyazoDesc, 'Enter Gyazo access token', 'gyazoAccessToken');
+		this.addVerifyButton(
+			this.secretSetting(containerEl, 'Gyazo access token', gyazoDesc, 'Enter Gyazo access token', 'gyazoAccessToken'),
+			() => this.verifyGyazoToken(this.plugin.settings.gyazoAccessToken)
+		);
 
 		// Marp settings
 		containerEl.createEl('h3', { text: 'Marp' });
