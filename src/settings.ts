@@ -1,4 +1,4 @@
-import { App, Notice, Plugin, PluginSettingTab, Setting, requestUrl } from 'obsidian';
+import { App, IconName, Notice, Plugin, PluginSettingTab, Setting, requestUrl, setIcon } from 'obsidian';
 import { AtpAgent } from '@atproto/api';
 
 export interface FileOrganizationRule {
@@ -73,6 +73,16 @@ export class CrystalSettingTab extends PluginSettingTab {
 	constructor(app: App, plugin: Plugin & { settings: CrystalPluginSettings; saveSettings(): Promise<void> }) {
 		super(app, plugin);
 		this.plugin = plugin;
+	}
+
+	private sectionHeading(containerEl: HTMLElement, name: string, icon: IconName, sub = false) {
+		const setting = new Setting(containerEl).setName(name).setHeading();
+		setting.settingEl.addClass('crystal-section-heading');
+		if (sub) setting.settingEl.addClass('crystal-section-heading-sub');
+		const iconEl = createSpan({ cls: 'crystal-section-icon' });
+		setIcon(iconEl, icon);
+		setting.nameEl.prepend(iconEl);
+		return setting;
 	}
 
 	private textSetting(containerEl: HTMLElement, name: string, desc: string, key: string, value: string) {
@@ -181,15 +191,13 @@ export class CrystalSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		containerEl.createEl('h1', { text: 'Crystal Plugin Settings' });
-
 		// General settings
-		containerEl.createEl('h3', { text: 'General Settings' });
+		this.sectionHeading(containerEl, 'General settings', 'settings-2');
 
 		this.textSetting(containerEl, 'Export Folder Path', 'Folder where this plugin exports files (used by PDF and Marp features)', 'exportFolderPath', 'Enter Export Folder Path');
 
 		// AI settings
-		containerEl.createEl('h3', { text: 'AI Editor Commands' });
+		this.sectionHeading(containerEl, 'AI editor commands', 'bot');
 
 		new Setting(containerEl)
 			.setName('AI Provider')
@@ -249,7 +257,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 				}));
 
 		// Bluesky settings
-		containerEl.createEl('h3', { text: 'Bluesky' });
+		this.sectionHeading(containerEl, 'Bluesky', 'cloud');
 
 		this.secretSetting(containerEl, 'Bluesky Handle/Email', 'Your Bluesky handle (e.g., user.bsky.social) or email address', 'Enter your Bluesky handle or email', 'blueskyIdentifier');
 
@@ -262,14 +270,14 @@ export class CrystalSettingTab extends PluginSettingTab {
 		this.textSetting(containerEl, 'Daily Note timeline heading', 'Heading text that marks the timeline section (exact match)', 'dailyNoteTimelineHeading', '# Time Line');
 
 		// Daily notes settings
-		containerEl.createEl('h3', { text: 'Daily Notes' });
+		this.sectionHeading(containerEl, 'Daily notes', 'calendar-days');
 
 		this.toggleSetting(containerEl, 'Auto Sort Tasks', 'Sort tasks in daily notes automatically', 'dailyNoteAutoSort');
 		this.toggleSetting(containerEl, 'Auto Link Notes', 'Add link to today\'s daily note when create any note', 'dailyNoteAutoLink');
 		this.toggleSetting(containerEl, 'Newest First (Daily Notes)', 'Place new daily note entries at the top (tasks, links, timeline)', 'dailyNoteNewestFirst');
 
 		// Image settings
-		containerEl.createEl('h3', { text: 'Image Procesor' });
+		this.sectionHeading(containerEl, 'Image processor', 'image');
 
 		new Setting(containerEl)
 			.setName('Auto Convert Images to WebP on Paste')
@@ -317,7 +325,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 				}));
 
 		// Gyazo settings
-		containerEl.createEl('h4', { text: 'Gyazo Uploader' });
+		this.sectionHeading(containerEl, 'Gyazo uploader', 'upload-cloud', true);
 
 		const gyazoDesc = document.createDocumentFragment();
 		gyazoDesc.append('Access token from ');
@@ -329,14 +337,14 @@ export class CrystalSettingTab extends PluginSettingTab {
 		);
 
 		// Marp settings
-		containerEl.createEl('h3', { text: 'Marp' });
+		this.sectionHeading(containerEl, 'Marp', 'presentation');
 
 		this.textSetting(containerEl, 'Marp Slide Folder Path (relative path)', 'Folder where slide files are organized', 'marpSlideFolderPath', 'e.g. Slides');
 		this.textSetting(containerEl, 'Marp Theme Directory', 'Absolute or relative path to a directory passed to Marp CLI --theme-set (optional)', 'marpThemePath', 'e.g. Slides/themes');
 		this.textSetting(containerEl, 'Marp Attachment Folder Path', 'Folder where Marp images are stored (relative path)', 'marpAttachmentFolderPath', 'e.g. Slides/attachments');
 
 		// Quartz settings
-		containerEl.createEl('h3', { text: 'Quartz' });
+		this.sectionHeading(containerEl, 'Quartz', 'globe');
 
 		this.textSetting(containerEl, 'Publish Folder Path', 'Path to Publish Folder (relative path from Obsidian Vault root)', 'publishFolderPath', 'Enter Publish Folder Path');
 		this.textSetting(containerEl, 'Path to Local Repository of Quartz', 'Path to Quartz (absolute path)', 'quartzPath', 'Enter Quartz Folder Path');
@@ -344,8 +352,8 @@ export class CrystalSettingTab extends PluginSettingTab {
 		this.textSetting(containerEl, 'Github User Name', 'Github user name', 'githubUserName', 'Enter Github User Name');
 
 		// File Organization Rules settings
-		containerEl.createEl('h3', { text: 'File Organization Rules' });
-		containerEl.createEl('p', { text: 'Configure rules for file organization. You can set display name, tag, folder, prefix, and date inclusion.' });
+		this.sectionHeading(containerEl, 'File organization rules', 'folder-tree')
+			.setDesc('Configure rules for file organization. You can set display name, tag, folder, prefix, and date inclusion.');
 
 		const rulesContainer = containerEl.createDiv({ cls: 'file-organization-rules' });
 		this.displayFileOrganizationRules(rulesContainer);

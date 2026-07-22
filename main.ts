@@ -91,6 +91,7 @@ export default class CrystalPlugin extends Plugin {
 		this.addCommand({
 			id: 'crystal-upload-clipboard-image',
 			name: 'Gyazo: Upload clipboard image',
+			icon: 'upload-cloud',
 			editorCallback: async (editor: Editor) => {
 				try {
 					await this.gyazoService.uploadClipboardImage(editor);
@@ -104,6 +105,7 @@ export default class CrystalPlugin extends Plugin {
 		this.addCommand({
 			id: 'crystal-upload-file-image',
 			name: 'Gyazo: Upload image file',
+			icon: 'upload-cloud',
 			editorCallback: async (editor: Editor) => {
 				try {
 					await this.gyazoService.promptFileUpload(editor);
@@ -117,6 +119,7 @@ export default class CrystalPlugin extends Plugin {
 		this.addCommand({
 			id: 'crystal-replace-image-urls-with-gyazo',
 			name: 'Gyazo: Replace image URLs in active note',
+			icon: 'image-plus',
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
 				try {
 					await this.gyazoImageMigrator.replaceExternalImagesInActiveNote(editor, view);
@@ -130,6 +133,7 @@ export default class CrystalPlugin extends Plugin {
 		this.addCommand({
 			id: 'crystal-replace-local-images-with-gyazo',
 			name: 'Gyazo: Replace local images in active note',
+			icon: 'image-plus',
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
 				try {
 					await this.gyazoLocalImageMigrator.replaceLocalImagesInActiveNote(editor, view);

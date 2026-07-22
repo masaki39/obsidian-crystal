@@ -22,7 +22,7 @@ export class GyazoLocalImageMigrator {
 	async replaceLocalImagesInActiveNote(editor: Editor, view: MarkdownView): Promise<void> {
 		const sourceFile = view.file;
 		if (!sourceFile) {
-			new Notice('ファイルが開かれていません');
+			new Notice('⚠️ ファイルが開かれていません');
 			return;
 		}
 
@@ -32,11 +32,11 @@ export class GyazoLocalImageMigrator {
 		// Collect unique local image files embedded in the active note
 		const targetFiles = this.collectLocalImageFiles(content, sourceFile.path);
 		if (targetFiles.size === 0) {
-			new Notice('置換対象のローカル画像が見つかりませんでした');
+			new Notice('⚠️ 置換対象のローカル画像が見つかりませんでした');
 			return;
 		}
 
-		new Notice(`${targetFiles.size}件のローカル画像をGyazoにアップロード中...`);
+		new Notice(`⏳ ${targetFiles.size}件のローカル画像をGyazoにアップロード中...`);
 
 		// Upload each unique file once: path -> Gyazo URL
 		const uploaded = new Map<string, string>();
@@ -53,7 +53,7 @@ export class GyazoLocalImageMigrator {
 		}
 
 		if (uploaded.size === 0) {
-			new Notice(`画像のアップロードに失敗しました (${failed}件)`);
+			new Notice(`❌ 画像のアップロードに失敗しました (${failed}件)`);
 			return;
 		}
 
@@ -92,7 +92,7 @@ export class GyazoLocalImageMigrator {
 		const parts = [`${uploaded.size}件のローカル画像をGyazoに置換`];
 		if (updatedNotes > 0) parts.push(`他${updatedNotes}ノートの参照も更新`);
 		if (failed > 0) parts.push(`${failed}件失敗`);
-		new Notice(parts.join('、'));
+		new Notice(`${failed > 0 ? '⚠️' : '✅'} ${parts.join('、')}`);
 	}
 
 	/**

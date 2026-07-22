@@ -53,10 +53,10 @@ export class GyazoService {
 		const url = await this.uploadToGyazo(blob, originalType);
 		if (editor) {
 			editor.replaceSelection(`![](${url})`);
-			new Notice('Image uploaded and inserted.');
+			new Notice('✅ Image uploaded and inserted.');
 		} else {
 			await navigator.clipboard.writeText(url);
-			new Notice('Image uploaded. URL copied to clipboard.');
+			new Notice('✅ Image uploaded. URL copied to clipboard.');
 		}
 		return url;
 	}
@@ -135,10 +135,10 @@ export class GyazoService {
 		}
 		try {
 			const url = await this.uploadToGyazo(blob, originalType);
-			new Notice('Image uploaded to Gyazo.');
+			new Notice('✅ Image uploaded to Gyazo.');
 			return url;
 		} catch (error) {
-			new Notice(`Upload failed: ${error.message}`);
+			new Notice(`❌ Upload failed: ${error.message}`);
 			throw error;
 		}
 	}
@@ -163,7 +163,7 @@ export class GyazoService {
 
 			return await this.uploadBlob(blob, originalType, editor);
 		} catch (error) {
-			new Notice(`Upload failed: ${error.message}`);
+			new Notice(`❌ Upload failed: ${error.message}`);
 			throw error;
 		}
 	}
@@ -203,7 +203,7 @@ export class GyazoService {
 
 			return await this.uploadBlob(finalBlob, finalType, editor);
 		} catch (error) {
-			new Notice(`Upload failed: ${error.message}`);
+			new Notice(`❌ Upload failed: ${error.message}`);
 			throw error;
 		}
 	}

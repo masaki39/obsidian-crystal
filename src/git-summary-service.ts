@@ -39,7 +39,7 @@ export class GitSummaryService {
 
     async generateSummary(): Promise<void> {
         if (!this.geminiService.isAvailable()) {
-            new Notice('AIのAPIキーが設定されていません。設定でプロバイダーとAPIキーを確認してください。');
+            new Notice('⚠️ AIのAPIキーが設定されていません。設定でプロバイダーとAPIキーを確認してください。');
             return;
         }
 
@@ -53,7 +53,7 @@ export class GitSummaryService {
             const isToday = dateStr === this.formatDate(new Date());
             const useWorkingTree = !isDailyNote || isToday;
 
-            new Notice('Gitコミット差分を取得中...');
+            new Notice('⏳ Gitコミット差分を取得中...');
 
             let lastCommit = '';
             if (!useWorkingTree) {
@@ -63,7 +63,7 @@ export class GitSummaryService {
                 );
                 lastCommit = lastCommitResult.stdout.trim();
                 if (!lastCommit) {
-                    new Notice(`${dateStr} のコミットが見つかりませんでした。`);
+                    new Notice(`⚠️ ${dateStr} のコミットが見つかりませんでした。`);
                     return;
                 }
             }
@@ -83,11 +83,11 @@ export class GitSummaryService {
             const diff = diffResult.stdout.trim();
 
             if (!diff) {
-                new Notice('差分が見つかりませんでした。');
+                new Notice('⚠️ 差分が見つかりませんでした。');
                 return;
             }
 
-            new Notice('AIでサマリーを生成中...');
+            new Notice('⏳ AIでサマリーを生成中...');
             const summary = await this.geminiService.generateGitSummary(diff, dateStr);
 
             // 書き込み先: デイリーノートならそのファイル、そうでなければ今日のデイリーノート
@@ -95,7 +95,7 @@ export class GitSummaryService {
             if (!isDailyNote) {
                 const todayNote = getDailyNote(moment(), getAllDailyNotes());
                 if (!todayNote) {
-                    new Notice('今日のデイリーノートが見つかりませんでした。');
+                    new Notice('⚠️ 今日のデイリーノートが見つかりませんでした。');
                     return;
                 }
                 targetFile = todayNote;
@@ -105,11 +105,11 @@ export class GitSummaryService {
                 frontmatter.summary = summary;
             });
 
-            new Notice(`サマリー生成完了: ${summary}`);
+            new Notice(`✅ サマリー生成完了: ${summary}`);
 
         } catch (error) {
             console.error('Error generating git summary:', error);
-            new Notice(`サマリー生成エラー: ${error.message}`);
+            new Notice(`❌ サマリー生成エラー: ${error.message}`);
         }
     }
 
@@ -117,6 +117,7 @@ export class GitSummaryService {
         this.plugin.addCommand({
             id: 'crystal-generate-git-commit-summary',
             name: 'AI: Generate git commit summary',
+            icon: 'git-commit-horizontal',
             callback: () => {
                 this.generateSummary();
             }

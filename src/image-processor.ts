@@ -33,12 +33,12 @@ export class ImageProcessor {
 				processedBlob = await this.convertToWebP(imageFile);
 				isConverted = true;
 				if (showNotice) {
-					new Notice(`Image converted to WebP (quality: ${Math.round(this.settings.webpQuality * 100)}%)`);
+					new Notice(`✅ Image converted to WebP (quality: ${Math.round(this.settings.webpQuality * 100)}%)`);
 				}
 			} catch (conversionError) {
 				console.warn('WebP conversion failed, using original format:', conversionError);
 				if (showNotice) {
-					new Notice('WebP conversion failed, uploading original format');
+					new Notice('❌ WebP conversion failed, uploading original format');
 				}
 				processedBlob = imageFile;
 			}

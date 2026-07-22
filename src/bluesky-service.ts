@@ -42,15 +42,11 @@ class ImagePreviewModal extends Modal {
 	}
 	onOpen() {
 		const { contentEl } = this;
-		contentEl.style.padding = '0';
+		this.modalEl.addClass('crystal-image-preview-modal');
 		this.modalEl.style.width = 'auto';
 		this.modalEl.style.maxWidth = '90vw';
 		const img = contentEl.createEl('img');
 		img.src = this.src;
-		img.style.width = 'auto';
-		img.style.maxWidth = '90vw';
-		img.style.maxHeight = '85vh';
-		img.style.display = 'block';
 	}
 	onClose() {
 		this.contentEl.empty();
@@ -82,24 +78,15 @@ class PostModal extends Modal {
 
 	onOpen() {
 		const { contentEl } = this;
-		contentEl.createEl('h3', { text: this.title });
+		contentEl.createEl('h3', { text: this.title, cls: 'crystal-modal-title' });
 
-		const textarea = contentEl.createEl('textarea');
-		textarea.style.width = '100%';
-		textarea.style.height = '120px';
-		textarea.style.resize = 'vertical';
-		textarea.style.fontFamily = 'inherit';
-		textarea.style.marginBottom = '8px';
+		const textarea = contentEl.createEl('textarea', { cls: 'crystal-modal-input' });
 		textarea.placeholder = '投稿内容を入力してください';
 
 		const imageSection = contentEl.createDiv();
 		imageSection.style.marginBottom = '16px';
 
-		const imageRow = imageSection.createDiv();
-		imageRow.style.display = 'flex';
-		imageRow.style.alignItems = 'flex-start';
-		imageRow.style.gap = '8px';
-		imageRow.style.marginBottom = '8px';
+		const imageRow = imageSection.createDiv({ cls: 'crystal-image-row' });
 
 		const uploadButton = imageRow.createEl('button', { text: `ファイルを選択` });
 		uploadButton.style.flexShrink = '0';
@@ -107,11 +94,7 @@ class PostModal extends Modal {
 		const clipboardButton = imageRow.createEl('button', { text: 'クリップボードから貼り付け' });
 		clipboardButton.style.flexShrink = '0';
 
-		const previewEl = imageSection.createDiv();
-		previewEl.style.display = 'flex';
-		previewEl.style.flexWrap = 'wrap';
-		previewEl.style.gap = '6px';
-		previewEl.style.alignItems = 'flex-start';
+		const previewEl = imageSection.createDiv({ cls: 'crystal-image-preview-row' });
 
 		const refreshPreview = () => {
 			for (const url of this.objectUrls) {
@@ -121,10 +104,10 @@ class PostModal extends Modal {
 			previewEl.empty();
 
 			if (this.selectedFiles.length === 0) {
-				const placeholder = previewEl.createEl('span', { text: `未選択 (最大${MAX_IMAGES}枚)` });
-				placeholder.style.color = 'var(--text-muted)';
-				placeholder.style.fontSize = '0.82em';
-				placeholder.style.alignSelf = 'center';
+				previewEl.createEl('span', {
+					text: `未選択 (最大${MAX_IMAGES}枚)`,
+					cls: 'crystal-image-preview-empty',
+				});
 				return;
 			}
 
@@ -133,40 +116,17 @@ class PostModal extends Modal {
 				const url = URL.createObjectURL(file);
 				this.objectUrls.push(url);
 
-				const wrapper = previewEl.createDiv();
-				wrapper.style.position = 'relative';
-				wrapper.style.width = '64px';
-				wrapper.style.height = '64px';
-				wrapper.style.flexShrink = '0';
-				wrapper.style.cursor = 'pointer';
+				const wrapper = previewEl.createDiv({ cls: 'crystal-image-thumb' });
 
 				const img = wrapper.createEl('img');
 				img.src = url;
-				img.style.width = '64px';
-				img.style.height = '64px';
-				img.style.objectFit = 'cover';
-				img.style.borderRadius = '4px';
-				img.style.display = 'block';
 
 				img.addEventListener('click', (e) => {
 					e.stopPropagation();
 					new ImagePreviewModal(this.app, url).open();
 				});
 
-				const removeBtn = wrapper.createEl('button', { text: '×' });
-				removeBtn.style.position = 'absolute';
-				removeBtn.style.top = '2px';
-				removeBtn.style.right = '2px';
-				removeBtn.style.width = '18px';
-				removeBtn.style.height = '18px';
-				removeBtn.style.padding = '0';
-				removeBtn.style.lineHeight = '1';
-				removeBtn.style.fontSize = '12px';
-				removeBtn.style.cursor = 'pointer';
-				removeBtn.style.background = 'rgba(0,0,0,0.55)';
-				removeBtn.style.color = '#fff';
-				removeBtn.style.border = 'none';
-				removeBtn.style.borderRadius = '50%';
+				const removeBtn = wrapper.createEl('button', { text: '×', cls: 'crystal-image-thumb-remove' });
 
 				const capturedIndex = i;
 				removeBtn.addEventListener('click', (e) => {
@@ -194,7 +154,7 @@ class PostModal extends Modal {
 
 		clipboardButton.addEventListener('click', async () => {
 			if (this.selectedFiles.length >= MAX_IMAGES) {
-				new Notice(`画像は最大${MAX_IMAGES}枚まで選択できます`);
+				new Notice(`⚠️ 画像は最大${MAX_IMAGES}枚まで選択できます`);
 				return;
 			}
 			try {
@@ -212,17 +172,14 @@ class PostModal extends Modal {
 						}
 					}
 				}
-				new Notice('クリップボードに画像が見つかりません');
+				new Notice('⚠️ クリップボードに画像が見つかりません');
 			} catch (e) {
-				new Notice('クリップボードの読み取りに失敗しました');
+				new Notice('❌ クリップボードの読み取りに失敗しました');
 				console.error('Clipboard read failed:', e);
 			}
 		});
 
-		const buttonContainer = contentEl.createDiv();
-		buttonContainer.style.display = 'flex';
-		buttonContainer.style.gap = '8px';
-		buttonContainer.style.justifyContent = 'flex-end';
+		const buttonContainer = contentEl.createDiv({ cls: 'crystal-modal-button-row' });
 
 		const cancelButton = buttonContainer.createEl('button', { text: 'キャンセル' });
 		const submitButton = buttonContainer.createEl('button', { text: this.buttonText });
@@ -580,23 +537,23 @@ export class BlueskyService {
 			});
 
 			if (!result || !result.text.trim()) {
-				new Notice('内容が空のため、追加をキャンセルしました。');
+				new Notice('⚠️ 内容が空のため、追加をキャンセルしました。');
 				return;
 			}
 
 			const imagePart = result.gyazoUrls.map(url => `![](${url})`).join('\n');
 			const fullText = imagePart ? `${result.text}\n${imagePart}` : result.text;
 			await this.dailyNotesManager.appendToTimeline(fullText);
-			new Notice('デイリーノートのタイムラインに追加しました。');
+			new Notice('✅ デイリーノートのタイムラインに追加しました。');
 		} catch (error) {
 			console.error('Error in promptAndAppendToDailyNote:', error);
-			new Notice(`追加エラー: ${error.message}`);
+			new Notice(`❌ 追加エラー: ${error.message}`);
 		}
 	}
 
 	async promptAndPost(): Promise<void> {
 		if (!this.isAvailable()) {
-			new Notice('Bluesky認証情報が設定されていません。設定からユーザー名とアプリパスワードを入力してください。');
+			new Notice('⚠️ Bluesky認証情報が設定されていません。設定からユーザー名とアプリパスワードを入力してください。');
 			return;
 		}
 
@@ -606,17 +563,17 @@ export class BlueskyService {
 			});
 
 			if (!result || !result.text.trim()) {
-				new Notice('投稿内容が空のため、投稿をキャンセルしました。');
+				new Notice('⚠️ 投稿内容が空のため、投稿をキャンセルしました。');
 				return;
 			}
 
-			new Notice('Blueskyに投稿中...');
+			new Notice('⏳ Blueskyに投稿中...');
 			await this.post(result.text, result.gyazoUrls, result.imageFiles);
-			new Notice('Blueskyに投稿が完了しました！');
+			new Notice('✅ Blueskyに投稿が完了しました！');
 
 		} catch (error) {
 			console.error('Error in promptAndPost:', error);
-			new Notice(`投稿エラー: ${error.message}`);
+			new Notice(`❌ 投稿エラー: ${error.message}`);
 		}
 	}
 
@@ -624,6 +581,7 @@ export class BlueskyService {
         this.plugin.addCommand({
             id: 'crystal-post-to-bluesky',
             name: 'Bluesky: Post to Bluesky',
+            icon: 'cloud',
             callback: () => {
                 this.promptAndPost();
             }
@@ -632,6 +590,7 @@ export class BlueskyService {
         this.plugin.addCommand({
             id: 'crystal-post-to-daily-note',
             name: 'Bluesky: Post to daily note timeline',
+            icon: 'calendar-days',
             callback: () => {
                 this.promptAndAppendToDailyNote();
             }

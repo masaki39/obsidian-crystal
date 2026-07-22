@@ -3,7 +3,7 @@ import { CrystalPluginSettings } from './settings';
 import { AIService } from './ai-service';
 import { promptForText } from './utils';
 
-const AI_KEY_MISSING_NOTICE = 'AIのAPIキーが設定されていません。設定でプロバイダーとAPIキーを確認してください。';
+const AI_KEY_MISSING_NOTICE = '⚠️ AIのAPIキーが設定されていません。設定でプロバイダーとAPIキーを確認してください。';
 
 export class GeminiService {
 	private ai: AIService;
@@ -86,12 +86,12 @@ ${content}`;
 		}
 
 		if (!view.file) {
-			new Notice('現在のファイルが見つかりません。');
+			new Notice('⚠️ 現在のファイルが見つかりません。');
 			return;
 		}
 
 		try {
-			new Notice('Descriptionを生成中...');
+			new Notice('⏳ Descriptionを生成中...');
 
 			// フロントマターを除去したコンテンツを取得
 			const titleForAnalysis = view.file.basename;
@@ -103,11 +103,11 @@ ${content}`;
 			// フロントマターを更新
 			await this.updateFrontmatterDescription(view.file, description);
 
-			new Notice(`Description生成完了: ${description}`);
+			new Notice(`✅ Description生成完了: ${description}`);
 
 		} catch (error) {
 			console.error('Error generating description:', error);
-			new Notice(`Description生成エラー: ${error.message}`);
+			new Notice(`❌ Description生成エラー: ${error.message}`);
 		}
 	}
 
@@ -120,12 +120,12 @@ ${content}`;
 		const selectedText = editor.getSelection();
 
 		if (!selectedText.trim()) {
-			new Notice('選択されたテキストが空のため、翻訳できません。');
+			new Notice('⚠️ 選択されたテキストが空のため、翻訳できません。');
 			return;
 		}
 
 		try {
-			new Notice('翻訳中...');
+			new Notice('⏳ 翻訳中...');
 
 			const prompt = `以下のテキストを翻訳してください。日本語の場合は英語に、英語の場合は日本語に翻訳してください。翻訳結果のみを出力し、余計な説明は含めないでください。
 
@@ -135,11 +135,11 @@ ${selectedText}`;
 
 			// 選択範囲を翻訳結果で置換
 			editor.replaceSelection(translatedText);
-			new Notice(`翻訳完了: ${translatedText}`);
+			new Notice(`✅ 翻訳完了: ${translatedText}`);
 
 		} catch (error) {
 			console.error('Error translating text:', error);
-			new Notice(`翻訳エラー: ${error.message}`);
+			new Notice(`❌ 翻訳エラー: ${error.message}`);
 		}
 	}
 
@@ -155,12 +155,12 @@ ${selectedText}`;
 
 		// 境界チェック
 		if (direction === 'above' && currentLine === 0) {
-			new Notice('カーソルが最初の行にあるため、上の行が存在しません。');
+			new Notice('⚠️ カーソルが最初の行にあるため、上の行が存在しません。');
 			return;
 		}
 
 		if (direction === 'below' && currentLine === totalLines - 1) {
-			new Notice('カーソルが最後の行にあるため、下の行が存在しません。');
+			new Notice('⚠️ カーソルが最後の行にあるため、下の行が存在しません。');
 			return;
 		}
 
@@ -171,13 +171,13 @@ ${selectedText}`;
 
 		if (!targetLinePureText) {
 			const directionText = direction === 'above' ? '上' : '下';
-			new Notice(`${directionText}の行が空行のため、翻訳できません。`);
+			new Notice(`⚠️ ${directionText}の行が空行のため、翻訳できません。`);
 			return;
 		}
 
 		try {
 			const directionText = direction === 'above' ? '上' : '下';
-			new Notice(`${directionText}の行を翻訳中...`);
+			new Notice(`⏳ ${directionText}の行を翻訳中...`);
 
 			const prompt = `以下のテキストを翻訳してください。日本語の場合は英語に、英語の場合は日本語に翻訳してください。翻訳結果のみを出力し、余計な説明は含めないでください。
 
@@ -194,11 +194,11 @@ ${targetLinePureText}`;
 				editor.replaceRange(translatedText, cursor);
 			}
 
-			new Notice(`翻訳完了: ${translatedText}`);
+			new Notice(`✅ 翻訳完了: ${translatedText}`);
 
 		} catch (error) {
 			console.error('Error translating text:', error);
-			new Notice(`翻訳エラー: ${error.message}`);
+			new Notice(`❌ 翻訳エラー: ${error.message}`);
 		}
 	}
 
@@ -239,7 +239,7 @@ ${targetLinePureText}`;
 
 		const instruction = await this.promptRewriteInstruction(mode);
 		if (!instruction || !instruction.trim()) {
-			new Notice('指示が入力されていません。');
+			new Notice('⚠️ 指示が入力されていません。');
 			return;
 		}
 
@@ -248,7 +248,7 @@ ${targetLinePureText}`;
 		const targetText = useSelection ? selection : editor.getValue();
 
 		if (!targetText.trim()) {
-			new Notice('変換対象のテキストがありません。');
+			new Notice('⚠️ 変換対象のテキストがありません。');
 			return;
 		}
 
@@ -269,13 +269,13 @@ ${instruction}
 ${targetText}`;
 
 		try {
-			new Notice('AIで書き換え中...');
+			new Notice('⏳ AIで書き換え中...');
 			const prompt = mode === 'replace' ? basePromptReplace : basePromptAppend;
 
 			const rewritten = await this.ai.generateText(prompt);
 
 			if (!rewritten) {
-				new Notice('AIから結果が返りませんでした。');
+				new Notice('⚠️ AIから結果が返りませんでした。');
 				return;
 			}
 
@@ -285,16 +285,16 @@ ${targetText}`;
 				} else {
 					editor.setValue(rewritten);
 				}
-				new Notice('書き換え完了（置換）。');
+				new Notice('✅ 書き換え完了（置換）。');
 			} else {
 				const needsBreak = editor.getValue().endsWith('\n') ? '' : '\n';
 				const appendText = `${needsBreak}${rewritten}\n`;
 				editor.replaceRange(appendText, { line: editor.lineCount(), ch: 0 });
-				new Notice('結果を末尾に追記しました。');
+				new Notice('✅ 結果を末尾に追記しました。');
 			}
 		} catch (error) {
 			console.error('Error rewriting text:', error);
-			new Notice(`書き換えエラー: ${error.message}`);
+			new Notice(`❌ 書き換えエラー: ${error.message}`);
 		}
 	}
 
@@ -309,7 +309,7 @@ ${targetText}`;
 		const currentLineText = editor.getLine(currentLine);
 
 		if (!currentLineText.trim()) {
-			new Notice('現在の行が空のため、文法チェックできません。');
+			new Notice('⚠️ 現在の行が空のため、文法チェックできません。');
 			return;
 		}
 
@@ -319,12 +319,12 @@ ${targetText}`;
 		const pureText = await this.getPureTextFromLine(currentLineText);
 
 		if (!pureText.trim()) {
-			new Notice('校正対象のテキストが空のため、文法チェックできません。');
+			new Notice('⚠️ 校正対象のテキストが空のため、文法チェックできません。');
 			return;
 		}
 
 		try {
-			new Notice('文法チェック中...');
+			new Notice('⏳ 文法チェック中...');
 
 			const prompt = `以下のテキストの文法をチェックして、より自然で正しい文に校正してください。言語は変更せず、日本語の場合は日本語のまま、英語の場合は英語のまま校正してください。校正結果のみを出力し、余計な説明は含めないでください。
 
@@ -338,11 +338,11 @@ ${pureText}`;
 			const lineEnd = { line: currentLine, ch: currentLineText.length };
 			editor.replaceRange(finalText, lineStart, lineEnd);
 
-			new Notice(`文法チェック完了: ${correctedText}`);
+			new Notice(`✅ 文法チェック完了: ${correctedText}`);
 
 		} catch (error) {
 			console.error('Error checking grammar:', error);
-			new Notice(`文法チェックエラー: ${error.message}`);
+			new Notice(`❌ 文法チェックエラー: ${error.message}`);
 		}
 	}
 
@@ -357,6 +357,7 @@ ${pureText}`;
 		this.plugin.addCommand({
 			id: 'crystal-generate-description',
 			name: 'AI: Generate description for current file',
+			icon: 'sparkles',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.generateDescriptionForCurrentFile(editor, view);
 			}
@@ -366,6 +367,7 @@ ${pureText}`;
 		this.plugin.addCommand({
 			id: 'crystal-translate-selected-text',
 			name: 'AI: Translate selected text',
+			icon: 'languages',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.translateSelectedText(editor, view);
 			}
@@ -375,6 +377,7 @@ ${pureText}`;
 		this.plugin.addCommand({
 			id: 'crystal-translate-above-cursor-text',
 			name: 'AI: Translate above cursor text',
+			icon: 'arrow-up',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.translateAboveCursorText(editor, view);
 			}
@@ -384,6 +387,7 @@ ${pureText}`;
 		this.plugin.addCommand({
 			id: 'crystal-grammar-check-current-line',
 			name: 'AI: Grammar check current line',
+			icon: 'spell-check',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.grammarCheckCurrentLine(editor, view);
 			}
@@ -393,6 +397,7 @@ ${pureText}`;
 		this.plugin.addCommand({
 			id: 'crystal-translate-below-cursor-text',
 			name: 'AI: Translate below cursor text',
+			icon: 'arrow-down',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.translateBelowCursorText(editor, view);
 			}
@@ -402,6 +407,7 @@ ${pureText}`;
 		this.plugin.addCommand({
 			id: 'crystal-gemini-rewrite-replace',
 			name: 'AI: Rewrite (replace selection or whole note)',
+			icon: 'wand-sparkles',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.rewriteWithInstruction(editor, view, 'replace');
 			}
@@ -411,6 +417,7 @@ ${pureText}`;
 		this.plugin.addCommand({
 			id: 'crystal-gemini-rewrite-append',
 			name: 'AI: Rewrite (append result at end)',
+			icon: 'text-cursor-input',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.rewriteWithInstruction(editor, view, 'append');
 			}

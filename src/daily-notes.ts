@@ -203,7 +203,7 @@ export class DailyNotesManager {
 
     private async ensureDailyNoteFile(date: Date): Promise<TFile | null> {
         if (!this.isDailyNotesPluginLoaded()) {
-            new Notice('Daily Notes plugin is disabled.');
+            new Notice('⚠️ Daily Notes plugin is disabled.');
             return null;
         }
         const filePath = this.getDailyNoteFilePath(date);
@@ -300,9 +300,9 @@ export class DailyNotesManager {
                 const newContent = `${frontmatter}${newBody}`;
                 return newContent.endsWith('\n') ? newContent : `${newContent}\n`;
             });
-            new Notice('デイリーノートにタスクを追加しました');
+            new Notice('✅ デイリーノートにタスクを追加しました');
         } catch (error) {
-            new Notice('タスクの追加に失敗しました: ' + error.message);
+            new Notice('❌ タスクの追加に失敗しました: ' + error.message);
             console.error('Add task to daily note error:', error);
         }
     }
@@ -356,30 +356,35 @@ export class DailyNotesManager {
         this.plugin.addCommand({
             id: 'crystal-open-today',
             name: 'Daily: Open today\'s note',
+            icon: 'calendar-days',
             callback: () => this.openToday()
         });
 
         this.plugin.addCommand({
             id: 'crystal-open-yesterday',
             name: 'Daily: Open yesterday\'s note',
+            icon: 'calendar-minus',
             callback: () => this.openYesterday()
         });
 
         this.plugin.addCommand({
             id: 'crystal-open-tomorrow',
             name: 'Daily: Open tomorrow\'s note',
+            icon: 'calendar-plus',
             callback: () => this.openTomorrow()
         });
 
         this.plugin.addCommand({
             id: 'crystal-add-task-to-daily-note',
             name: 'Daily: Add task to daily note',
+            icon: 'list-plus',
             callback: () => this.addTaskToDailyNote()
         });
 
         this.plugin.addCommand({
             id: 'crystal-roll-over-tasks',
             name: 'Daily: Roll over yesterday\'s undone tasks',
+            icon: 'list-todo',
             editorCallback: (editor) => this.rollOverYesterdayUndoTaskList(editor)
         });
 

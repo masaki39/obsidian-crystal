@@ -16,35 +16,28 @@ export function promptForText(app: App, title = 'テキストを入力してく�
 
 			onOpen() {
 				const { contentEl } = this;
-				contentEl.createEl('h3', { text: title });
-				
+				contentEl.createEl('h3', { text: title, cls: 'crystal-modal-title' });
+
 				let input: HTMLInputElement | HTMLTextAreaElement;
-				
+
 				if (multiline) {
 					input = contentEl.createEl('textarea', {
-						placeholder
+						placeholder,
+						cls: 'crystal-modal-input',
 					}) as HTMLTextAreaElement;
-					input.style.width = '100%';
-					input.style.height = '120px';
-					input.style.resize = 'vertical';
-					input.style.fontFamily = 'inherit';
 					input.placeholder = placeholder || '';
 				} else {
 					input = contentEl.createEl('input', {
 						type: 'text',
-						placeholder
+						placeholder,
+						cls: 'crystal-modal-input',
 					}) as HTMLInputElement;
-					input.style.width = '100%';
 					input.placeholder = placeholder || '';
 				}
-				
+
 				input.value = defaultValue ?? '';
-				input.style.marginBottom = '16px';
-				
-				const buttonContainer = contentEl.createDiv();
-				buttonContainer.style.display = 'flex';
-				buttonContainer.style.gap = '8px';
-				buttonContainer.style.justifyContent = 'flex-end';
+
+				const buttonContainer = contentEl.createDiv({ cls: 'crystal-modal-button-row' });
 				const cancelButton = buttonContainer.createEl('button', { text: 'キャンセル' });
 				const addButton = buttonContainer.createEl('button', { text: buttonText });
 				addButton.addClass('mod-cta');

@@ -62,19 +62,19 @@ export class MarpCommands {
 				// Marpコマンドを生成（-- 以降でMarkdownファイルを指定）
 				const marpCommand = `marp -p${themeOption} -o "${outputPath}" -- "${activeFilePath}"`;
 
-			new Notice('Marpプレビューを実行中...');
+			new Notice('⏳ Marpプレビューを実行中...');
 			
 			// コマンドを実行
 			const result = await this.terminalService.executeCommand(marpCommand);
 			
 			if (result.exitCode === 0) {
-				new Notice('Marpプレビューが完了しました');
+				new Notice('✅ Marpプレビューが完了しました');
 			} else {
-				new Notice(`Marpプレビューでエラーが発生しました: ${result.stderr}`);
+				new Notice(`❌ Marpプレビューでエラーが発生しました: ${result.stderr}`);
 			}
 		} catch (error) {
 			console.error('Failed to execute Marp preview command:', error);
-			new Notice('Marpプレビューの実行に失敗しました: ' + error.message);
+			new Notice('❌ Marpプレビューの実行に失敗しました: ' + error.message);
 		}
 	}
 
@@ -105,25 +105,25 @@ export class MarpCommands {
 				const marpCommand = `marp --allow-local-files${editableOption}${themeOption} -o "${outputPath}" -- "${activeFilePath}"`;
 			console.log('Executing Marp command:', marpCommand);
 
-			const noticeMessage = (editable && format === 'pptx') 
-				? `Marpエクスポート（${format.toUpperCase()}・編集可能）を実行中...` 
-				: `Marpエクスポート（${format.toUpperCase()}）を実行中...`;
+			const noticeMessage = (editable && format === 'pptx')
+				? `⏳ Marpエクスポート（${format.toUpperCase()}・編集可能）を実行中...`
+				: `⏳ Marpエクスポート（${format.toUpperCase()}）を実行中...`;
 			new Notice(noticeMessage);
-			
+
 			// コマンドを実行
 			const result = await this.terminalService.executeCommand(marpCommand);
-			
+
 			if (result.exitCode === 0) {
-				const successMessage = (editable && format === 'pptx') 
-					? `Marpエクスポート（${format.toUpperCase()}・編集可能）が完了しました` 
-					: `Marpエクスポート（${format.toUpperCase()}）が完了しました`;
+				const successMessage = (editable && format === 'pptx')
+					? `✅ Marpエクスポート（${format.toUpperCase()}・編集可能）が完了しました`
+					: `✅ Marpエクスポート（${format.toUpperCase()}）が完了しました`;
 				new Notice(successMessage);
 			} else {
-				new Notice(`Marpエクスポートでエラーが発生しました: ${result.stderr}`);
+				new Notice(`❌ Marpエクスポートでエラーが発生しました: ${result.stderr}`);
 			}
 		} catch (error) {
 			console.error('Failed to execute Marp export command:', error);
-			new Notice('Marpエクスポートの実行に失敗しました: ' + error.message);
+			new Notice('❌ Marpエクスポートの実行に失敗しました: ' + error.message);
 		}
 	}
 
@@ -191,18 +191,18 @@ export class MarpCommands {
 			const themeOption = this.getThemeSetOption();
 			const marpCommand = `marp --allow-local-files${themeOption} -o "${htmlOutputPath}" -- "${mdCopyPath}"`;
 
-			new Notice('Marp HTML（添付ファイル付き）をエクスポート中...');
+			new Notice('⏳ Marp HTML（添付ファイル付き）をエクスポート中...');
 
 			const result = await this.terminalService.executeCommand(marpCommand);
 
 			if (result.exitCode === 0) {
-				new Notice(`エクスポート完了: ${outputFolderAbsPath}`);
+				new Notice(`✅ エクスポート完了: ${outputFolderAbsPath}`);
 			} else {
-				new Notice(`Marpエクスポートでエラーが発生しました: ${result.stderr}`);
+				new Notice(`❌ Marpエクスポートでエラーが発生しました: ${result.stderr}`);
 			}
 		} catch (error) {
 			console.error('Failed to export Marp HTML with attachments:', error);
-			new Notice('エクスポートに失敗しました: ' + error.message);
+			new Notice('❌ エクスポートに失敗しました: ' + error.message);
 		}
 	}
 
@@ -230,19 +230,19 @@ export class MarpCommands {
 			const marpCommand = `marp --notes "${activeFilePath}" -o "${outputPath}"`;
 			console.log('Executing Marp notes command:', marpCommand);
 
-			new Notice('Marp Presenter Notesを出力中...');
+			new Notice('⏳ Marp Presenter Notesを出力中...');
 			
 			// コマンドを実行
 			const result = await this.terminalService.executeCommand(marpCommand);
 			
 			if (result.exitCode === 0) {
-				new Notice('Marp Presenter Notesの出力が完了しました');
+				new Notice('✅ Marp Presenter Notesの出力が完了しました');
 			} else {
-				new Notice(`Marp Presenter Notesの出力でエラーが発生しました: ${result.stderr}`);
+				new Notice(`❌ Marp Presenter Notesの出力でエラーが発生しました: ${result.stderr}`);
 			}
 		} catch (error) {
 			console.error('Failed to execute Marp notes command:', error);
-			new Notice('Marp Presenter Notesの出力に失敗しました: ' + error.message);
+			new Notice('❌ Marp Presenter Notesの出力に失敗しました: ' + error.message);
 		}
 	}
 
@@ -252,7 +252,7 @@ export class MarpCommands {
 	async executeMarpServerCommand() {
 		// 設定チェック
 		if (!this.settings.marpSlideFolderPath) {
-			new Notice('Marp Slide Folder Path is not configured in settings');
+			new Notice('⚠️ Marp Slide Folder Path is not configured in settings');
 			return;
 		}
 
@@ -262,7 +262,7 @@ export class MarpCommands {
 			// Marpサーバーコマンドを生成
 				const marpCommand = `marp -s --allow-local-files${themeOption} -- "${this.settings.marpSlideFolderPath}"`;
 
-			new Notice('Marpサーバーを起動中...');
+			new Notice('⏳ Marpサーバーを起動中...');
 			
 			// サーバーをバックグラウンドで実行（非同期で起動、結果は待たない）
 			this.terminalService.executeCommand(marpCommand);
@@ -271,7 +271,7 @@ export class MarpCommands {
 			this.waitForServerAndOpen();
 		} catch (error) {
 			console.error('Failed to start Marp server:', error);
-			new Notice('Marpサーバーの起動に失敗しました: ' + error.message);
+			new Notice('❌ Marpサーバーの起動に失敗しました: ' + error.message);
 		}
 	}
 
@@ -280,7 +280,7 @@ export class MarpCommands {
 	 */
 	async stopMarpServerCommand() {
 		try {
-			new Notice('Marpサーバーを停止中...');
+			new Notice('⏳ Marpサーバーを停止中...');
 
 			// プロセス監視を停止
 			this.stopServerMonitor();
@@ -293,14 +293,14 @@ export class MarpCommands {
 			const result = await this.terminalService.executeCommand(killCommand);
 			
 			if (result.exitCode === 0) {
-				new Notice('Marpサーバーを停止しました');
+				new Notice('✅ Marpサーバーを停止しました');
 			} else {
 				// プロセスが見つからない場合も正常とみなす
-				new Notice('Marpサーバーを停止しました');
+				new Notice('✅ Marpサーバーを停止しました');
 			}
 		} catch (error) {
 			console.error('Failed to stop Marp server:', error);
-			new Notice('Marpサーバーの停止に失敗しました: ' + error.message);
+			new Notice('❌ Marpサーバーの停止に失敗しました: ' + error.message);
 		}
 	}
 
@@ -359,14 +359,14 @@ export class MarpCommands {
 					shell.openExternal('http://localhost:8080');
 				}
 
-				new Notice('Marpサーバーが起動しました');
+				new Notice('✅ Marpサーバーが起動しました');
 				// 起動を確認できたらプロセス監視を開始する
 				this.startServerMonitor();
 				return;
 			}
 
 			if (attempts >= maxAttempts) {
-				new Notice('Marpサーバーの起動を確認できませんでしたが、ブラウザを開きます');
+				new Notice('⚠️ Marpサーバーの起動を確認できませんでしたが、ブラウザを開きます');
 				shell.openExternal('http://localhost:8080');
 				return;
 			}
@@ -388,7 +388,7 @@ export class MarpCommands {
 		const intervalId = window.setInterval(async () => {
 			if (!(await this.isServerAlive())) {
 				this.stopServerMonitor();
-				new Notice('Marpサーバーが停止しました');
+				new Notice('✅ Marpサーバーが停止しました');
 			}
 		}, 5000);
 
@@ -413,7 +413,7 @@ export class MarpCommands {
 	async moveImagesToMarpFolder(_editor: Editor, view: MarkdownView) {
 		const file = view.file;
 		if (!file) {
-			new Notice('アクティブなファイルが見つかりません');
+			new Notice('⚠️ アクティブなファイルが見つかりません');
 			return;
 		}
 
@@ -421,14 +421,14 @@ export class MarpCommands {
 			// 設定からmarp用のattachmentフォルダパスを取得
 			const marpAttachmentFolder = this.normalizeSettingPath(this.settings.marpAttachmentFolderPath);
 			if (!marpAttachmentFolder) {
-				new Notice('Marp Attachment Folder Path が設定されていません');
+				new Notice('⚠️ Marp Attachment Folder Path が設定されていません');
 				return;
 			}
 
 			// フォルダの存在確認
 			const folder = this.plugin.app.vault.getAbstractFileByPath(marpAttachmentFolder);
 			if (!folder) {
-				new Notice(`Marp Attachment Folder が存在しません: ${marpAttachmentFolder}`);
+				new Notice(`⚠️ Marp Attachment Folder が存在しません: ${marpAttachmentFolder}`);
 				return;
 			}
 
@@ -439,7 +439,7 @@ export class MarpCommands {
 			const imageLinks = this.extractImageLinks(content);
 			
 			if (imageLinks.length === 0) {
-				new Notice('画像リンクが見つかりませんでした');
+				new Notice('⚠️ 画像リンクが見つかりませんでした');
 				return;
 			}
 
@@ -470,14 +470,14 @@ export class MarpCommands {
 			// ファイルを更新
 			if (movedCount > 0) {
 				await this.plugin.app.vault.modify(file, updatedContent);
-				new Notice(`${movedCount}個の画像をMarpフォルダに移動しました`);
+				new Notice(`✅ ${movedCount}個の画像をMarpフォルダに移動しました`);
 			} else {
-				new Notice('移動できる画像がありませんでした');
+				new Notice('⚠️ 移動できる画像がありませんでした');
 			}
 
 		} catch (error) {
 			console.error('Failed to move images to Marp folder:', error);
-			new Notice('画像の移動に失敗しました: ' + error.message);
+			new Notice('❌ 画像の移動に失敗しました: ' + error.message);
 		}
 	}
 
@@ -557,6 +557,7 @@ export class MarpCommands {
 		this.plugin.addCommand({
 			id: 'crystal-preview-marp-slide',
 			name: 'Marp: Preview slide',
+			icon: 'eye',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.executeMarpPreviewCommand(editor, view);
 			}
@@ -565,6 +566,7 @@ export class MarpCommands {
 		this.plugin.addCommand({
 			id: 'crystal-export-marp-slide',
 			name: 'Marp: Export slide (PPTX)',
+			icon: 'file-down',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.executeMarpExportCommand(editor, view, 'pptx');
 			}
@@ -573,6 +575,7 @@ export class MarpCommands {
 		this.plugin.addCommand({
 			id: 'crystal-export-marp-slide-editable',
 			name: 'Marp: Export slide (PPTX editable)',
+			icon: 'file-pen',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.executeMarpExportCommand(editor, view, 'pptx', true);
 			}
@@ -581,6 +584,7 @@ export class MarpCommands {
 		this.plugin.addCommand({
 			id: 'crystal-export-marp-slide-html',
 			name: 'Marp: Export slide (HTML)',
+			icon: 'file-code',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.executeMarpExportCommand(editor, view, 'html');
 			}
@@ -589,6 +593,7 @@ export class MarpCommands {
 		this.plugin.addCommand({
 			id: 'crystal-export-marp-slide-html-folder',
 			name: 'Marp: Export slide (HTML folder with attachments)',
+			icon: 'folder-down',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.executeMarpExportHtmlFolderCommand(editor, view);
 			}
@@ -597,6 +602,7 @@ export class MarpCommands {
 		this.plugin.addCommand({
 			id: 'crystal-export-marp-slide-pdf',
 			name: 'Marp: Export slide (PDF)',
+			icon: 'file-text',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.executeMarpExportCommand(editor, view, 'pdf');
 			}
@@ -605,6 +611,7 @@ export class MarpCommands {
 		this.plugin.addCommand({
 			id: 'crystal-marp-server',
 			name: 'Marp: Start server',
+			icon: 'play',
 			callback: () => {
 				this.executeMarpServerCommand();
 			}
@@ -613,6 +620,7 @@ export class MarpCommands {
 		this.plugin.addCommand({
 			id: 'crystal-stop-marp-server',
 			name: 'Marp: Stop server',
+			icon: 'square',
 			callback: () => {
 				this.stopMarpServerCommand();
 			}
@@ -621,6 +629,7 @@ export class MarpCommands {
 		this.plugin.addCommand({
 			id: 'crystal-move-images-to-marp-folder',
 			name: 'Marp: Move images to Marp folder',
+			icon: 'folder-input',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.moveImagesToMarpFolder(editor, view);
 			}
@@ -629,6 +638,7 @@ export class MarpCommands {
 		this.plugin.addCommand({
 			id: 'crystal-export-marp-notes',
 			name: 'Marp: Export presenter notes',
+			icon: 'sticky-note',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.executeMarpNotesCommand(editor, view);
 			}

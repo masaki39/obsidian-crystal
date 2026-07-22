@@ -1,0 +1,147 @@
+/* Settings section headings */
+.crystal-section-heading .setting-item-name {
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+}
+
+.crystal-section-heading .crystal-section-icon {
+	display: inline-flex;
+	color: var(--text-accent);
+}
+
+.crystal-section-heading .crystal-section-icon svg {
+	width: 1em;
+	height: 1em;
+}
+
+.crystal-section-heading:not(:first-child) {
+	margin-top: 1.5em;
+}
+
+.crystal-section-heading-sub .setting-item-name {
+	font-size: 0.95em;
+}
+
+.crystal-section-heading-sub {
+	margin-top: 1em;
+	padding-left: 0.75em;
+	border-left: 2px solid var(--background-modifier-border);
+}
+
+/* Shared modal inputs and button rows */
+.crystal-modal-title {
+	margin-bottom: 0.75em;
+}
+
+.crystal-modal-input {
+	width: 100%;
+	margin-bottom: 12px;
+	border-radius: var(--radius-m);
+}
+
+textarea.crystal-modal-input {
+	height: 120px;
+	resize: vertical;
+	font-family: inherit;
+}
+
+.crystal-modal-button-row {
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end;
+	margin-top: 4px;
+}
+
+/* Bluesky post modal image picker */
+.crystal-image-row {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.crystal-image-preview-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	align-items: flex-start;
+	min-height: 64px;
+}
+
+.crystal-image-preview-empty {
+	color: var(--text-muted);
+	font-size: 0.82em;
+	align-self: center;
+}
+
+.crystal-image-thumb {
+	position: relative;
+	width: 64px;
+	height: 64px;
+	flex-shrink: 0;
+	cursor: pointer;
+	border-radius: var(--radius-m);
+	overflow: hidden;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+	transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.crystal-image-thumb:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 3px 8px rgba(0, 0, 0, 0.32);
+}
+
+.crystal-image-thumb img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.crystal-image-thumb-remove {
+	position: absolute;
+	top: 2px;
+	right: 2px;
+	width: 18px;
+	height: 18px;
+	padding: 0;
+	line-height: 1;
+	font-size: 12px;
+	cursor: pointer;
+	background: rgba(0, 0, 0, 0.55);
+	color: #fff;
+	border: none;
+	border-radius: 50%;
+}
+
+/* Fullscreen image preview modal */
+.crystal-image-preview-modal .modal-content {
+	padding: 0;
+}
+
+.crystal-image-preview-modal img {
+	width: auto;
+	max-width: 90vw;
+	max-height: 85vh;
+	display: block;
+}
+
+/* File organization rule suggester */
+.crystal-rule-suggestion-title {
+	display: flex;
+	align-items: center;
+	gap: 0.4em;
+}
+
+.crystal-rule-suggestion-icon svg {
+	width: 0.9em;
+	height: 0.9em;
+	color: var(--text-accent);
+}
+
+.crystal-rule-suggestion-desc {
+	font-size: 0.82em;
+	color: var(--text-muted);
+	margin-top: 2px;
+}

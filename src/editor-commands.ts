@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Notice, SuggestModal, Plugin, WorkspaceLeaf } from 'obsidian';
+import { App, Editor, MarkdownView, Notice, SuggestModal, Plugin, WorkspaceLeaf, setIcon } from 'obsidian';
 import { CrystalPluginSettings, FileOrganizationRule } from './settings';
 import { parseFrontmatter, promptForText } from './utils';
 import * as path from 'path';
@@ -25,7 +25,14 @@ class RuleSuggestModal extends SuggestModal<FileOrganizationRule> {
 	}
 
 	renderSuggestion(rule: FileOrganizationRule, el: HTMLElement) {
-		el.createEl("div", { text: this.getDisplayText(rule) });
+		const titleEl = el.createDiv({ cls: 'crystal-rule-suggestion-title' });
+		setIcon(titleEl.createSpan({ cls: 'crystal-rule-suggestion-icon' }), 'folder-tree');
+		titleEl.createSpan({ text: this.getDisplayText(rule) });
+
+		const detail = [rule.folder, rule.tag].filter(Boolean).join(' · ');
+		if (detail) {
+			el.createDiv({ cls: 'crystal-rule-suggestion-desc', text: detail });
+		}
 	}
 
 	onChooseSuggestion(rule: FileOrganizationRule) {
@@ -63,7 +70,7 @@ export class EditorCommands {
 			await this.app.workspace.getLeaf().openFile(newFile);
 			await this.openInInsertModeOrEditTitle();
 		} catch (error) {
-			new Notice('Failed to create new file: ' + error.message);
+			new Notice('❌ Failed to create new file: ' + error.message);
 		}
 	}
 
@@ -81,7 +88,7 @@ export class EditorCommands {
 			await this.app.workspace.getLeaf().openFile(newFile);
 			await this.openInInsertModeOrEditTitle();
 		} catch (error) {
-			new Notice('Failed to create linked file: ' + error.message);
+			new Notice('❌ Failed to create linked file: ' + error.message);
 		}
 	}
 
@@ -124,7 +131,7 @@ export class EditorCommands {
 		const file = view?.file || this.app.workspace.getActiveFile();
 
 		if (!file) {
-			new Notice('No file is currently open');
+			new Notice('⚠️ No file is currently open');
 			return;
 		}
 
@@ -132,7 +139,7 @@ export class EditorCommands {
 		const fileName = file.extension === 'md' ? file.basename : file.name;
 		const fileLink = `[[${fileName}]]`;
 		await navigator.clipboard.writeText(fileLink);
-		new Notice('File link is copied!');
+		new Notice('✅ File link is copied!');
 	}
 
 	/**
@@ -140,7 +147,7 @@ export class EditorCommands {
 	 */
 	async copyFileLinkWithAlias(editor: Editor, view: MarkdownView) {
 		if (!view.file) {
-			new Notice('No file is currently open');
+			new Notice('⚠️ No file is currently open');
 			return;
 		}
 
@@ -148,13 +155,13 @@ export class EditorCommands {
 		const aliases = fileCache?.frontmatter?.aliases;
 
 		if (!aliases || !Array.isArray(aliases) || aliases.length === 0) {
-			new Notice('No aliases found in frontmatter');
+			new Notice('⚠️ No aliases found in frontmatter');
 			return;
 		}
 
 		const fileLink = `[[${view.file.basename}|${aliases[0]}]]`;
 		await navigator.clipboard.writeText(fileLink);
-		new Notice('File link with alias is copied!');
+		new Notice('✅ File link with alias is copied!');
 	}
 
 	/**
@@ -251,7 +258,7 @@ export class EditorCommands {
 	 */
 	async organizeFileWithTags(editor: Editor, view: MarkdownView) {
 		if (!view.file) {
-			new Notice('ファイルが開かれていません');
+			new Notice('⚠️ ファイルが開かれていません');
 			return;
 		}
 
@@ -259,7 +266,7 @@ export class EditorCommands {
 		const rules = this.settings.fileOrganizationRules;
 
 		if (rules.length === 0) {
-			new Notice('ファイル整理ルールが設定されていません');
+			new Notice('⚠️ ファイル整理ルールが設定されていません');
 			return;
 		}
 
@@ -291,9 +298,9 @@ export class EditorCommands {
 				// ファイル名処理
 				await this.processFileNameWithRule(view.file!, selectedRule);
 
-				new Notice('ファイルが正常に分類されました');
+				new Notice('✅ ファイルが正常に分類されました');
 			} catch (error) {
-				new Notice('ファイル整理中にエラーが発生しました: ' + error.message);
+				new Notice('❌ ファイル整理中にエラーが発生しました: ' + error.message);
 				console.error('File organization error:', error);
 			}
 
@@ -365,7 +372,7 @@ export class EditorCommands {
 				await this.app.fileManager.renameFile(file, targetPath);
 			} catch (error) {
 				console.error('File operation error:', error);
-				new Notice('ファイル操作に失敗しました: ' + error.message);
+				new Notice('❌ ファイル操作に失敗しました: ' + error.message);
 			}
 		}
 	}
@@ -376,7 +383,7 @@ export class EditorCommands {
 	 */
 	async convertLinksToRelativePaths(editor: Editor, view: MarkdownView) {
 		if (!view.file) {
-			new Notice('ファイルが開かれていません');
+			new Notice('⚠️ ファイルが開かれていません');
 			return;
 		}
 
@@ -449,9 +456,9 @@ export class EditorCommands {
 
 		if (changeCount > 0) {
 			editor.setValue(convertedContent);
-			new Notice(`${changeCount}個のリンクを相対パスに変換済`);
+			new Notice(`✅ ${changeCount}個のリンクを相対パスに変換済`);
 		} else {
-			new Notice('変換対象のリンクが見つかりませんでした');
+			new Notice('⚠️ 変換対象のリンクが見つかりませんでした');
 		}
 
 		// カーソル位置を復元
@@ -481,7 +488,7 @@ export class EditorCommands {
 	 */
 	async convertActiveFileToBulletList(editor: Editor, view: MarkdownView) {
 		if (!view.file) {
-			new Notice('ファイルが開かれていません');
+			new Notice('⚠️ ファイルが開かれていません');
 			return;
 		}
 
@@ -510,7 +517,7 @@ export class EditorCommands {
 			.filter((line: string | null): line is string => line !== null);
 
 		editor.setValue(`${frontmatter}${bulletLines.join('\n')}`);
-		new Notice('コンテンツをバレットリストに変換しました');
+		new Notice('✅ コンテンツをバレットリストに変換しました');
 	}
 
 	/**
@@ -532,7 +539,7 @@ export class EditorCommands {
 		try {
 			new URL(url);
 		} catch (error) {
-			new Notice('無効なURLです');
+			new Notice('⚠️ 無効なURLです');
 			return;
 		}
 
@@ -545,7 +552,7 @@ export class EditorCommands {
 		// Insert at cursor position
 		editor.replaceSelection(ogpLink);
 
-		new Notice('OGPリンクを挿入しました');
+		new Notice('✅ OGPリンクを挿入しました');
 	}
 
 	async onload() {
@@ -571,6 +578,7 @@ export class EditorCommands {
 		this.plugin.addCommand({
 			id: 'crystal-create-timestamp-file',
 			name: 'Editor: Create new file with timestamp',
+			icon: 'file-plus',
 			callback: () => {
 				this.createTimestampFile();
 			}
@@ -579,6 +587,7 @@ export class EditorCommands {
 		this.plugin.addCommand({
 			id: 'crystal-create-linked-timestamp-file',
 			name: 'Editor: Create new file with link at cursor',
+			icon: 'file-symlink',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.createLinkedTimestampFile(editor, view);
 			}
@@ -587,6 +596,7 @@ export class EditorCommands {
 		this.plugin.addCommand({
 			id: 'crystal-copy-file-link',
 			name: 'Editor: Copy file link',
+			icon: 'link',
 			callback: () => {
 				this.copyFileLink();
 			}
@@ -595,6 +605,7 @@ export class EditorCommands {
 		this.plugin.addCommand({
 			id: 'crystal-copy-file-link-with-alias',
 			name: 'Editor: Copy file link with alias',
+			icon: 'link-2',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.copyFileLinkWithAlias(editor, view);
 			}
@@ -603,6 +614,7 @@ export class EditorCommands {
 		this.plugin.addCommand({
 			id: 'crystal-wrap-subscript',
 			name: 'Editor: Wrap selection with subscript',
+			icon: 'subscript',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.wrapWithSubscript(editor, view);
 			}
@@ -611,6 +623,7 @@ export class EditorCommands {
 		this.plugin.addCommand({
 			id: 'crystal-wrap-superscript',
 			name: 'Editor: Wrap selection with superscript',
+			icon: 'superscript',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.wrapWithSuperscript(editor, view);
 			}
@@ -619,6 +632,7 @@ export class EditorCommands {
 		this.plugin.addCommand({
 			id: 'crystal-increase-blockquote',
 			name: 'Editor: Increase blockquote level',
+			icon: 'quote',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.increaseBlockquote(editor, view);
 			}
@@ -627,6 +641,7 @@ export class EditorCommands {
 		this.plugin.addCommand({
 			id: 'crystal-organize-file-with-tags',
 			name: 'Editor: Organize file with prefix and tags',
+			icon: 'folder-tree',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.organizeFileWithTags(editor, view);
 			}
@@ -636,6 +651,7 @@ export class EditorCommands {
 		this.plugin.addCommand({
 			id: 'crystal-convert-links-to-relative-paths',
 			name: 'Editor: Convert links to relative paths',
+			icon: 'route',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.convertLinksToRelativePaths(editor, view);
 			}
@@ -644,6 +660,7 @@ export class EditorCommands {
 		this.plugin.addCommand({
 			id: 'crystal-convert-active-file-to-bullet-list',
 			name: 'Editor: Convert active file to bullet list',
+			icon: 'list',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.convertActiveFileToBulletList(editor, view);
 			}
@@ -652,6 +669,7 @@ export class EditorCommands {
 		this.plugin.addCommand({
 			id: 'crystal-insert-ogp-link-horizontal',
 			name: 'Editor: Insert OGP link (horizontal)',
+			icon: 'rectangle-horizontal',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.insertOgpLink(editor, view, 'horizontal');
 			}
@@ -660,6 +678,7 @@ export class EditorCommands {
 		this.plugin.addCommand({
 			id: 'crystal-insert-ogp-link-vertical',
 			name: 'Editor: Insert OGP link (vertical)',
+			icon: 'rectangle-vertical',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.insertOgpLink(editor, view, 'vertical');
 			}
