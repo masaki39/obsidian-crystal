@@ -15,6 +15,7 @@ import { MacroCommands } from './src/macro';
 import { GitSummaryService } from './src/git-summary-service';
 import { GamificationManager, VIEW_TYPE_GAMIFICATION } from './src/gamification';
 import { GamificationView } from './src/gamification-view';
+import { SidebarFocusCommands } from './src/sidebar-focus';
 
 // Crystal Plugin for Obsidian
 
@@ -54,6 +55,7 @@ export default class CrystalPlugin extends Plugin {
 	private macroCommands: MacroCommands;
 	private gitSummaryService: GitSummaryService;
 	private gamificationManager: GamificationManager;
+	private sidebarFocusCommands: SidebarFocusCommands;
 
 	async onload() {
 		await this.loadSettings();
@@ -77,6 +79,7 @@ export default class CrystalPlugin extends Plugin {
 		this.gamificationManager = new GamificationManager(
 			this.app, this, this.settings, Math.random, () => this.activateGamificationView()
 		);
+		this.sidebarFocusCommands = new SidebarFocusCommands(this.app, this);
 
 		// Load Services
 		this.blueskyService.onload();
@@ -88,6 +91,7 @@ export default class CrystalPlugin extends Plugin {
 		this.macroCommands.onload();
 		this.gitSummaryService.onload();
 		this.gamificationManager.onLoad();
+		this.sidebarFocusCommands.onload();
 
 		// Gamification view (sidebar): full Lv/XP/streak/badge picture
 		this.registerView(
