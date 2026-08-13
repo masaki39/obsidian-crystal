@@ -1,5 +1,6 @@
 import { App, IconName, Notice, Plugin, PluginSettingTab, Setting, requestUrl, setIcon } from 'obsidian';
 import { AtpAgent } from '@atproto/api';
+import { calculateLevel } from './gamification';
 
 export interface FileOrganizationRule {
 	displayName: string;
@@ -36,6 +37,22 @@ export interface CrystalPluginSettings {
 	quartzSiteName: string;
 	githubUserName: string;
 	fileOrganizationRules: FileOrganizationRule[];
+	gamificationEnabled: boolean;
+	gamificationTotalXP: number;
+	gamificationStreak: number;
+	gamificationLastActiveDate: string;
+	gamificationFreezeTokensAvailable: number;
+	gamificationFreezeTokensRefillMonth: string;
+	gamificationUnlockedBadges: string[];
+	gamificationTotalTasksCompleted: number;
+	gamificationStartDate: string;
+	gamificationDailyXPLog: Record<string, number>;
+	gamificationFreezeTokenLog: string[];
+	gamificationBestStreak: number;
+	gamificationBestDayTasks: number;
+	gamificationBestWeekXP: number;
+	gamificationDailyTaskLog: Record<string, number>;
+	gamificationFreezeMilestonesGranted: number[];
 }
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
@@ -65,6 +82,22 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	quartzSiteName: '',
 	githubUserName: '',
 	fileOrganizationRules: [],
+	gamificationEnabled: false,
+	gamificationTotalXP: 0,
+	gamificationStreak: 0,
+	gamificationLastActiveDate: '',
+	gamificationFreezeTokensAvailable: 2,
+	gamificationFreezeTokensRefillMonth: '',
+	gamificationUnlockedBadges: [],
+	gamificationTotalTasksCompleted: 0,
+	gamificationStartDate: '',
+	gamificationDailyXPLog: {},
+	gamificationFreezeTokenLog: [],
+	gamificationBestStreak: 0,
+	gamificationBestDayTasks: 0,
+	gamificationBestWeekXP: 0,
+	gamificationDailyTaskLog: {},
+	gamificationFreezeMilestonesGranted: [],
 }
 
 export class CrystalSettingTab extends PluginSettingTab {
@@ -275,6 +308,37 @@ export class CrystalSettingTab extends PluginSettingTab {
 		this.toggleSetting(containerEl, 'Auto Sort Tasks', 'Sort tasks in daily notes automatically', 'dailyNoteAutoSort');
 		this.toggleSetting(containerEl, 'Auto Link Notes', 'Add link to today\'s daily note when create any note', 'dailyNoteAutoLink');
 		this.toggleSetting(containerEl, 'Newest First (Daily Notes)', 'Place new daily note entries at the top (tasks, links, timeline)', 'dailyNoteNewestFirst');
+
+		// Gamification settings
+		this.sectionHeading(containerEl, 'Gamification', 'gamepad-2');
+
+		this.toggleSetting(containerEl, 'Enable Gamification', 'Earn XP (with occasional bonus rewards), levels, streaks and badges for completing tasks in daily notes. Open the Gamification view (ribbon icon, or the command palette) to see full details', 'gamificationEnabled');
+
+		new Setting(containerEl)
+			.setName('Reset progress')
+			.setDesc(`Lv.${calculateLevel(this.plugin.settings.gamificationTotalXP).level} · ${this.plugin.settings.gamificationTotalXP} XP · ${this.plugin.settings.gamificationStreak}d streak · ${this.plugin.settings.gamificationFreezeTokensAvailable} freeze · ${this.plugin.settings.gamificationUnlockedBadges.length} badges`)
+			.addButton(button => button
+				.setButtonText('Reset')
+				.setWarning()
+				.onClick(async () => {
+					this.plugin.settings.gamificationTotalXP = 0;
+					this.plugin.settings.gamificationStreak = 0;
+					this.plugin.settings.gamificationLastActiveDate = '';
+					this.plugin.settings.gamificationFreezeTokensAvailable = 2;
+					this.plugin.settings.gamificationFreezeTokensRefillMonth = '';
+					this.plugin.settings.gamificationUnlockedBadges = [];
+					this.plugin.settings.gamificationTotalTasksCompleted = 0;
+					this.plugin.settings.gamificationStartDate = '';
+					this.plugin.settings.gamificationDailyXPLog = {};
+					this.plugin.settings.gamificationFreezeTokenLog = [];
+					this.plugin.settings.gamificationBestStreak = 0;
+					this.plugin.settings.gamificationBestDayTasks = 0;
+					this.plugin.settings.gamificationBestWeekXP = 0;
+					this.plugin.settings.gamificationDailyTaskLog = {};
+					this.plugin.settings.gamificationFreezeMilestonesGranted = [];
+					await this.plugin.saveSettings();
+					this.display();
+				}));
 
 		// Image settings
 		this.sectionHeading(containerEl, 'Image processor', 'image');

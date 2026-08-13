@@ -29,6 +29,414 @@
 	border-left: 2px solid var(--background-modifier-border);
 }
 
+/* Gamification status bar */
+.crystal-gamification-status {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3em;
+	font-variant-numeric: tabular-nums;
+}
+
+.crystal-gv-status-icon {
+	display: inline-flex;
+	color: var(--text-muted);
+}
+
+.crystal-gv-status-icon svg {
+	width: 0.9em;
+	height: 0.9em;
+}
+
+.crystal-gv-sep {
+	color: var(--text-faint);
+}
+
+.crystal-gamification-status--flash {
+	color: var(--text-accent);
+	animation: crystal-gamification-pulse 0.4s ease-out;
+}
+
+.crystal-gamification-status--flash .crystal-gv-status-icon {
+	color: var(--text-accent);
+}
+
+@keyframes crystal-gamification-pulse {
+	from {
+		transform: scale(1.15);
+	}
+	to {
+		transform: scale(1);
+	}
+}
+
+/* Gamification view */
+.crystal-gamification-view {
+	padding: var(--size-4-4);
+}
+
+.crystal-gv-disabled {
+	color: var(--text-muted);
+}
+
+/* Generic inline icon, sized relative to the surrounding text */
+.crystal-gv-icon {
+	display: inline-flex;
+	vertical-align: -0.15em;
+}
+
+.crystal-gv-icon svg {
+	width: 1em;
+	height: 1em;
+}
+
+.crystal-gv-level-label {
+	display: flex;
+	align-items: center;
+	gap: 0.35em;
+	font-size: 1.3em;
+	font-weight: var(--font-bold);
+	letter-spacing: 0.03em;
+	color: var(--text-accent);
+}
+
+.crystal-gv-bar {
+	margin: 0.5em 0;
+	height: 0.6em;
+	border-radius: var(--radius-s);
+	background: var(--background-modifier-border);
+	overflow: hidden;
+}
+
+.crystal-gv-bar-fill {
+	height: 100%;
+	background: var(--text-accent);
+	/* Slight overshoot (squash & stretch) instead of a flat ease-out, so the bar
+	   feels like it has weight rather than snapping mechanically to place. */
+	transition: width 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* "Almost there" shimmer once a bar is 90%+ full */
+.crystal-gv-bar-fill.is-almost-there {
+	background: linear-gradient(90deg, var(--text-accent) 0%, var(--color-yellow, gold) 50%, var(--text-accent) 100%);
+	background-size: 200% 100%;
+	animation: crystal-gv-shimmer 1.6s linear infinite;
+}
+
+@keyframes crystal-gv-shimmer {
+	from {
+		background-position: 200% 0;
+	}
+	to {
+		background-position: -200% 0;
+	}
+}
+
+.crystal-gv-level-sub {
+	color: var(--text-muted);
+	font-size: 0.85em;
+}
+
+.crystal-gv-streak {
+	display: flex;
+	align-items: center;
+	margin: 1em 0;
+	font-size: 1.1em;
+}
+
+.crystal-gv-streak > span {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3em;
+}
+
+.crystal-gv-freeze {
+	margin-left: 1em;
+	color: var(--text-muted);
+}
+
+.crystal-gv-freeze-log {
+	margin-top: -0.5em;
+	margin-bottom: 1em;
+	font-size: 0.8em;
+	color: var(--text-faint);
+}
+
+.crystal-gv-today .crystal-gv-bar-fill {
+	background: var(--color-green, var(--text-accent));
+}
+
+/* Next-badge callout: the "anticipation" hook */
+.crystal-gv-next-target {
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+	margin: 0.75em 0 1em;
+	padding: 0.5em 0.75em;
+	border-radius: var(--radius-m);
+	background: var(--background-modifier-hover);
+	font-size: 0.9em;
+}
+
+.crystal-gv-next-target-icon svg {
+	width: 1.1em;
+	height: 1.1em;
+}
+
+.crystal-gv-next-target-label {
+	font-weight: var(--font-bold);
+	letter-spacing: 0.04em;
+	color: var(--text-muted);
+}
+
+/* Near-miss emphasis: "so close" gets a gentle pulse to nudge one more push */
+.crystal-gv-level.is-near-miss .crystal-gv-level-label,
+.crystal-gv-next-target.is-near-miss,
+.crystal-gv-today.is-near-miss .crystal-gv-level-sub {
+	animation: crystal-gv-near-miss-pulse 1.4s ease-in-out infinite;
+}
+
+.crystal-gv-next-target.is-near-miss {
+	background: var(--background-modifier-error-hover, var(--background-modifier-hover));
+}
+
+.crystal-gv-near-miss-label {
+	margin-top: 0.3em;
+	font-size: 0.8em;
+	font-weight: var(--font-bold);
+	color: var(--text-accent);
+}
+
+@keyframes crystal-gv-near-miss-pulse {
+	0%, 100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.6;
+	}
+}
+
+.crystal-gv-section-title {
+	margin-top: 1.2em;
+	margin-bottom: 0.5em;
+	font-size: 0.75em;
+	font-weight: var(--font-bold);
+	letter-spacing: 0.08em;
+	color: var(--text-muted);
+}
+
+.crystal-gv-lifetime {
+	display: flex;
+	align-items: center;
+	font-size: 0.85em;
+	color: var(--text-muted);
+}
+
+.crystal-gv-lifetime > span {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3em;
+}
+
+.crystal-gv-since {
+	margin-left: 1em;
+}
+
+/* Weekly XP chart */
+.crystal-gv-chart {
+	display: flex;
+	align-items: flex-end;
+	gap: 0.5em;
+	height: 5em;
+}
+
+.crystal-gv-chart-col {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-end;
+	flex: 1;
+	height: 100%;
+	gap: 0.3em;
+}
+
+.crystal-gv-chart-col.is-today .crystal-gv-chart-label {
+	color: var(--text-accent);
+	font-weight: var(--font-bold);
+}
+
+.crystal-gv-chart-bar-wrap {
+	display: flex;
+	align-items: flex-end;
+	width: 100%;
+	height: 100%;
+}
+
+.crystal-gv-chart-bar {
+	width: 100%;
+	min-height: 2px;
+	border-radius: var(--radius-s) var(--radius-s) 0 0;
+	background: var(--text-accent);
+	transition: height 0.3s ease-out;
+}
+
+.crystal-gv-chart-col.is-today .crystal-gv-chart-bar {
+	background: var(--color-green, var(--text-accent));
+}
+
+/* Pure-CSS hover tooltip: shows/hides purely via :hover, no JS timer to race
+   against a re-render, and no dependency on native title tooltips (which
+   Obsidian's own styling can suppress or delay inconsistently). */
+.crystal-gv-has-tooltip {
+	position: relative;
+}
+
+.crystal-gv-has-tooltip:hover::after {
+	content: attr(data-tooltip);
+	position: absolute;
+	bottom: 100%;
+	left: 50%;
+	transform: translateX(-50%);
+	margin-bottom: 0.4em;
+	padding: 0.45em 0.7em;
+	border-radius: var(--radius-s);
+	/* Solid, deliberately high-contrast — theme background vars can read as
+	   near-transparent against the panel in some themes. */
+	background-color: rgba(20, 20, 22, 0.96);
+	color: #fff;
+	font-size: 0.78em;
+	line-height: 1.4;
+	white-space: normal;
+	width: max-content;
+	max-width: 13em;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+	z-index: 100;
+	pointer-events: none;
+	text-align: left;
+}
+
+.crystal-gv-chart-label {
+	font-size: 0.7em;
+	color: var(--text-faint);
+}
+
+/* Personal-best grid */
+.crystal-gv-best-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 0.5em;
+}
+
+.crystal-gv-best {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.15em;
+	padding: 0.5em 0.25em;
+	border-radius: var(--radius-m);
+	background: var(--background-secondary);
+	text-align: center;
+}
+
+.crystal-gv-best-icon svg {
+	width: 1.1em;
+	height: 1.1em;
+	color: var(--text-accent);
+}
+
+.crystal-gv-best-value {
+	font-weight: var(--font-bold);
+	font-size: 1.05em;
+}
+
+.crystal-gv-best-unit {
+	margin-left: 0.15em;
+	font-size: 0.75em;
+	font-weight: normal;
+	color: var(--text-muted);
+}
+
+.crystal-gv-best-label {
+	font-size: 0.65em;
+	font-weight: var(--font-bold);
+	letter-spacing: 0.06em;
+	color: var(--text-muted);
+}
+
+.crystal-gv-badge-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(4.5em, 1fr));
+	gap: 0.75em;
+}
+
+.crystal-gv-badge {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.25em;
+	padding: 0.5em;
+	border-radius: var(--radius-m);
+	background: var(--background-secondary);
+	text-align: center;
+	cursor: default;
+	animation: crystal-gv-badge-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+	transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s ease-out;
+}
+
+.crystal-gv-badge.is-unlocked:hover {
+	transform: translateY(-2px) scale(1.08);
+	background: var(--background-modifier-hover);
+}
+
+.crystal-gv-badge.is-locked {
+	opacity: 0.5;
+}
+
+.crystal-gv-badge.just-unlocked {
+	animation: crystal-gv-badge-celebrate 0.6s ease-out;
+	box-shadow: 0 0 0 2px var(--text-accent);
+}
+
+.crystal-gv-badge-icon svg {
+	width: 1.5em;
+	height: 1.5em;
+}
+
+.crystal-gv-badge.is-unlocked .crystal-gv-badge-icon svg {
+	color: var(--text-accent);
+}
+
+.crystal-gv-badge-name {
+	font-size: 0.7em;
+	font-weight: var(--font-bold);
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	overflow-wrap: anywhere;
+}
+
+@keyframes crystal-gv-badge-pop {
+	from {
+		opacity: 0;
+		transform: scale(0.7) translateY(0.25em);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1) translateY(0);
+	}
+}
+
+@keyframes crystal-gv-badge-celebrate {
+	0% {
+		transform: scale(1);
+	}
+	40% {
+		transform: scale(1.25);
+	}
+	100% {
+		transform: scale(1);
+	}
+}
+
 /* Shared modal inputs and button rows */
 .crystal-modal-title {
 	margin-bottom: 0.75em;

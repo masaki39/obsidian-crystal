@@ -13,6 +13,8 @@ import { TerminalService } from './src/terminal-service';
 import { QuartzService } from './src/quartz-service';
 import { MacroCommands } from './src/macro';
 import { GitSummaryService } from './src/git-summary-service';
+import { GamificationManager, VIEW_TYPE_GAMIFICATION } from './src/gamification';
+import { GamificationView } from './src/gamification-view';
 
 // Crystal Plugin for Obsidian
 
@@ -51,6 +53,7 @@ export default class CrystalPlugin extends Plugin {
 	private quartzService: QuartzService;
 	private macroCommands: MacroCommands;
 	private gitSummaryService: GitSummaryService;
+	private gamificationManager: GamificationManager;
 
 	async onload() {
 		await this.loadSettings();
@@ -71,6 +74,9 @@ export default class CrystalPlugin extends Plugin {
 		this.gitSummaryService = new GitSummaryService(
 			this.app, this, this.settings, this.terminalService, this.geminiService
 		);
+		this.gamificationManager = new GamificationManager(
+			this.app, this, this.settings, Math.random, () => this.activateGamificationView()
+		);
 
 		// Load Services
 		this.blueskyService.onload();
@@ -81,6 +87,20 @@ export default class CrystalPlugin extends Plugin {
 		this.editorCommands.onload();
 		this.macroCommands.onload();
 		this.gitSummaryService.onload();
+		this.gamificationManager.onLoad();
+
+		// Gamification view (sidebar): full Lv/XP/streak/badge picture
+		this.registerView(
+			VIEW_TYPE_GAMIFICATION,
+			(leaf) => new GamificationView(leaf, () => this.gamificationManager.getSnapshot())
+		);
+		this.addRibbonIcon('gamepad-2', 'Crystal: Gamification stats', () => this.activateGamificationView());
+		this.addCommand({
+			id: 'crystal-open-gamification-view',
+			name: 'Gamification: Open stats view',
+			icon: 'gamepad-2',
+			callback: () => this.activateGamificationView(),
+		});
 
 		// Always enable image paste and drop handler (processing depends on settings)
 		this.imagePasteAndDropHandler.enable();
@@ -152,6 +172,16 @@ export default class CrystalPlugin extends Plugin {
 		}
 	}
 
+	async activateGamificationView() {
+		const { workspace } = this.app;
+		let leaf = workspace.getLeavesOfType(VIEW_TYPE_GAMIFICATION)[0];
+		if (!leaf) {
+			leaf = workspace.getRightLeaf(false) ?? workspace.getLeaf(true);
+			await leaf.setViewState({ type: VIEW_TYPE_GAMIFICATION, active: true });
+		}
+		workspace.revealLeaf(leaf);
+	}
+
 	async loadSettings() {
 		const stored = await this.loadData();
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, stored);
@@ -199,6 +229,7 @@ export default class CrystalPlugin extends Plugin {
 		this.marpCommands.updateSettings(this.settings);
 		this.quartzService.updateSettings(this.settings);
 		this.gitSummaryService.updateSettings(this.settings);
+		this.gamificationManager.updateSettings(this.settings);
 	}
 
 }
