@@ -46,8 +46,17 @@ export class GamificationView extends ItemView {
         this.render();
     }
 
+    /** Respect the OS/browser-level "reduce motion" preference for every animation in this view. */
+    private prefersReducedMotion(): boolean {
+        return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+
     /** Animate a bar's fill from 0 to `pct`% so every update feels like it's "filling up". */
     private animateBar(fillEl: HTMLElement, pct: number) {
+        if (this.prefersReducedMotion()) {
+            fillEl.style.width = `${pct}%`;
+            return;
+        }
         fillEl.style.width = '0%';
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
@@ -58,7 +67,7 @@ export class GamificationView extends ItemView {
 
     /** Count a number up (or down) from `from` to `to` with an ease-out curve, instead of snapping. */
     private animateNumber(el: HTMLElement, from: number, to: number, duration = 500) {
-        if (from === to) {
+        if (from === to || this.prefersReducedMotion()) {
             el.setText(String(to));
             return;
         }
@@ -72,11 +81,17 @@ export class GamificationView extends ItemView {
         requestAnimationFrame(step);
     }
 
-    /** Attach a pure-CSS hover tooltip (no reliance on native title timing or Obsidian's tooltip manager,
-     * both of which can get cancelled if this panel re-renders while the mouse is hovering). */
+    /**
+     * TRIAL: using Obsidian's built-in `aria-label` tooltip instead of the
+     * previous pure-CSS one, to check in practice whether it survives this
+     * panel's frequent re-renders (every task completion tears down and
+     * rebuilds the DOM, which could cut off a tooltip mid-hover — see git
+     * history on this method for the earlier pure-CSS approach that avoided
+     * that risk). Revert to the CSS approach if this turns out to glitch.
+     */
     private attachTooltip(el: HTMLElement, text: string) {
-        el.addClass('crystal-gv-has-tooltip');
-        el.setAttr('data-tooltip', text);
+        el.setAttr('aria-label', text);
+        if (!el.hasAttribute('tabindex')) el.setAttr('tabindex', '0');
     }
 
     /** A small Lucide icon, sized to the surrounding text via CSS (em units). */
@@ -107,6 +122,7 @@ export class GamificationView extends ItemView {
         this.renderStreak(container, snapshot);
         this.renderTodayProgress(container, snapshot);
         this.renderWeeklyXP(container, snapshot);
+        this.renderMonthlyHeatmap(container, snapshot);
         this.renderLifetimeStats(container, snapshot);
         this.renderPersonalBests(container, snapshot);
         this.renderBadges(container, snapshot);
@@ -125,6 +141,7 @@ export class GamificationView extends ItemView {
         const label = levelSection.createDiv({ cls: 'crystal-gv-level-label' });
         this.renderIcon(label, 'zap');
         label.createSpan({ text: `LEVEL ${snapshot.level}` });
+        label.createSpan({ cls: 'crystal-gv-level-title', text: ` · ${snapshot.levelTitle}` });
 
         const barOuter = levelSection.createDiv({ cls: 'crystal-gv-bar' });
         const barInner = barOuter.createDiv({ cls: 'crystal-gv-bar-fill' });
@@ -221,6 +238,21 @@ export class GamificationView extends ItemView {
             this.attachTooltip(bar, `${day.date}${isToday ? ' (today)' : ''}: ${day.xp} XP`);
             const weekday = WEEKDAY_LABELS[new Date(`${day.date}T00:00:00Z`).getUTCDay()];
             col.createDiv({ cls: 'crystal-gv-chart-label', text: weekday });
+        });
+    }
+
+    /**
+     * GitHub-style 30-day heatmap — a calmer, zoomed-out complement to the
+     * 7-day bar chart, using the same daily XP log (already kept for 30 days).
+     */
+    private renderMonthlyHeatmap(container: HTMLElement, snapshot: GamificationSnapshot) {
+        container.createEl('div', { cls: 'crystal-gv-section-title', text: '30-DAY ACTIVITY' });
+        const maxXP = Math.max(1, ...snapshot.monthlyXP.map((d) => d.xp));
+        const grid = container.createDiv({ cls: 'crystal-gv-heatmap' });
+        snapshot.monthlyXP.forEach((day) => {
+            const level = day.xp === 0 ? 0 : Math.min(4, Math.ceil((day.xp / maxXP) * 4));
+            const cell = grid.createDiv({ cls: `crystal-gv-heatmap-cell is-level-${level}` });
+            this.attachTooltip(cell, `${day.date}: ${day.xp} XP`);
         });
     }
 

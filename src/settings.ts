@@ -53,6 +53,9 @@ export interface CrystalPluginSettings {
 	gamificationBestWeekXP: number;
 	gamificationDailyTaskLog: Record<string, number>;
 	gamificationFreezeMilestonesGranted: number[];
+	/** Local day-of-week (0=Sunday..6=Saturday) that never counts as a missed
+	 * day for streak purposes, or -1 if no rest day is configured. */
+	gamificationRestDayOfWeek: number;
 }
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
@@ -98,6 +101,7 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	gamificationBestWeekXP: 0,
 	gamificationDailyTaskLog: {},
 	gamificationFreezeMilestonesGranted: [],
+	gamificationRestDayOfWeek: -1,
 }
 
 export class CrystalSettingTab extends PluginSettingTab {
@@ -313,6 +317,24 @@ export class CrystalSettingTab extends PluginSettingTab {
 		this.sectionHeading(containerEl, 'Gamification', 'gamepad-2');
 
 		this.toggleSetting(containerEl, 'Enable Gamification', 'Earn XP (with occasional bonus rewards), levels, streaks and badges for completing tasks in daily notes. Open the Gamification view (ribbon icon, or the command palette) to see full details', 'gamificationEnabled');
+
+		new Setting(containerEl)
+			.setName('Rest day')
+			.setDesc('A weekly day off: missing tasks on this day never breaks your streak and never costs a freeze token. Applies going forward only.')
+			.addDropdown(dropdown => dropdown
+				.addOption('-1', 'None')
+				.addOption('0', 'Sunday')
+				.addOption('1', 'Monday')
+				.addOption('2', 'Tuesday')
+				.addOption('3', 'Wednesday')
+				.addOption('4', 'Thursday')
+				.addOption('5', 'Friday')
+				.addOption('6', 'Saturday')
+				.setValue(String(this.plugin.settings.gamificationRestDayOfWeek))
+				.onChange(async (value) => {
+					this.plugin.settings.gamificationRestDayOfWeek = parseInt(value, 10);
+					await this.plugin.saveSettings();
+				}));
 
 		new Setting(containerEl)
 			.setName('Reset progress')

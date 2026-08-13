@@ -5,6 +5,7 @@ import {
 	checkNewlySpecialUnlocks,
 	checkNewlyUnlockedBadges,
 	countCompletedTasks,
+	countNonRestMissedDays,
 	countTotalTasks,
 	findNearestBadgeTarget,
 	getWeeklyXPSeries,
@@ -12,9 +13,11 @@ import {
 	nextStreakWithFreeze,
 	pruneDailyXPLog,
 	refillFreezeTokens,
+	resolveStreakAdvance,
 	rollReward,
 	SPECIAL_BADGE_IDS,
 	sumRecentXP,
+	titleForLevel,
 } from '../src/gamification';
 
 describe('countCompletedTasks', () => {
@@ -34,6 +37,25 @@ describe('countCompletedTasks', () => {
 	it('returns 0 for content with no tasks', () => {
 		expect(countCompletedTasks('just some text\n- a bullet, no checkbox')).toBe(0);
 	});
+
+	it('ignores checkbox-looking lines inside a fenced code block', () => {
+		const content = [
+			'- [x] a real completed task',
+			'```',
+			'- [x] this is just an example in a code sample',
+			'- [x] so is this one',
+			'```',
+			'- [x] another real task',
+		].join('\n');
+
+		expect(countCompletedTasks(content)).toBe(2);
+	});
+
+	it('ignores checkbox-looking lines inside a ~~~ fenced code block', () => {
+		const content = ['~~~', '- [x] not a real task', '~~~', '- [x] real task'].join('\n');
+
+		expect(countCompletedTasks(content)).toBe(1);
+	});
 });
 
 describe('countTotalTasks', () => {
@@ -52,6 +74,12 @@ describe('countTotalTasks', () => {
 
 	it('returns 0 for content with no tasks', () => {
 		expect(countTotalTasks('just some text\n- a bullet, no checkbox')).toBe(0);
+	});
+
+	it('ignores checkbox-looking lines inside a fenced code block', () => {
+		const content = ['- [ ] a real task', '```', '- [ ] example syntax only', '```'].join('\n');
+
+		expect(countTotalTasks(content)).toBe(1);
 	});
 });
 
@@ -143,6 +171,30 @@ describe('nextStreakWithFreeze', () => {
 
 	it('resets the streak to 1 with zero freeze tokens and any gap', () => {
 		expect(nextStreakWithFreeze('2026-08-10', 5, '2026-08-13', 0)).toEqual({ streak: 1, freezeTokensUsed: 0 });
+	});
+
+	it('extends the streak without spending a token when the only missed day is a configured rest day', () => {
+		// 2026-08-15 is a Saturday. Missed 08-14 (Fri) -> completed 08-13 (Thu), resume 08-15 (Sat)... use a case
+		// where the single missed day in between is the rest day itself.
+		// previous=2026-08-13 (Thu), active=2026-08-15 (Sat): missed day is 08-14 (Fri, day 5).
+		expect(nextStreakWithFreeze('2026-08-13', 5, '2026-08-15', 0, [5])).toEqual({ streak: 6, freezeTokensUsed: 0 });
+	});
+
+	it('still spends a token for a missed day that is not the configured rest day', () => {
+		expect(nextStreakWithFreeze('2026-08-13', 5, '2026-08-15', 1, [0])).toEqual({ streak: 6, freezeTokensUsed: 1 });
+	});
+
+	it('resets the streak when a non-rest missed day exceeds available tokens, even with a rest day configured', () => {
+		expect(nextStreakWithFreeze('2026-08-13', 5, '2026-08-15', 0, [0])).toEqual({ streak: 1, freezeTokensUsed: 0 });
+	});
+});
+
+describe('countNonRestMissedDays', () => {
+	it('excludes the configured rest day(s) from the missed-day count', () => {
+		// Days strictly between 08-13 and 08-16: 08-14 (Fri=5), 08-15 (Sat=6)
+		expect(countNonRestMissedDays('2026-08-13', '2026-08-16', [5, 6])).toBe(0);
+		expect(countNonRestMissedDays('2026-08-13', '2026-08-16', [6])).toBe(1);
+		expect(countNonRestMissedDays('2026-08-13', '2026-08-16', [])).toBe(2);
 	});
 });
 
@@ -306,6 +358,113 @@ describe('checkNewlySpecialUnlocks', () => {
 	it('excludes badges already unlocked', () => {
 		const unlocked = checkNewlySpecialUnlocks({ hour: 2, todayTaskCount: 10 }, [SPECIAL_BADGE_IDS.NIGHT_OWL]);
 		expect(unlocked.map((b) => b.id)).toEqual([SPECIAL_BADGE_IDS.TEN_IN_A_DAY]);
+	});
+});
+
+describe('resolveStreakAdvance', () => {
+	const baseInput = {
+		activeDate: '2026-08-13',
+		today: '2026-08-13',
+		previousActiveDate: '2026-08-12',
+		currentStreak: 3,
+		freezeTokensAvailable: 2,
+		freezeTokensRefillMonth: '2026-08',
+		bestStreak: 3,
+		freezeMilestonesGranted: [] as number[],
+		restDayOfWeek: -1,
+	};
+
+	it('advances the streak normally for a same-day/consecutive-day completion', () => {
+		const result = resolveStreakAdvance(baseInput);
+		expect(result.isBackdatedEdit).toBe(false);
+		expect(result.streak).toBe(4);
+		expect(result.lastActiveDate).toBe('2026-08-13');
+		expect(result.newBestStreak).toBe(true);
+		expect(result.bestStreak).toBe(4);
+	});
+
+	it('never touches the streak or last-active date when backfilling an older daily note', () => {
+		// Today's streak has already advanced to 2026-08-13; the user now goes back
+		// and checks off a leftover task in a much older note (2026-08-01).
+		const result = resolveStreakAdvance({
+			...baseInput,
+			activeDate: '2026-08-01',
+			previousActiveDate: '2026-08-13',
+			currentStreak: 5,
+			bestStreak: 5,
+		});
+
+		expect(result.isBackdatedEdit).toBe(true);
+		expect(result.streak).toBe(5);
+		expect(result.lastActiveDate).toBe('2026-08-13');
+		expect(result.freezeTokensUsed).toBe(0);
+		expect(result.isComeback).toBe(false);
+		expect(result.newBestStreak).toBe(false);
+		expect(result.bestStreak).toBe(5);
+	});
+
+	it('does not spend or lose freeze tokens when backfilling an older daily note', () => {
+		const result = resolveStreakAdvance({
+			...baseInput,
+			activeDate: '2026-08-01',
+			previousActiveDate: '2026-08-13',
+			freezeTokensAvailable: 2,
+			freezeTokensRefillMonth: '2026-08',
+		});
+
+		expect(result.freezeTokensAvailable).toBe(2);
+	});
+
+	it('refills freeze tokens against the real "today", not the (possibly backdated) active date', () => {
+		// First-ever completion, but it happens on a backfilled note dated in July
+		// while it's actually August and tokens haven't been refilled since July.
+		const result = resolveStreakAdvance({
+			...baseInput,
+			activeDate: '2026-07-01',
+			today: '2026-08-13',
+			previousActiveDate: null,
+			currentStreak: 0,
+			freezeTokensAvailable: 0,
+			freezeTokensRefillMonth: '2026-07',
+			bestStreak: 0,
+		});
+
+		// Refilled because "today" (2026-08) differs from the last refill month
+		// (2026-07) — a bug would instead compare against the note's own month
+		// (also 2026-07), see no change, and leave tokens at 0.
+		expect(result.freezeTokensRefillMonth).toBe('2026-08');
+		expect(result.freezeTokensAvailable).toBe(2);
+	});
+
+	it('bridges a gap using a rest day without spending a freeze token', () => {
+		// The only missed day between 2026-08-13 (Thu) and 2026-08-15 (Sat) is
+		// 2026-08-14 (Friday) — configuring Friday as the rest day means it
+		// doesn't cost a token.
+		const result = resolveStreakAdvance({
+			...baseInput,
+			activeDate: '2026-08-15',
+			previousActiveDate: '2026-08-13',
+			freezeTokensAvailable: 0,
+			restDayOfWeek: 5,
+		});
+
+		expect(result.streak).toBe(4);
+		expect(result.freezeTokensUsed).toBe(0);
+	});
+});
+
+describe('titleForLevel', () => {
+	it('returns "Beginner" below the first level-badge threshold', () => {
+		expect(titleForLevel(1)).toBe('Beginner');
+		expect(titleForLevel(4)).toBe('Beginner');
+	});
+
+	it('returns the matching level-badge name once its threshold is reached', () => {
+		expect(titleForLevel(5)).toBe('Rookie');
+		expect(titleForLevel(9)).toBe('Rookie');
+		expect(titleForLevel(10)).toBe('Adept');
+		expect(titleForLevel(50)).toBe('Legend');
+		expect(titleForLevel(999)).toBe('Legend');
 	});
 });
 

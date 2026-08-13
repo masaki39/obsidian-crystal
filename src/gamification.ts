@@ -62,15 +62,25 @@ export function rollReward(random: () => number = Math.random): Reward {
     return { xp: BASE_XP, tier: 'normal' };
 }
 
+/**
+ * Strip fenced code blocks (``` or ~~~, including indented ones) before
+ * scanning for checkboxes, so a note that *documents* task syntax (e.g.
+ * explaining the Tasks plugin) inside a code sample isn't counted as real
+ * tasks.
+ */
+function stripCodeBlocks(content: string): string {
+    return content.replace(/^[ \t]*(`{3,}|~{3,})[^\n]*\n[\s\S]*?^[ \t]*\1[ \t]*$/gm, '');
+}
+
 /** Count completed checkbox tasks (`- [x]`) in note content. */
 export function countCompletedTasks(content: string): number {
-    const matches = content.match(/^[ \t]*(?:[-*+]|\d+[.)])[ \t]+\[[xX]\]/gm);
+    const matches = stripCodeBlocks(content).match(/^[ \t]*(?:[-*+]|\d+[.)])[ \t]+\[[xX]\]/gm);
     return matches ? matches.length : 0;
 }
 
 /** Count all checkbox tasks (any state: `- [ ]`, `- [x]`, `- [/]`, etc.) in note content. */
 export function countTotalTasks(content: string): number {
-    const matches = content.match(/^[ \t]*(?:[-*+]|\d+[.)])[ \t]+\[.\]/gm);
+    const matches = stripCodeBlocks(content).match(/^[ \t]*(?:[-*+]|\d+[.)])[ \t]+\[.\]/gm);
     return matches ? matches.length : 0;
 }
 
@@ -101,15 +111,34 @@ export interface StreakResult {
 }
 
 /**
+ * Count the days strictly between `previousDate` and `activeDate` that are
+ * *not* one of `restDays` (local day-of-week numbers, 0=Sunday..6=Saturday).
+ * Used so a configured weekly rest day never counts as a "missed" day.
+ */
+export function countNonRestMissedDays(previousDate: string, activeDate: string, restDays: number[]): number {
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const start = new Date(`${previousDate}T00:00:00Z`).getTime();
+    const end = new Date(`${activeDate}T00:00:00Z`).getTime();
+    let missed = 0;
+    for (let t = start + msPerDay; t < end; t += msPerDay) {
+        if (!restDays.includes(new Date(t).getUTCDay())) missed++;
+    }
+    return missed;
+}
+
+/**
  * Like `nextStreak`, but a gap of missed days can be bridged with freeze
  * tokens (one token per missed day) instead of resetting the streak. Used to
- * avoid the "missed one day, streak gone, why bother" drop-off.
+ * avoid the "missed one day, streak gone, why bother" drop-off. Days listed
+ * in `restDays` (local day-of-week, 0=Sunday..6=Saturday) never count as
+ * missed and never cost a freeze token — a deliberate day off each week.
  */
 export function nextStreakWithFreeze(
     previousDate: string | null,
     currentStreak: number,
     activeDate: string,
-    freezeTokensAvailable: number
+    freezeTokensAvailable: number,
+    restDays: number[] = []
 ): StreakResult {
     if (previousDate === activeDate) return { streak: currentStreak, freezeTokensUsed: 0 };
     if (!previousDate) return { streak: 1, freezeTokensUsed: 0 };
@@ -117,7 +146,8 @@ export function nextStreakWithFreeze(
     const gap = daysBetween(previousDate, activeDate);
     if (gap === 1) return { streak: currentStreak + 1, freezeTokensUsed: 0 };
     if (gap > 1) {
-        const missedDays = gap - 1;
+        const missedDays = restDays.length > 0 ? countNonRestMissedDays(previousDate, activeDate, restDays) : gap - 1;
+        if (missedDays === 0) return { streak: currentStreak + 1, freezeTokensUsed: 0 };
         if (freezeTokensAvailable >= missedDays) {
             return { streak: currentStreak + 1, freezeTokensUsed: missedDays };
         }
@@ -128,17 +158,19 @@ export function nextStreakWithFreeze(
 const FREEZE_TOKENS_PER_MONTH = 2;
 
 /**
- * Refill freeze tokens to a flat amount at the start of each calendar month
- * (based on the daily note's date, not wall-clock time). Tokens don't
+ * Refill freeze tokens to a flat amount at the start of each calendar month.
+ * Pure function: "current month" is whatever `referenceDate` says it is —
+ * callers should pass the real current date, not a possibly-backdated note's
+ * date, so a backfilled old note can't shift the refill month. Tokens don't
  * accumulate across months.
  */
 export function refillFreezeTokens(
     currentTokens: number,
     lastRefillMonth: string,
-    activeDate: string,
+    referenceDate: string,
     tokensPerMonth: number = FREEZE_TOKENS_PER_MONTH
 ): { tokens: number; refillMonth: string } {
-    const month = activeDate.slice(0, 7); // YYYY-MM
+    const month = referenceDate.slice(0, 7); // YYYY-MM
     if (month !== lastRefillMonth) {
         return { tokens: tokensPerMonth, refillMonth: month };
     }
@@ -169,6 +201,19 @@ const LEVEL_BADGES: BadgeRule[] = [
     { id: 'level-30', name: 'Master', description: 'Reach level 30', icon: 'gem', metric: 'level', threshold: 30 },
     { id: 'level-50', name: 'Legend', description: 'Reach level 50', icon: 'crown', metric: 'level', threshold: 50 },
 ];
+
+/**
+ * The level-badge names double as level "titles" — reused here as a compact
+ * one-line status (e.g. "LEVEL 12 · Adept") instead of only living inside the
+ * badge collection.
+ */
+export function titleForLevel(level: number): string {
+    let title = 'Beginner';
+    for (const badge of LEVEL_BADGES) {
+        if (level >= badge.threshold) title = badge.name;
+    }
+    return title;
+}
 
 const STREAK_BADGES: BadgeRule[] = [
     { id: 'streak-3', name: 'Firestarter', description: '3-day streak', icon: 'flame', metric: 'streak', threshold: 3 },
@@ -313,9 +358,100 @@ export function checkNewlyReachedFreezeMilestones(streak: number, granted: numbe
     return FREEZE_MILESTONES.filter((milestone) => streak >= milestone && !granted.includes(milestone));
 }
 
+export interface StreakAdvanceInput {
+    /** The day the completed task belongs to (the daily note's date). */
+    activeDate: string;
+    /** The real current date — always used for the freeze-token refill, since
+     * "this calendar month" is a real-time concept that shouldn't shift just
+     * because an old note was edited. */
+    today: string;
+    previousActiveDate: string | null;
+    currentStreak: number;
+    freezeTokensAvailable: number;
+    freezeTokensRefillMonth: string;
+    bestStreak: number;
+    freezeMilestonesGranted: number[];
+    /** -1 for "no rest day configured", otherwise 0(Sun)-6(Sat). */
+    restDayOfWeek: number;
+}
+
+export interface StreakAdvanceOutput {
+    /** True when `activeDate` precedes `previousActiveDate` — a backfill of
+     * an old, already-past daily note rather than today's real activity. */
+    isBackdatedEdit: boolean;
+    freezeTokensAvailable: number;
+    freezeTokensRefillMonth: string;
+    streak: number;
+    lastActiveDate: string;
+    freezeTokensUsed: number;
+    isComeback: boolean;
+    newBestStreak: boolean;
+    bestStreak: number;
+    newMilestones: number[];
+}
+
+/**
+ * Pure core of the streak/freeze-token bookkeeping, kept separate from
+ * `GamificationManager` so it's directly unit-testable without mocking the
+ * Obsidian API. Refills freeze tokens against the real calendar month, then
+ * — unless this is a backdated (backfilled) edit, in which case the streak
+ * is left untouched entirely — advances the streak (bridging a gap with
+ * freeze tokens/rest days if possible), tracks the best-ever streak, and
+ * grants any newly-reached freeze-token milestones.
+ */
+export function resolveStreakAdvance(input: StreakAdvanceInput): StreakAdvanceOutput {
+    const { tokens, refillMonth } = refillFreezeTokens(input.freezeTokensAvailable, input.freezeTokensRefillMonth, input.today);
+
+    const isBackdatedEdit = input.previousActiveDate !== null && input.activeDate < input.previousActiveDate;
+    if (isBackdatedEdit) {
+        return {
+            isBackdatedEdit: true,
+            freezeTokensAvailable: tokens,
+            freezeTokensRefillMonth: refillMonth,
+            streak: input.currentStreak,
+            lastActiveDate: input.previousActiveDate as string,
+            freezeTokensUsed: 0,
+            isComeback: false,
+            newBestStreak: false,
+            bestStreak: input.bestStreak,
+            newMilestones: [],
+        };
+    }
+
+    const restDays = input.restDayOfWeek < 0 ? [] : [input.restDayOfWeek];
+    const { streak, freezeTokensUsed } = nextStreakWithFreeze(
+        input.previousActiveDate,
+        input.currentStreak,
+        input.activeDate,
+        tokens,
+        restDays
+    );
+
+    // A "comeback": the streak genuinely reset (not bridged by a freeze token
+    // or rest day) after having been meaningfully underway. Worth a softer
+    // message than silence.
+    const isComeback = streak === 1 && freezeTokensUsed === 0 && input.currentStreak > 1;
+    const newBestStreak = streak > input.bestStreak;
+    const newMilestones = checkNewlyReachedFreezeMilestones(streak, input.freezeMilestonesGranted);
+
+    return {
+        isBackdatedEdit: false,
+        freezeTokensAvailable: tokens - freezeTokensUsed + newMilestones.length,
+        freezeTokensRefillMonth: refillMonth,
+        streak,
+        lastActiveDate: input.activeDate,
+        freezeTokensUsed,
+        isComeback,
+        newBestStreak,
+        bestStreak: newBestStreak ? streak : input.bestStreak,
+        newMilestones,
+    };
+}
+
 export interface GamificationSnapshot {
     enabled: boolean;
     level: number;
+    levelTitle: string;
     xpIntoLevel: number;
     xpForNextLevel: number;
     totalXP: number;
@@ -326,6 +462,7 @@ export interface GamificationSnapshot {
     totalTasksCompleted: number;
     startDate: string | null;
     weeklyXP: DailyXP[];
+    monthlyXP: DailyXP[];
     nearestBadge: NearestBadgeTarget | null;
     freezeTokenLog: string[];
     bestStreak: number;
@@ -354,6 +491,7 @@ export class GamificationManager {
     private todayProgress: TodayProgress | null = null;
     private statusBarItem: HTMLElement | null = null;
     private flashTimeoutId: number | null = null;
+    private saveDebounceId: number | null = null;
     private onStatusBarClick?: () => void;
 
     constructor(
@@ -373,6 +511,9 @@ export class GamificationManager {
     updateSettings(settings: CrystalPluginSettings) {
         this.settings = settings;
         this.renderStatusBar();
+        // e.g. the settings tab's "Reset progress" button changes the
+        // underlying data — make sure an already-open sidebar reflects it.
+        this.refreshViews();
     }
 
     onLoad() {
@@ -420,6 +561,10 @@ export class GamificationManager {
         if (!this.isDailyNote(file)) return;
         if (this.taskCounts.has(file.path)) return;
         const content = await this.app.vault.cachedRead(file);
+        // Re-check after the await: handleFileModify may have raced ahead and
+        // already established a (more current) baseline for this file while
+        // we were reading it. Don't clobber it with a possibly-stale read.
+        if (this.taskCounts.has(file.path)) return;
         this.taskCounts.set(file.path, countCompletedTasks(content));
         this.taskTotals.set(file.path, countTotalTasks(content));
         this.refreshTodayProgress(file, content);
@@ -482,6 +627,14 @@ export class GamificationManager {
         this.refreshTodayProgress(file, content);
 
         const dateStr = date.format('YYYY-MM-DD');
+        // The real "today", independent of which day's note was edited — used
+        // for anything that must stay anchored to the actual calendar (log
+        // pruning, freeze-token refill), so backfilling an old note can never
+        // wipe out or misdate today's own data. `dateStr` (the note's date)
+        // still attributes XP/tasks/streak to the day the work was for.
+        const todayStr = moment().format('YYYY-MM-DD');
+
+        const levelBefore = calculateLevel(this.settings.gamificationTotalXP).level;
 
         let gainedXP = 0;
         let bestTier: RewardTier = 'normal';
@@ -491,14 +644,16 @@ export class GamificationManager {
             gainedXP += reward.xp;
             if (tierRank(reward.tier) > tierRank(bestTier)) bestTier = reward.tier;
         }
+        const levelAfter = calculateLevel(this.settings.gamificationTotalXP).level;
+        const leveledUp = levelAfter > levelBefore;
 
         this.settings.gamificationTotalTasksCompleted += delta;
         if (!this.settings.gamificationStartDate) this.settings.gamificationStartDate = dateStr;
         this.settings.gamificationDailyXPLog[dateStr] = (this.settings.gamificationDailyXPLog[dateStr] ?? 0) + gainedXP;
-        this.settings.gamificationDailyXPLog = pruneDailyXPLog(this.settings.gamificationDailyXPLog, dateStr);
+        this.settings.gamificationDailyXPLog = pruneDailyXPLog(this.settings.gamificationDailyXPLog, todayStr);
 
         this.settings.gamificationDailyTaskLog[dateStr] = (this.settings.gamificationDailyTaskLog[dateStr] ?? 0) + delta;
-        this.settings.gamificationDailyTaskLog = pruneDailyXPLog(this.settings.gamificationDailyTaskLog, dateStr);
+        this.settings.gamificationDailyTaskLog = pruneDailyXPLog(this.settings.gamificationDailyTaskLog, todayStr);
         const todayTaskCount = this.settings.gamificationDailyTaskLog[dateStr];
         const newBestDayTasks = todayTaskCount > this.settings.gamificationBestDayTasks;
         if (newBestDayTasks) this.settings.gamificationBestDayTasks = todayTaskCount;
@@ -507,7 +662,7 @@ export class GamificationManager {
         const newBestWeekXP = weekXP > this.settings.gamificationBestWeekXP;
         if (newBestWeekXP) this.settings.gamificationBestWeekXP = weekXP;
 
-        const { newlyUnlocked, newBestStreak, isComeback, freezeMilestoneBonus } = this.updateStreakAndBadges(dateStr);
+        const { newlyUnlocked, newBestStreak, isComeback, freezeMilestoneBonus } = this.updateStreakAndBadges(dateStr, todayStr);
 
         const specialUnlocks = checkNewlySpecialUnlocks(
             { hour: new Date().getHours(), todayTaskCount },
@@ -521,6 +676,8 @@ export class GamificationManager {
         // One status-bar moment per completion — pick the most exciting thing that happened.
         if (allNewBadges.length > 0) {
             this.flashBadge(allNewBadges[allNewBadges.length - 1]);
+        } else if (leveledUp) {
+            this.flashLevelUp(levelAfter);
         } else if (freezeMilestoneBonus > 0) {
             this.flash([{ icon: 'snowflake', text: `+${freezeMilestoneBonus} FREEZE` }], 2500);
         } else if (newBestStreak || newBestDayTasks || newBestWeekXP) {
@@ -531,7 +688,11 @@ export class GamificationManager {
             this.flashReward({ xp: gainedXP, tier: bestTier });
         }
         this.refreshViews();
-        await this.plugin.saveSettings();
+        // Debounced rather than awaited: checking off several tasks in a row
+        // should coalesce into a single data.json write (and a single
+        // updateSettings() cascade across every other service) instead of one
+        // per checkbox. flushPendingSave() forces it out on unload.
+        this.debouncedSave();
     }
 
     /**
@@ -539,48 +700,48 @@ export class GamificationManager {
      * available), refill freeze tokens on a new calendar month, grant
      * milestone freeze bonuses, track the best-ever streak, and unlock any
      * newly-earned badges.
+     *
+     * `activeDate` is the day the completed task belongs to (the daily
+     * note's date); `today` is the real current date. Freeze-token refill
+     * always uses `today`, since "this calendar month" is a real-time concept
+     * that shouldn't shift just because an old note was edited.
+     *
+     * If `activeDate` is *earlier* than the last recorded active date, this
+     * is a backfill (catching up on a stale, already-past daily note) rather
+     * than today's activity — the streak, freeze tokens and last-active date
+     * are left untouched so backfilling never resets progress that's already
+     * been earned. XP/badges from the completion still apply regardless.
      */
-    private updateStreakAndBadges(activeDate: string): StreakUpdateResult {
-        const streakBeforeUpdate = this.settings.gamificationStreak;
+    private updateStreakAndBadges(activeDate: string, today: string): StreakUpdateResult {
+        const advance = resolveStreakAdvance({
+            activeDate,
+            today,
+            previousActiveDate: this.settings.gamificationLastActiveDate || null,
+            currentStreak: this.settings.gamificationStreak,
+            freezeTokensAvailable: this.settings.gamificationFreezeTokensAvailable,
+            freezeTokensRefillMonth: this.settings.gamificationFreezeTokensRefillMonth,
+            bestStreak: this.settings.gamificationBestStreak,
+            freezeMilestonesGranted: this.settings.gamificationFreezeMilestonesGranted,
+            restDayOfWeek: this.settings.gamificationRestDayOfWeek,
+        });
 
-        const { tokens, refillMonth } = refillFreezeTokens(
-            this.settings.gamificationFreezeTokensAvailable,
-            this.settings.gamificationFreezeTokensRefillMonth,
-            activeDate
-        );
+        this.settings.gamificationFreezeTokensAvailable = advance.freezeTokensAvailable;
+        this.settings.gamificationFreezeTokensRefillMonth = advance.freezeTokensRefillMonth;
+        this.settings.gamificationStreak = advance.streak;
+        this.settings.gamificationLastActiveDate = advance.lastActiveDate;
+        this.settings.gamificationBestStreak = advance.bestStreak;
 
-        const previous = this.settings.gamificationLastActiveDate || null;
-        const { streak, freezeTokensUsed } = nextStreakWithFreeze(previous, this.settings.gamificationStreak, activeDate, tokens);
-
-        this.settings.gamificationFreezeTokensAvailable = tokens - freezeTokensUsed;
-        this.settings.gamificationFreezeTokensRefillMonth = refillMonth;
-        this.settings.gamificationStreak = streak;
-        this.settings.gamificationLastActiveDate = activeDate;
-
-        if (freezeTokensUsed > 0) {
+        if (advance.freezeTokensUsed > 0) {
             this.settings.gamificationFreezeTokenLog.push(activeDate);
             this.settings.gamificationFreezeTokenLog = this.settings.gamificationFreezeTokenLog.slice(-10);
         }
-
-        // A "comeback": the streak genuinely reset (not bridged by a freeze token)
-        // after having been meaningfully underway. Worth a softer message than silence.
-        const isComeback = streak === 1 && freezeTokensUsed === 0 && streakBeforeUpdate > 1;
-
-        let newBestStreak = false;
-        if (streak > this.settings.gamificationBestStreak) {
-            this.settings.gamificationBestStreak = streak;
-            newBestStreak = true;
-        }
-
-        const newMilestones = checkNewlyReachedFreezeMilestones(streak, this.settings.gamificationFreezeMilestonesGranted);
-        if (newMilestones.length > 0) {
-            this.settings.gamificationFreezeTokensAvailable += newMilestones.length;
-            this.settings.gamificationFreezeMilestonesGranted.push(...newMilestones);
+        if (advance.newMilestones.length > 0) {
+            this.settings.gamificationFreezeMilestonesGranted.push(...advance.newMilestones);
         }
 
         const state = {
             level: calculateLevel(this.settings.gamificationTotalXP).level,
-            streak,
+            streak: this.settings.gamificationStreak,
             totalXP: this.settings.gamificationTotalXP,
         };
         const newlyUnlocked = checkNewlyUnlockedBadges(state, this.settings.gamificationUnlockedBadges);
@@ -588,7 +749,12 @@ export class GamificationManager {
             this.settings.gamificationUnlockedBadges.push(...newlyUnlocked.map((b) => b.id));
         }
 
-        return { newlyUnlocked, newBestStreak, isComeback, freezeMilestoneBonus: newMilestones.length };
+        return {
+            newlyUnlocked,
+            newBestStreak: advance.newBestStreak,
+            isComeback: advance.isComeback,
+            freezeMilestoneBonus: advance.newMilestones.length,
+        };
     }
 
     getSnapshot(): GamificationSnapshot {
@@ -601,6 +767,7 @@ export class GamificationManager {
         return {
             enabled: this.settings.gamificationEnabled,
             level,
+            levelTitle: titleForLevel(level),
             xpIntoLevel,
             xpForNextLevel,
             totalXP: this.settings.gamificationTotalXP,
@@ -611,6 +778,7 @@ export class GamificationManager {
             totalTasksCompleted: this.settings.gamificationTotalTasksCompleted,
             startDate: this.settings.gamificationStartDate || null,
             weeklyXP: getWeeklyXPSeries(this.settings.gamificationDailyXPLog, todayStr, 7),
+            monthlyXP: getWeeklyXPSeries(this.settings.gamificationDailyXPLog, todayStr, 30),
             nearestBadge: findNearestBadgeTarget(
                 { level, streak: this.settings.gamificationStreak },
                 this.settings.gamificationUnlockedBadges
@@ -676,6 +844,12 @@ export class GamificationManager {
         this.flash([{ icon: 'award', text: 'NEW' }, { icon: badge.icon, text: badge.name }], 2500);
     }
 
+    /** A level-up is the headline event of the whole XP system — it gets its
+     * own moment instead of blending into a routine XP-reward flash. */
+    private flashLevelUp(level: number) {
+        this.flash([{ icon: 'trending-up', text: 'LEVEL UP' }, { icon: 'zap', text: `Lv${level}` }], 2500);
+    }
+
     /** Celebrates beating a personal record — translates SNS-style "compare to others" into "compare to your past self". */
     private flashPersonalBest(broke: { streak: boolean; dayTasks: boolean; weekXP: boolean }) {
         const text = broke.streak ? `${this.settings.gamificationBestStreak}d streak`
@@ -699,6 +873,39 @@ export class GamificationManager {
             this.renderStatusBar();
         }, duration);
         this.plugin.registerInterval(this.flashTimeoutId);
+    }
+
+    /**
+     * Persist settings after a short debounce window so rapid-fire checkbox
+     * toggles (checking off several tasks at once) coalesce into a single
+     * data.json write — and a single `updateSettings()` cascade across every
+     * other service — instead of one per task.
+     */
+    private debouncedSave() {
+        if (this.saveDebounceId !== null) {
+            window.clearTimeout(this.saveDebounceId);
+        }
+        this.saveDebounceId = window.setTimeout(() => {
+            this.saveDebounceId = null;
+            this.plugin.saveSettings().catch((error) => {
+                console.error('Crystal gamification: failed to save settings', error);
+            });
+        }, 400);
+        this.plugin.registerInterval(this.saveDebounceId);
+    }
+
+    /**
+     * Force out any pending debounced save immediately. Called on plugin
+     * unload so a completion right before Obsidian closes/reloads doesn't
+     * get lost in the debounce window.
+     */
+    flushPendingSave() {
+        if (this.saveDebounceId === null) return;
+        window.clearTimeout(this.saveDebounceId);
+        this.saveDebounceId = null;
+        this.plugin.saveSettings().catch((error) => {
+            console.error('Crystal gamification: failed to save settings', error);
+        });
     }
 }
 

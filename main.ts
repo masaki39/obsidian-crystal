@@ -170,6 +170,9 @@ export default class CrystalPlugin extends Plugin {
 		if (this.imagePasteAndDropHandler) {
 			this.imagePasteAndDropHandler.disable();
 		}
+		// Flush any debounced gamification save so a completion right before
+		// unload/reload isn't silently dropped.
+		this.gamificationManager?.flushPendingSave();
 	}
 
 	async activateGamificationView() {

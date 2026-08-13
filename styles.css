@@ -99,6 +99,13 @@
 	color: var(--text-accent);
 }
 
+.crystal-gv-level-title {
+	font-size: 0.7em;
+	font-weight: normal;
+	letter-spacing: normal;
+	color: var(--text-muted);
+}
+
 .crystal-gv-bar {
 	margin: 0.5em 0;
 	height: 0.6em;
@@ -283,14 +290,17 @@
 	background: var(--color-green, var(--text-accent));
 }
 
-/* Pure-CSS hover tooltip: shows/hides purely via :hover, no JS timer to race
-   against a re-render, and no dependency on native title tooltips (which
-   Obsidian's own styling can suppress or delay inconsistently). */
+/* TRIAL: pure-CSS hover tooltip disabled while trying Obsidian's built-in
+   `aria-label` tooltip instead (see attachTooltip() in gamification-view.ts).
+   Kept here, commented out, so it's easy to restore if the native one turns
+   out to glitch under this panel's frequent re-renders.
+
 .crystal-gv-has-tooltip {
 	position: relative;
 }
 
-.crystal-gv-has-tooltip:hover::after {
+.crystal-gv-has-tooltip:hover::after,
+.crystal-gv-has-tooltip:focus-visible::after {
 	content: attr(data-tooltip);
 	position: absolute;
 	bottom: 100%;
@@ -299,8 +309,6 @@
 	margin-bottom: 0.4em;
 	padding: 0.45em 0.7em;
 	border-radius: var(--radius-s);
-	/* Solid, deliberately high-contrast — theme background vars can read as
-	   near-transparent against the panel in some themes. */
 	background-color: rgba(20, 20, 22, 0.96);
 	color: #fff;
 	font-size: 0.78em;
@@ -313,10 +321,41 @@
 	pointer-events: none;
 	text-align: left;
 }
+*/
 
 .crystal-gv-chart-label {
 	font-size: 0.7em;
 	color: var(--text-faint);
+}
+
+/* 30-day activity heatmap: GitHub-style intensity grid, quieter than the
+   7-day bar chart — a zoomed-out "did I keep showing up" glance. */
+.crystal-gv-heatmap {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(0.9em, 1fr));
+	gap: 0.25em;
+}
+
+.crystal-gv-heatmap-cell {
+	aspect-ratio: 1;
+	border-radius: var(--radius-s);
+	background: var(--background-modifier-border);
+}
+
+.crystal-gv-heatmap-cell.is-level-1 {
+	background: color-mix(in srgb, var(--text-accent) 30%, var(--background-modifier-border));
+}
+
+.crystal-gv-heatmap-cell.is-level-2 {
+	background: color-mix(in srgb, var(--text-accent) 55%, var(--background-modifier-border));
+}
+
+.crystal-gv-heatmap-cell.is-level-3 {
+	background: color-mix(in srgb, var(--text-accent) 80%, var(--background-modifier-border));
+}
+
+.crystal-gv-heatmap-cell.is-level-4 {
+	background: var(--text-accent);
 }
 
 /* Personal-best grid */
@@ -434,6 +473,27 @@
 	}
 	100% {
 		transform: scale(1);
+	}
+}
+
+/* Respect the OS "reduce motion" preference: drop every gamification
+   animation/transition to an instant state change. The bar-fill/number
+   count-up JS animations already check the same media query directly. */
+@media (prefers-reduced-motion: reduce) {
+	.crystal-gamification-status--flash,
+	.crystal-gv-bar-fill.is-almost-there,
+	.crystal-gv-level.is-near-miss .crystal-gv-level-label,
+	.crystal-gv-next-target.is-near-miss,
+	.crystal-gv-today.is-near-miss .crystal-gv-level-sub,
+	.crystal-gv-badge,
+	.crystal-gv-badge.just-unlocked {
+		animation: none !important;
+	}
+
+	.crystal-gv-bar-fill,
+	.crystal-gv-chart-bar,
+	.crystal-gv-badge {
+		transition: none !important;
 	}
 }
 
