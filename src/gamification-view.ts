@@ -19,6 +19,9 @@ export class GamificationView extends ItemView {
     private previousUnlockedIds: Set<string> | null = null;
     /** Snapshot as of the previous render; null until the first render happens. Powers count-up animations. */
     private previousSnapshot: GamificationSnapshot | null = null;
+    /** DOM refs for the writing-goal meter, cached so `updateTodayChars` can
+     * patch it in place on routine writing ticks without a full re-render. */
+    private todayCharsRefs: { section: HTMLElement; bar: HTMLElement; countEl: HTMLElement; labelEl: HTMLElement } | null = null;
 
     constructor(leaf: WorkspaceLeaf, getSnapshot: () => GamificationSnapshot) {
         super(leaf);
@@ -44,6 +47,31 @@ export class GamificationView extends ItemView {
     /** Called by GamificationManager whenever XP/streak/badges change. */
     refresh() {
         this.render();
+    }
+
+    /**
+     * Lightweight patch for routine writing-progress ticks — the word-count
+     * stats file can update every ~400ms while actively typing, far too
+     * often to justify tearing down and rebuilding the whole panel (which
+     * also interrupts hover tooltips and badge-pop animations elsewhere on
+     * the page). Updates just the writing-goal meter's bar width, count and
+     * near-miss label in place. Returns false if the meter isn't currently
+     * rendered (e.g. the goal was just turned on, or the panel was never
+     * opened this session) so the caller can fall back to a full `refresh()`.
+     */
+    updateTodayChars(current: number, goal: number): boolean {
+        if (!this.todayCharsRefs || goal <= 0) return false;
+        const { section, bar, countEl, labelEl } = this.todayCharsRefs;
+
+        countEl.setText(String(current));
+        bar.style.width = `${Math.min(100, (current / goal) * 100)}%`;
+
+        const remaining = goal - current;
+        const nearMiss = remaining > 0 && remaining <= Math.max(1, goal * 0.1);
+        section.toggleClass('is-near-miss', nearMiss);
+        labelEl.setText(nearMiss ? `${remaining} TO GOAL` : '');
+
+        return true;
     }
 
     /** Respect the OS/browser-level "reduce motion" preference for every animation in this view. */
@@ -121,8 +149,8 @@ export class GamificationView extends ItemView {
         this.renderNearestBadge(container, snapshot);
         this.renderStreak(container, snapshot);
         this.renderTodayProgress(container, snapshot);
-        this.renderWeeklyXP(container, snapshot);
-        this.renderMonthlyHeatmap(container, snapshot);
+        this.renderTodayChars(container, snapshot);
+        this.renderActivity(container, snapshot);
         this.renderLifetimeStats(container, snapshot);
         this.renderPersonalBests(container, snapshot);
         this.renderBadges(container, snapshot);
@@ -166,7 +194,9 @@ export class GamificationView extends ItemView {
     private renderNearestBadge(container: HTMLElement, snapshot: GamificationSnapshot) {
         if (!snapshot.nearestBadge) return;
         const { badge, remaining, metric } = snapshot.nearestBadge;
-        const unit = metric === 'level' ? (remaining === 1 ? 'level' : 'levels') : (remaining === 1 ? 'day' : 'days');
+        const unit = metric === 'level' ? (remaining === 1 ? 'level' : 'levels')
+            : metric === 'streak' ? (remaining === 1 ? 'day' : 'days')
+                : 'chars';
         const nearMiss = remaining <= 1;
         const target = container.createDiv({ cls: `crystal-gv-next-target${nearMiss ? ' is-near-miss' : ''}` });
         this.renderIcon(target, 'target', 'crystal-gv-next-target-icon');
@@ -200,32 +230,88 @@ export class GamificationView extends ItemView {
         }
     }
 
+    /**
+     * Shared head row for a TODAY meter: icon + label on the left, the
+     * animated "current / total" count on the right — used for both the task
+     * meter and the writing-goal meter so they read as two peers, not one
+     * primary metric with an oddly-labeled afterthought bolted on.
+     */
+    private renderMeterHead(container: HTMLElement, icon: string, label: string, current: number, prevCurrent: number, totalText: string): HTMLElement {
+        const head = container.createDiv({ cls: 'crystal-gv-meter-head' });
+        const labelEl = head.createSpan({ cls: 'crystal-gv-meter-label' });
+        this.renderIcon(labelEl, icon);
+        labelEl.createSpan({ text: ` ${label}` });
+        const countEl = head.createSpan({ cls: 'crystal-gv-meter-count' });
+        const currentEl = countEl.createSpan();
+        this.animateNumber(currentEl, prevCurrent, current);
+        countEl.createSpan({ text: ` ${totalText}` });
+        return currentEl;
+    }
+
     private renderTodayProgress(container: HTMLElement, snapshot: GamificationSnapshot) {
         container.createEl('div', { cls: 'crystal-gv-section-title', text: 'TODAY' });
         if (snapshot.todayProgress && snapshot.todayProgress.total > 0) {
             const { completed, total } = snapshot.todayProgress;
             const nearMiss = total - completed === 1;
-            const todaySection = container.createDiv({ cls: `crystal-gv-today${nearMiss ? ' is-near-miss' : ''}` });
-            const todayBarOuter = todaySection.createDiv({ cls: 'crystal-gv-bar' });
-            const todayBarInner = todayBarOuter.createDiv({ cls: 'crystal-gv-bar-fill' });
-            this.animateBar(todayBarInner, Math.min(100, (completed / total) * 100));
+            const section = container.createDiv({ cls: `crystal-gv-meter is-tasks${nearMiss ? ' is-near-miss' : ''}` });
+            this.renderMeterHead(section, 'check-circle', 'Tasks', completed, this.previousSnapshot?.todayProgress?.completed ?? 0, `/ ${total}`);
 
-            const sub = todaySection.createEl('div', { cls: 'crystal-gv-level-sub' });
-            const prevCompleted = this.previousSnapshot?.todayProgress?.completed ?? 0;
-            const completedEl = sub.createSpan();
-            this.animateNumber(completedEl, prevCompleted, completed);
-            sub.createSpan({ text: ` / ${total} tasks` });
+            const barOuter = section.createDiv({ cls: 'crystal-gv-bar' });
+            const barInner = barOuter.createDiv({ cls: 'crystal-gv-bar-fill' });
+            this.animateBar(barInner, Math.min(100, (completed / total) * 100));
 
             if (nearMiss) {
-                todaySection.createEl('div', { cls: 'crystal-gv-near-miss-label', text: '1 TASK LEFT' });
+                section.createEl('div', { cls: 'crystal-gv-near-miss-label', text: '1 TASK LEFT' });
             }
         } else {
             container.createEl('div', { cls: 'crystal-gv-level-sub', text: 'No tasks in today\'s daily note yet' });
         }
     }
 
-    private renderWeeklyXP(container: HTMLElement, snapshot: GamificationSnapshot) {
-        container.createEl('div', { cls: 'crystal-gv-section-title', text: '7-DAY XP' });
+    /**
+     * Today's progress toward the daily writing goal (optional Better Word
+     * Count integration) — same `.crystal-gv-meter` shape as the task meter
+     * above it, so hitting either one reads as an equally valid way to keep
+     * the streak alive.
+     */
+    private renderTodayChars(container: HTMLElement, snapshot: GamificationSnapshot) {
+        this.todayCharsRefs = null;
+        if (!snapshot.todayChars) return;
+        const { current, goal } = snapshot.todayChars;
+        const achieved = current >= goal;
+        const remaining = goal - current;
+        const nearMiss = !achieved && goal > 0 && remaining <= Math.max(1, goal * 0.1);
+
+        const section = container.createDiv({ cls: `crystal-gv-meter is-chars${achieved ? ' is-achieved' : ''}${nearMiss ? ' is-near-miss' : ''}` });
+        const countEl = this.renderMeterHead(section, 'pen-line', 'Writing', current, this.previousSnapshot?.todayChars?.current ?? 0, `/ ${goal} chars`);
+
+        const barOuter = section.createDiv({ cls: 'crystal-gv-bar' });
+        const barInner = barOuter.createDiv({ cls: 'crystal-gv-bar-fill' });
+        this.animateBar(barInner, Math.min(100, (current / goal) * 100));
+
+        const labelEl = section.createEl('div', { cls: 'crystal-gv-near-miss-label' });
+        if (achieved) {
+            labelEl.setText('GOAL MET');
+        } else if (nearMiss) {
+            labelEl.setText(`${remaining} TO GOAL`);
+        } else {
+            // Cache refs only in the routine (not-yet-achieved) state — once
+            // achieved, further updates should go through a full refresh so
+            // level-up/badge/streak side effects render correctly too.
+            this.todayCharsRefs = { section, bar: barInner, countEl, labelEl };
+        }
+    }
+
+    /**
+     * One merged ACTIVITY section: the 7-day XP bar chart, a row of dots
+     * underneath marking which of those days hit the writing goal (optional
+     * Better Word Count integration), and the 30-day heatmap — previously
+     * three visually separate blocks that all told some version of the same
+     * "how active have I been lately" story.
+     */
+    private renderActivity(container: HTMLElement, snapshot: GamificationSnapshot) {
+        container.createEl('div', { cls: 'crystal-gv-section-title', text: 'ACTIVITY' });
+
         const maxXP = Math.max(1, ...snapshot.weeklyXP.map((d) => d.xp));
         const chart = container.createDiv({ cls: 'crystal-gv-chart' });
         snapshot.weeklyXP.forEach((day, index) => {
@@ -239,18 +325,22 @@ export class GamificationView extends ItemView {
             const weekday = WEEKDAY_LABELS[new Date(`${day.date}T00:00:00Z`).getUTCDay()];
             col.createDiv({ cls: 'crystal-gv-chart-label', text: weekday });
         });
-    }
 
-    /**
-     * GitHub-style 30-day heatmap — a calmer, zoomed-out complement to the
-     * 7-day bar chart, using the same daily XP log (already kept for 30 days).
-     */
-    private renderMonthlyHeatmap(container: HTMLElement, snapshot: GamificationSnapshot) {
-        container.createEl('div', { cls: 'crystal-gv-section-title', text: '30-DAY ACTIVITY' });
-        const maxXP = Math.max(1, ...snapshot.monthlyXP.map((d) => d.xp));
+        const goal = snapshot.todayChars?.goal ?? 0;
+        const showGoalMarkers = snapshot.charStatsAvailable && goal > 0 && snapshot.weeklyChars.length === snapshot.weeklyXP.length;
+        if (showGoalMarkers) {
+            const markerRow = container.createDiv({ cls: 'crystal-gv-activity-markers' });
+            snapshot.weeklyChars.forEach((day) => {
+                const hit = day.characters >= goal;
+                const dot = markerRow.createSpan({ cls: `crystal-gv-activity-dot${hit ? ' is-hit' : ''}`, text: hit ? '✓' : '·' });
+                this.attachTooltip(dot, `${day.date}: ${day.characters}/${goal} chars${hit ? ' — writing goal met' : ''}`);
+            });
+        }
+
+        const maxMonthlyXP = Math.max(1, ...snapshot.monthlyXP.map((d) => d.xp));
         const grid = container.createDiv({ cls: 'crystal-gv-heatmap' });
         snapshot.monthlyXP.forEach((day) => {
-            const level = day.xp === 0 ? 0 : Math.min(4, Math.ceil((day.xp / maxXP) * 4));
+            const level = day.xp === 0 ? 0 : Math.min(4, Math.ceil((day.xp / maxMonthlyXP) * 4));
             const cell = grid.createDiv({ cls: `crystal-gv-heatmap-cell is-level-${level}` });
             this.attachTooltip(cell, `${day.date}: ${day.xp} XP`);
         });
@@ -265,8 +355,16 @@ export class GamificationView extends ItemView {
         this.animateNumber(countEl, this.previousSnapshot?.totalTasksCompleted ?? 0, snapshot.totalTasksCompleted);
         tasksEl.createSpan({ text: ' tasks' });
 
+        if (snapshot.charStatsAvailable) {
+            const charsEl = el.createSpan();
+            this.renderIcon(charsEl, 'pen-line');
+            const charsCountEl = charsEl.createSpan();
+            this.animateNumber(charsCountEl, this.previousSnapshot?.lifetimeCharsWritten ?? 0, snapshot.lifetimeCharsWritten);
+            charsEl.createSpan({ text: ' chars' });
+        }
+
         if (snapshot.startDate) {
-            const sinceEl = el.createSpan({ cls: 'crystal-gv-since' });
+            const sinceEl = el.createSpan();
             this.renderIcon(sinceEl, 'calendar');
             sinceEl.createSpan({ text: ` since ${snapshot.startDate}` });
         }
@@ -282,6 +380,9 @@ export class GamificationView extends ItemView {
             { icon: 'list-checks', label: 'DAY', value: snapshot.bestDayTasks, unit: '' },
             { icon: 'zap', label: 'WEEK', value: snapshot.bestWeekXP, unit: 'xp' },
         ];
+        if (snapshot.charStatsAvailable) {
+            entries.push({ icon: 'pen-line', label: 'CHARS', value: snapshot.bestDayChars, unit: '' });
+        }
         for (const entry of entries) {
             const cell = grid.createDiv({ cls: 'crystal-gv-best' });
             this.renderIcon(cell, entry.icon, 'crystal-gv-best-icon');

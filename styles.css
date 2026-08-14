@@ -168,7 +168,43 @@
 	color: var(--text-faint);
 }
 
-.crystal-gv-today .crystal-gv-bar-fill {
+/* TODAY meters: shared shape for the task meter and the (optional) writing-goal
+   meter, so the two read as peers — a label+count head row, then the bar. */
+.crystal-gv-meter + .crystal-gv-meter {
+	margin-top: 0.6em;
+}
+
+.crystal-gv-meter-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	font-size: 0.85em;
+}
+
+.crystal-gv-meter-label {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35em;
+	color: var(--text-muted);
+}
+
+.crystal-gv-meter-count {
+	color: var(--text-muted);
+}
+
+.crystal-gv-meter .crystal-gv-bar {
+	margin: 0.3em 0 0;
+}
+
+.crystal-gv-meter.is-tasks .crystal-gv-bar-fill {
+	background: var(--color-green, var(--text-accent));
+}
+
+.crystal-gv-meter.is-chars .crystal-gv-bar-fill {
+	background: var(--color-purple, var(--text-accent));
+}
+
+.crystal-gv-meter.is-chars.is-achieved .crystal-gv-bar-fill {
 	background: var(--color-green, var(--text-accent));
 }
 
@@ -198,7 +234,7 @@
 /* Near-miss emphasis: "so close" gets a gentle pulse to nudge one more push */
 .crystal-gv-level.is-near-miss .crystal-gv-level-label,
 .crystal-gv-next-target.is-near-miss,
-.crystal-gv-today.is-near-miss .crystal-gv-level-sub {
+.crystal-gv-meter.is-near-miss .crystal-gv-meter-count {
 	animation: crystal-gv-near-miss-pulse 1.4s ease-in-out infinite;
 }
 
@@ -213,6 +249,13 @@
 	color: var(--text-accent);
 }
 
+/* The writing-goal meter always creates this label (so updateTodayChars can
+   patch its text in place); collapse it to nothing when there's no message. */
+.crystal-gv-near-miss-label:empty {
+	margin-top: 0;
+	display: none;
+}
+
 @keyframes crystal-gv-near-miss-pulse {
 	0%, 100% {
 		opacity: 1;
@@ -223,7 +266,7 @@
 }
 
 .crystal-gv-section-title {
-	margin-top: 1.2em;
+	margin-top: 1em;
 	margin-bottom: 0.5em;
 	font-size: 0.75em;
 	font-weight: var(--font-bold);
@@ -233,7 +276,10 @@
 
 .crystal-gv-lifetime {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
+	column-gap: 1em;
+	row-gap: 0.3em;
 	font-size: 0.85em;
 	color: var(--text-muted);
 }
@@ -242,10 +288,7 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 0.3em;
-}
-
-.crystal-gv-since {
-	margin-left: 1em;
+	white-space: nowrap;
 }
 
 /* Weekly XP chart */
@@ -328,12 +371,34 @@
 	color: var(--text-faint);
 }
 
+/* Row of per-day dots under the 7-day chart marking which days hit the
+   writing goal (optional Better Word Count integration) — merged into the
+   same ACTIVITY section instead of a separate chart. */
+.crystal-gv-activity-markers {
+	display: flex;
+	gap: 0.5em;
+	margin-top: 0.2em;
+}
+
+.crystal-gv-activity-dot {
+	flex: 1;
+	text-align: center;
+	font-size: 0.75em;
+	color: var(--text-faint);
+}
+
+.crystal-gv-activity-dot.is-hit {
+	color: var(--color-purple, var(--text-accent));
+	font-weight: var(--font-bold);
+}
+
 /* 30-day activity heatmap: GitHub-style intensity grid, quieter than the
    7-day bar chart — a zoomed-out "did I keep showing up" glance. */
 .crystal-gv-heatmap {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(0.9em, 1fr));
 	gap: 0.25em;
+	margin-top: 0.6em;
 }
 
 .crystal-gv-heatmap-cell {
@@ -358,11 +423,12 @@
 	background: var(--text-accent);
 }
 
-/* Personal-best grid */
+/* Personal-best grid: a fixed 4 columns so 3 or 4 entries both fill a single
+   row cleanly instead of leaving an orphaned tile on its own row. */
 .crystal-gv-best-grid {
 	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 0.5em;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 0.4em;
 }
 
 .crystal-gv-best {
@@ -370,21 +436,21 @@
 	flex-direction: column;
 	align-items: center;
 	gap: 0.15em;
-	padding: 0.5em 0.25em;
+	padding: 0.5em 0.2em;
 	border-radius: var(--radius-m);
 	background: var(--background-secondary);
 	text-align: center;
 }
 
 .crystal-gv-best-icon svg {
-	width: 1.1em;
-	height: 1.1em;
+	width: 1em;
+	height: 1em;
 	color: var(--text-accent);
 }
 
 .crystal-gv-best-value {
 	font-weight: var(--font-bold);
-	font-size: 1.05em;
+	font-size: 0.95em;
 }
 
 .crystal-gv-best-unit {
@@ -403,16 +469,16 @@
 
 .crystal-gv-badge-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(4.5em, 1fr));
-	gap: 0.75em;
+	grid-template-columns: repeat(auto-fill, minmax(3.75em, 1fr));
+	gap: 0.5em;
 }
 
 .crystal-gv-badge {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 0.25em;
-	padding: 0.5em;
+	gap: 0.2em;
+	padding: 0.4em 0.3em;
 	border-radius: var(--radius-m);
 	background: var(--background-secondary);
 	text-align: center;
@@ -436,8 +502,8 @@
 }
 
 .crystal-gv-badge-icon svg {
-	width: 1.5em;
-	height: 1.5em;
+	width: 1.25em;
+	height: 1.25em;
 }
 
 .crystal-gv-badge.is-unlocked .crystal-gv-badge-icon svg {
@@ -484,7 +550,7 @@
 	.crystal-gv-bar-fill.is-almost-there,
 	.crystal-gv-level.is-near-miss .crystal-gv-level-label,
 	.crystal-gv-next-target.is-near-miss,
-	.crystal-gv-today.is-near-miss .crystal-gv-level-sub,
+	.crystal-gv-meter.is-near-miss .crystal-gv-meter-count,
 	.crystal-gv-badge,
 	.crystal-gv-badge.just-unlocked {
 		animation: none !important;

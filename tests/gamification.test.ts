@@ -1,6 +1,7 @@
 import {
 	ALL_BADGES,
 	calculateLevel,
+	checkNewlyReachedCharMilestones,
 	checkNewlyReachedFreezeMilestones,
 	checkNewlySpecialUnlocks,
 	checkNewlyUnlockedBadges,
@@ -14,6 +15,7 @@ import {
 	pruneDailyXPLog,
 	refillFreezeTokens,
 	resolveStreakAdvance,
+	rollCharMilestoneBonus,
 	rollReward,
 	SPECIAL_BADGE_IDS,
 	sumRecentXP,
@@ -117,6 +119,39 @@ describe('rollReward', () => {
 	it('returns the normal reward for the remaining rolls', () => {
 		expect(rollReward(() => 0.18)).toEqual({ xp: 10, tier: 'normal' });
 		expect(rollReward(() => 0.999)).toEqual({ xp: 10, tier: 'normal' });
+	});
+});
+
+describe('checkNewlyReachedCharMilestones', () => {
+	it('returns milestones newly crossed by current/goal', () => {
+		expect(checkNewlyReachedCharMilestones(250, 1000, [])).toEqual([0.25]);
+		expect(checkNewlyReachedCharMilestones(600, 1000, [])).toEqual([0.25, 0.5]);
+	});
+
+	it('excludes milestones already recorded as reached', () => {
+		expect(checkNewlyReachedCharMilestones(600, 1000, [0.25])).toEqual([0.5]);
+	});
+
+	it('can return multiple milestones at once for a big jump (e.g. pasted text)', () => {
+		expect(checkNewlyReachedCharMilestones(999, 1000, [])).toEqual([0.25, 0.5, 0.75]);
+	});
+
+	it('returns nothing below the first milestone', () => {
+		expect(checkNewlyReachedCharMilestones(100, 1000, [])).toEqual([]);
+	});
+
+	it('returns nothing when the goal is 0 (disabled)', () => {
+		expect(checkNewlyReachedCharMilestones(999999, 0, [])).toEqual([]);
+	});
+});
+
+describe('rollCharMilestoneBonus', () => {
+	it('grants the bonus on a low roll', () => {
+		expect(rollCharMilestoneBonus(() => 0)).toBe(5);
+	});
+
+	it('grants nothing on a high roll', () => {
+		expect(rollCharMilestoneBonus(() => 0.99)).toBe(0);
 	});
 });
 
@@ -240,6 +275,16 @@ describe('checkNewlyUnlockedBadges', () => {
 		const ids = ALL_BADGES.map((b) => b.id);
 		expect(new Set(ids).size).toBe(ids.length);
 	});
+
+	it('unlocks a chars badge once lifetime characters meet its threshold', () => {
+		const unlocked = checkNewlyUnlockedBadges({ level: 1, streak: 0, totalXP: 0, chars: 10000 }, []);
+		expect(unlocked.map((b) => b.id)).toContain('chars-10000');
+	});
+
+	it('treats a missing chars field as 0 (no chars badges unlock)', () => {
+		const unlocked = checkNewlyUnlockedBadges({ level: 1, streak: 0, totalXP: 0 }, []);
+		expect(unlocked.map((b) => b.id)).not.toContain('chars-10000');
+	});
 });
 
 describe('findNearestBadgeTarget', () => {
@@ -263,6 +308,12 @@ describe('findNearestBadgeTarget', () => {
 		// level 9 -> level-10 is 1 away; streak 2 -> streak-3 is 1 away. level-10 comes first in ALL_BADGES.
 		const result = findNearestBadgeTarget({ level: 9, streak: 2 }, []);
 		expect(result?.badge.id).toBe('level-10');
+	});
+
+	it('can target a chars badge when it is the closest remaining goal', () => {
+		// chars 9,999 -> chars-10000 is 1 away; level 1 -> level-5 is 4 away; streak 0 -> streak-3 is 3 away.
+		const result = findNearestBadgeTarget({ level: 1, streak: 0, chars: 9999 }, []);
+		expect(result).toEqual({ badge: expect.objectContaining({ id: 'chars-10000' }), remaining: 1, metric: 'chars' });
 	});
 });
 

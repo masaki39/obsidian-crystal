@@ -1,6 +1,7 @@
 import { App, IconName, Notice, Plugin, PluginSettingTab, Setting, requestUrl, setIcon } from 'obsidian';
 import { AtpAgent } from '@atproto/api';
 import { calculateLevel } from './gamification';
+import { hasVaultStatsFile } from './word-stats';
 
 export interface FileOrganizationRule {
 	displayName: string;
@@ -56,6 +57,17 @@ export interface CrystalPluginSettings {
 	/** Local day-of-week (0=Sunday..6=Saturday) that never counts as a missed
 	 * day for streak purposes, or -1 if no rest day is configured. */
 	gamificationRestDayOfWeek: number;
+	/** Daily writing-goal target in characters, used by the optional Better
+	 * Word Count integration; 0 disables the writing-goal feature. */
+	gamificationDailyCharGoal: number;
+	/** Date (YYYY-MM-DD) the writing goal's XP reward was last granted, so it
+	 * fires at most once per day. */
+	gamificationCharGoalLastAchievedDate: string;
+	/** Date (YYYY-MM-DD) `gamificationCharMilestonesReached` applies to; reset
+	 * when the date rolls over. */
+	gamificationCharMilestonesDate: string;
+	/** Writing-goal fractions (from `CHAR_GOAL_MILESTONES`) already rolled today. */
+	gamificationCharMilestonesReached: number[];
 }
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
@@ -102,6 +114,10 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	gamificationDailyTaskLog: {},
 	gamificationFreezeMilestonesGranted: [],
 	gamificationRestDayOfWeek: -1,
+	gamificationDailyCharGoal: 1000,
+	gamificationCharGoalLastAchievedDate: '',
+	gamificationCharMilestonesDate: '',
+	gamificationCharMilestonesReached: [],
 }
 
 export class CrystalSettingTab extends PluginSettingTab {
@@ -336,6 +352,12 @@ export class CrystalSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
+		// Writing-goal setting depends on the optional Better Word Count
+		// plugin's stats file; only show it once we've confirmed it exists,
+		// so users without that plugin never see a setting they can't use.
+		const charGoalContainer = containerEl.createDiv();
+		this.renderCharGoalSetting(charGoalContainer);
+
 		new Setting(containerEl)
 			.setName('Reset progress')
 			.setDesc(`Lv.${calculateLevel(this.plugin.settings.gamificationTotalXP).level} · ${this.plugin.settings.gamificationTotalXP} XP · ${this.plugin.settings.gamificationStreak}d streak · ${this.plugin.settings.gamificationFreezeTokensAvailable} freeze · ${this.plugin.settings.gamificationUnlockedBadges.length} badges`)
@@ -358,6 +380,9 @@ export class CrystalSettingTab extends PluginSettingTab {
 					this.plugin.settings.gamificationBestWeekXP = 0;
 					this.plugin.settings.gamificationDailyTaskLog = {};
 					this.plugin.settings.gamificationFreezeMilestonesGranted = [];
+					this.plugin.settings.gamificationCharGoalLastAchievedDate = '';
+					this.plugin.settings.gamificationCharMilestonesDate = '';
+					this.plugin.settings.gamificationCharMilestonesReached = [];
 					await this.plugin.saveSettings();
 					this.display();
 				}));
@@ -460,6 +485,30 @@ export class CrystalSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 					this.displayFileOrganizationRules(rulesContainer);
 				}));
+	}
+
+	/**
+	 * Shown only when the Better Word Count plugin's stats file is found
+	 * (`.obsidian/vault-stats.json` with "Collect Stats" enabled) — an
+	 * optional integration, so users without it never see a setting for a
+	 * feature that can't do anything for them.
+	 */
+	private renderCharGoalSetting(container: HTMLElement) {
+		hasVaultStatsFile(this.app).then((available) => {
+			if (!available) return;
+			container.empty();
+			new Setting(container)
+				.setName('Daily writing goal (characters)')
+				.setDesc('Reaching this many characters written in a day (from Better Word Count\'s stats) earns bonus XP and counts as an active day for your streak, alongside completing tasks. Set to 0 to disable.')
+				.addText(text => text
+					.setPlaceholder('1000')
+					.setValue(String(this.plugin.settings.gamificationDailyCharGoal))
+					.onChange(async (value) => {
+						const parsed = parseInt(value, 10);
+						this.plugin.settings.gamificationDailyCharGoal = Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+						await this.plugin.saveSettings();
+					}));
+		});
 	}
 
 	private displayFileOrganizationRules(container: HTMLElement) {
