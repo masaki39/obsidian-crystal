@@ -218,7 +218,7 @@ export class GamificationView extends ItemView {
         freezeEl.createSpan({ text: `${snapshot.freezeTokensAvailable}` });
         this.attachTooltip(
             freezeEl,
-            'Freeze: skip a missed day without breaking your streak. Refills to 2 each month.'
+            'Freeze: skip a missed day without breaking your streak. Tops up to 2 each month (any surplus from streak milestones carries over).'
         );
 
         if (snapshot.freezeTokenLog.length > 0) {

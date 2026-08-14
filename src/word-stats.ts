@@ -103,7 +103,7 @@ export function bestWeekCharacters(stats: VaultStatsFile, days = 7): number {
     return best;
 }
 
-/** True once `date`'s characters have reached `goal` (a `goal` of 0 disables the check). */
-export function hasReachedDailyGoal(stats: VaultStatsFile, date: string, goal: number): boolean {
-    return goal > 0 && charactersOn(stats, date) >= goal;
+/** True once `current` characters have reached `goal` (a `goal` of 0 disables the check). */
+export function hasReachedGoal(current: number, goal: number): boolean {
+    return goal > 0 && current >= goal;
 }

@@ -3,7 +3,7 @@ import {
 	bestWeekCharacters,
 	charactersOn,
 	getWeeklyCharSeries,
-	hasReachedDailyGoal,
+	hasReachedGoal,
 	lifetimeCharactersWritten,
 	sumCharactersInWindow,
 	VaultStatsFile,
@@ -88,17 +88,23 @@ describe('bestWeekCharacters', () => {
 	});
 });
 
-describe('hasReachedDailyGoal', () => {
-	it('is true once the day\'s characters meet or exceed the goal', () => {
-		expect(hasReachedDailyGoal(statsFrom({ '2026-08-13': 1000 }), '2026-08-13', 1000)).toBe(true);
-		expect(hasReachedDailyGoal(statsFrom({ '2026-08-13': 1500 }), '2026-08-13', 1000)).toBe(true);
+describe('hasReachedGoal', () => {
+	it('is true once characters meet or exceed the goal', () => {
+		expect(hasReachedGoal(1000, 1000)).toBe(true);
+		expect(hasReachedGoal(1500, 1000)).toBe(true);
 	});
 
 	it('is false when under the goal', () => {
-		expect(hasReachedDailyGoal(statsFrom({ '2026-08-13': 999 }), '2026-08-13', 1000)).toBe(false);
+		expect(hasReachedGoal(999, 1000)).toBe(false);
 	});
 
 	it('is always false when the goal is 0 (disabled)', () => {
-		expect(hasReachedDailyGoal(statsFrom({ '2026-08-13': 999999 }), '2026-08-13', 0)).toBe(false);
+		expect(hasReachedGoal(999999, 0)).toBe(false);
+	});
+
+	it('composes with charactersOn to check a specific day against a goal', () => {
+		const stats = statsFrom({ '2026-08-13': 1000 });
+		expect(hasReachedGoal(charactersOn(stats, '2026-08-13'), 1000)).toBe(true);
+		expect(hasReachedGoal(charactersOn(stats, '2026-08-14'), 1000)).toBe(false);
 	});
 });

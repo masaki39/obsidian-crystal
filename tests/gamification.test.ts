@@ -1,7 +1,7 @@
 import {
 	ALL_BADGES,
 	calculateLevel,
-	checkNewlyReachedCharMilestones,
+	charsBadgeEligible,
 	checkNewlyReachedFreezeMilestones,
 	checkNewlySpecialUnlocks,
 	checkNewlyUnlockedBadges,
@@ -15,7 +15,6 @@ import {
 	pruneDailyXPLog,
 	refillFreezeTokens,
 	resolveStreakAdvance,
-	rollCharMilestoneBonus,
 	rollReward,
 	SPECIAL_BADGE_IDS,
 	sumRecentXP,
@@ -122,39 +121,6 @@ describe('rollReward', () => {
 	});
 });
 
-describe('checkNewlyReachedCharMilestones', () => {
-	it('returns milestones newly crossed by current/goal', () => {
-		expect(checkNewlyReachedCharMilestones(250, 1000, [])).toEqual([0.25]);
-		expect(checkNewlyReachedCharMilestones(600, 1000, [])).toEqual([0.25, 0.5]);
-	});
-
-	it('excludes milestones already recorded as reached', () => {
-		expect(checkNewlyReachedCharMilestones(600, 1000, [0.25])).toEqual([0.5]);
-	});
-
-	it('can return multiple milestones at once for a big jump (e.g. pasted text)', () => {
-		expect(checkNewlyReachedCharMilestones(999, 1000, [])).toEqual([0.25, 0.5, 0.75]);
-	});
-
-	it('returns nothing below the first milestone', () => {
-		expect(checkNewlyReachedCharMilestones(100, 1000, [])).toEqual([]);
-	});
-
-	it('returns nothing when the goal is 0 (disabled)', () => {
-		expect(checkNewlyReachedCharMilestones(999999, 0, [])).toEqual([]);
-	});
-});
-
-describe('rollCharMilestoneBonus', () => {
-	it('grants the bonus on a low roll', () => {
-		expect(rollCharMilestoneBonus(() => 0)).toBe(5);
-	});
-
-	it('grants nothing on a high roll', () => {
-		expect(rollCharMilestoneBonus(() => 0.99)).toBe(0);
-	});
-});
-
 describe('nextStreak', () => {
 	it('starts a new streak at 1 on first ever completion', () => {
 		expect(nextStreak(null, 0, '2026-08-13')).toBe(1);
@@ -242,13 +208,43 @@ describe('refillFreezeTokens', () => {
 		expect(refillFreezeTokens(1, '2026-08', '2026-08-20')).toEqual({ tokens: 1, refillMonth: '2026-08' });
 	});
 
-	it('refills (not accumulates) when the month changes', () => {
+	it('tops up to the base amount when the month changes and the balance is below it', () => {
 		expect(refillFreezeTokens(0, '2026-07', '2026-08-01')).toEqual({ tokens: 2, refillMonth: '2026-08' });
 		expect(refillFreezeTokens(2, '2026-07', '2026-08-01')).toEqual({ tokens: 2, refillMonth: '2026-08' });
 	});
 
+	it('preserves a surplus (e.g. from streak-milestone bonus tokens) across the month boundary instead of resetting it down', () => {
+		expect(refillFreezeTokens(5, '2026-07', '2026-08-01')).toEqual({ tokens: 5, refillMonth: '2026-08' });
+	});
+
 	it('respects a custom tokensPerMonth', () => {
 		expect(refillFreezeTokens(0, '2026-07', '2026-08-01', 3)).toEqual({ tokens: 3, refillMonth: '2026-08' });
+	});
+});
+
+describe('charsBadgeEligible', () => {
+	it('equals the lifetime total when there is no baseline (never reset)', () => {
+		expect(charsBadgeEligible(15000, 0)).toBe(15000);
+	});
+
+	it('subtracts the baseline captured at the last reset', () => {
+		expect(charsBadgeEligible(15000, 10000)).toBe(5000);
+	});
+
+	it('never goes negative, even if the baseline exceeds the current lifetime total', () => {
+		// Shouldn't normally happen (lifetime total only grows), but stay defensive.
+		expect(charsBadgeEligible(1000, 10000)).toBe(0);
+	});
+
+	it('regression: a reset does not let already-earned chars-badges instantly re-unlock', () => {
+		// Before this baseline existed, resetting gamificationUnlockedBadges
+		// while Better Word Count's external lifetime total stayed at 60,000
+		// meant the very next writing tick recomputed chars=60000 >= 10000
+		// and immediately re-unlocked "Scribe" right after the user reset it.
+		const lifetimeCharsAtResetTime = 60000;
+		expect(charsBadgeEligible(lifetimeCharsAtResetTime, lifetimeCharsAtResetTime)).toBe(0);
+		// Only characters written *after* the reset should count again.
+		expect(charsBadgeEligible(lifetimeCharsAtResetTime + 500, lifetimeCharsAtResetTime)).toBe(500);
 	});
 });
 

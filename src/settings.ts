@@ -1,7 +1,8 @@
 import { App, IconName, Notice, Plugin, PluginSettingTab, Setting, requestUrl, setIcon } from 'obsidian';
 import { AtpAgent } from '@atproto/api';
 import { calculateLevel } from './gamification';
-import { hasVaultStatsFile } from './word-stats';
+import { defaultVaultStatsPath, hasVaultStatsFile, lifetimeCharactersWritten, readVaultStats } from './word-stats';
+import { promptForConfirmation } from './utils';
 
 export interface FileOrganizationRule {
 	displayName: string;
@@ -69,6 +70,16 @@ export interface CrystalPluginSettings {
 	gamificationCharMilestonesDate: string;
 	/** Writing-goal fractions (from `CHAR_GOAL_MILESTONES`) already rolled today. */
 	gamificationCharMilestonesReached: number[];
+	/**
+	 * Lifetime-characters-written total (from the optional Better Word Count
+	 * integration) as of the last "Reset progress". That integration's own
+	 * stats file is external and can't be reset from here, so without this
+	 * baseline the chars-based badges (Scribe/Wordsmith/...) would instantly
+	 * re-unlock on the very next writing tick after a reset. Chars-badge
+	 * eligibility is `lifetimeCharactersWritten(stats) - this baseline`,
+	 * while the *displayed* lifetime total stays the true, unadjusted figure.
+	 */
+	gamificationCharsBadgeBaseline: number;
 }
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
@@ -120,6 +131,7 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	gamificationCharGoalLastAchievedDate: '',
 	gamificationCharMilestonesDate: '',
 	gamificationCharMilestonesReached: [],
+	gamificationCharsBadgeBaseline: 0,
 }
 
 export class CrystalSettingTab extends PluginSettingTab {
@@ -367,6 +379,13 @@ export class CrystalSettingTab extends PluginSettingTab {
 				.setButtonText('Reset')
 				.setWarning()
 				.onClick(async () => {
+					const confirmed = await promptForConfirmation(
+						this.app,
+						'進捗をリセットしますか？',
+						'レベル・XP・連続日数・フリーズトークン・バッジ・記録をすべて削除します。この操作は取り消せません。',
+						'リセット'
+					);
+					if (!confirmed) return;
 					this.plugin.settings.gamificationTotalXP = 0;
 					this.plugin.settings.gamificationStreak = 0;
 					this.plugin.settings.gamificationLastActiveDate = '';
@@ -382,9 +401,35 @@ export class CrystalSettingTab extends PluginSettingTab {
 					this.plugin.settings.gamificationBestWeekXP = 0;
 					this.plugin.settings.gamificationDailyTaskLog = {};
 					this.plugin.settings.gamificationFreezeMilestonesGranted = [];
-					this.plugin.settings.gamificationCharGoalLastAchievedDate = '';
-					this.plugin.settings.gamificationCharMilestonesDate = '';
-					this.plugin.settings.gamificationCharMilestonesReached = [];
+					// Deliberately NOT clearing gamificationCharGoalLastAchievedDate /
+					// gamificationCharMilestonesDate / gamificationCharMilestonesReached:
+					// they just record today's actual writing progress (day-scoped,
+					// self-correcting at the next date rollover), not "lifetime
+					// progress" to take back. Clearing them here used to create a
+					// false "not achieved today" state that the very save this button
+					// triggers would immediately correct — re-detecting today's
+					// already-met goal as newly met and re-granting its reward
+					// moments after the "clean slate" this dialog just promised.
+					// The optional Better Word Count integration's lifetime
+					// character count lives in that plugin's own external stats
+					// file, which can't be reset from here — without capturing
+					// this baseline, the chars-based badges just cleared above
+					// would instantly re-unlock on the very next writing tick,
+					// breaking the "clean slate" this reset just promised.
+					//
+					// If the read fails (e.g. Better Word Count is mid-write and
+					// the file doesn't parse), leave the baseline exactly as it
+					// was rather than defaulting it to 0: a baseline of 0 is
+					// *lower* than the user's actual lifetime chars, so the next
+					// successful read would treat their entire writing history as
+					// newly eligible and instantly re-unlock every chars badge —
+					// the opposite of what this reset promised. Leaving the old
+					// baseline in place is a safe no-op for this one metric
+					// instead.
+					const stats = await readVaultStats(this.app, defaultVaultStatsPath(this.app));
+					if (stats) {
+						this.plugin.settings.gamificationCharsBadgeBaseline = lifetimeCharactersWritten(stats);
+					}
 					await this.plugin.saveSettings();
 					this.display();
 				}));

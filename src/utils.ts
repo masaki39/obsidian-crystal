@@ -1,5 +1,18 @@
 import { App, Modal, MarkdownView } from 'obsidian';
 
+/** Shared markup both `promptForText`'s and `promptForConfirmation`'s modals
+ * use — a title styled with `crystal-modal-title`, and a button row styled
+ * with `crystal-modal-button-row` — factored out so the two otherwise quite
+ * different modals (free text input w/ IME handling vs. two static buttons)
+ * don't each re-derive the same two lines of markup. */
+function createModalTitle(contentEl: HTMLElement, title: string): void {
+	contentEl.createEl('h3', { text: title, cls: 'crystal-modal-title' });
+}
+
+function createModalButtonRow(contentEl: HTMLElement): HTMLElement {
+	return contentEl.createDiv({ cls: 'crystal-modal-button-row' });
+}
+
 export function promptForText(app: App, title = 'テキストを入力してください', placeholder = '', buttonText = '追加', defaultValue = '', multiline = false): Promise<string | null> {
 	const activeView = app.workspace.getActiveViewOfType(MarkdownView);
 	const savedCursor = activeView?.editor.getCursor();
@@ -16,7 +29,7 @@ export function promptForText(app: App, title = 'テキストを入力してく�
 
 			onOpen() {
 				const { contentEl } = this;
-				contentEl.createEl('h3', { text: title, cls: 'crystal-modal-title' });
+				createModalTitle(contentEl, title);
 
 				let input: HTMLInputElement | HTMLTextAreaElement;
 
@@ -37,7 +50,7 @@ export function promptForText(app: App, title = 'テキストを入力してく�
 
 				input.value = defaultValue ?? '';
 
-				const buttonContainer = contentEl.createDiv({ cls: 'crystal-modal-button-row' });
+				const buttonContainer = createModalButtonRow(contentEl);
 				const cancelButton = buttonContainer.createEl('button', { text: 'キャンセル' });
 				const addButton = buttonContainer.createEl('button', { text: buttonText });
 				addButton.addClass('mod-cta');
@@ -110,7 +123,50 @@ export function promptForText(app: App, title = 'テキストを入力してく�
 		const modal = new GenericInputModal(app, resolve);
 		modal.open();
 	});
-} 
+}
+
+/**
+ * Ask the user to confirm a destructive, irreversible action (e.g. resetting
+ * gamification progress) before proceeding. Resolves `true` only if the
+ * user explicitly clicks the confirm button; closing the modal any other
+ * way (Escape, clicking outside, the cancel button) resolves `false`.
+ */
+export function promptForConfirmation(app: App, title: string, message: string, confirmText = '実行'): Promise<boolean> {
+	return new Promise((resolve) => {
+		class ConfirmModal extends Modal {
+			private confirmed = false;
+			private resolve: (value: boolean) => void;
+
+			constructor(app: App, resolve: (value: boolean) => void) {
+				super(app);
+				this.resolve = resolve;
+			}
+
+			onOpen() {
+				const { contentEl } = this;
+				createModalTitle(contentEl, title);
+				contentEl.createEl('p', { text: message });
+
+				const buttonContainer = createModalButtonRow(contentEl);
+				const cancelButton = buttonContainer.createEl('button', { text: 'キャンセル' });
+				const confirmButton = buttonContainer.createEl('button', { text: confirmText });
+				confirmButton.addClass('mod-warning');
+
+				cancelButton.addEventListener('click', () => this.close());
+				confirmButton.addEventListener('click', () => {
+					this.confirmed = true;
+					this.close();
+				});
+			}
+
+			onClose() {
+				this.resolve(this.confirmed);
+			}
+		}
+		const modal = new ConfirmModal(app, resolve);
+		modal.open();
+	});
+}
 
 export function parseFrontmatter(fileContent: string): { frontmatter: string, content: string } {
     // 最初の文字が'---'で始まらない場合は早期リターン
