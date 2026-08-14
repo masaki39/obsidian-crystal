@@ -38,6 +38,7 @@ export interface CrystalPluginSettings {
 	quartzSiteName: string;
 	githubUserName: string;
 	fileOrganizationRules: FileOrganizationRule[];
+	windowOpacity: number;
 	gamificationEnabled: boolean;
 	gamificationTotalXP: number;
 	gamificationStreak: number;
@@ -97,6 +98,7 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	quartzSiteName: '',
 	githubUserName: '',
 	fileOrganizationRules: [],
+	windowOpacity: 1.0,
 	gamificationEnabled: false,
 	gamificationTotalXP: 0,
 	gamificationStreak: 0,

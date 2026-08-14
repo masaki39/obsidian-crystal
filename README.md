@@ -134,6 +134,14 @@ BlueSkyへの投稿をアシストする。
 > [!note]
 > `Editor: Organize file with prefix and tags`には設定画面に専用設定UIがある。
 
+### 🪟 Window
+
+デスクトップ版のウィンドウ表示を調整する。
+
+| コマンド | 機能 | 説明 |
+|---|---|---|
+| `Window: Toggle opacity` | 不透明度切替 | ウィンドウの不透明度を100%と90%の間でトグルする。デスクトップ版のみ動作する。 |
+
 ### 🎞 Marp
 
 [Marp](https://marp.app/)を使ったプレゼンテーション作成を支援する。

@@ -13,6 +13,7 @@ import { TerminalService } from './src/terminal-service';
 import { QuartzService } from './src/quartz-service';
 import { MacroCommands } from './src/macro';
 import { GitSummaryService } from './src/git-summary-service';
+import { OpacityService } from './src/opacity-service';
 import { GamificationManager, VIEW_TYPE_GAMIFICATION } from './src/gamification';
 import { GamificationView } from './src/gamification-view';
 import { SidebarFocusCommands } from './src/sidebar-focus';
@@ -54,6 +55,7 @@ export default class CrystalPlugin extends Plugin {
 	private quartzService: QuartzService;
 	private macroCommands: MacroCommands;
 	private gitSummaryService: GitSummaryService;
+	private opacityService: OpacityService;
 	private gamificationManager: GamificationManager;
 	private sidebarFocusCommands: SidebarFocusCommands;
 
@@ -76,6 +78,7 @@ export default class CrystalPlugin extends Plugin {
 		this.gitSummaryService = new GitSummaryService(
 			this.app, this, this.settings, this.terminalService, this.geminiService
 		);
+		this.opacityService = new OpacityService(this);
 		this.gamificationManager = new GamificationManager(
 			this.app, this, this.settings, Math.random, () => this.activateGamificationView()
 		);
@@ -90,6 +93,7 @@ export default class CrystalPlugin extends Plugin {
 		this.editorCommands.onload();
 		this.macroCommands.onload();
 		this.gitSummaryService.onload();
+		this.opacityService.onload();
 		this.gamificationManager.onLoad();
 		this.sidebarFocusCommands.onload();
 
@@ -177,6 +181,7 @@ export default class CrystalPlugin extends Plugin {
 		// Flush any debounced gamification save so a completion right before
 		// unload/reload isn't silently dropped.
 		this.gamificationManager?.flushPendingSave();
+		this.opacityService?.onunload();
 	}
 
 	async activateGamificationView() {
