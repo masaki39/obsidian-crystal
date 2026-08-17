@@ -17,6 +17,7 @@ import { OpacityService } from './src/opacity-service';
 import { GamificationManager, VIEW_TYPE_GAMIFICATION } from './src/gamification';
 import { GamificationView } from './src/gamification-view';
 import { SidebarFocusCommands } from './src/sidebar-focus';
+import { PropertyLinkService } from './src/property-link';
 
 // Crystal Plugin for Obsidian
 
@@ -58,6 +59,7 @@ export default class CrystalPlugin extends Plugin {
 	private opacityService: OpacityService;
 	private gamificationManager: GamificationManager;
 	private sidebarFocusCommands: SidebarFocusCommands;
+	private propertyLinkService: PropertyLinkService;
 
 	async onload() {
 		await this.loadSettings();
@@ -83,6 +85,7 @@ export default class CrystalPlugin extends Plugin {
 			this.app, this, this.settings, Math.random, () => this.activateGamificationView()
 		);
 		this.sidebarFocusCommands = new SidebarFocusCommands(this.app, this);
+		this.propertyLinkService = new PropertyLinkService(this.app, this, this.settings);
 
 		// Load Services
 		this.blueskyService.onload();
@@ -96,6 +99,7 @@ export default class CrystalPlugin extends Plugin {
 		this.opacityService.onload();
 		this.gamificationManager.onLoad();
 		this.sidebarFocusCommands.onload();
+		this.propertyLinkService.onload();
 
 		// Gamification view (sidebar): full Lv/XP/streak/badge picture
 		this.registerView(
@@ -242,6 +246,7 @@ export default class CrystalPlugin extends Plugin {
 		this.quartzService.updateSettings(this.settings);
 		this.gitSummaryService.updateSettings(this.settings);
 		this.gamificationManager.updateSettings(this.settings);
+		this.propertyLinkService.updateSettings(this.settings);
 	}
 
 }

@@ -12,6 +12,17 @@ export interface FileOrganizationRule {
 	includeDate: boolean;
 }
 
+/**
+ * A reciprocal property-link rule: when `source` links to another note, a
+ * link back to the note is added to that other note's `target` property
+ * (created as a list if missing). `source === target` (e.g. `friends`,
+ * `oppose`) makes the relation symmetric instead of directed.
+ */
+export interface PropertyLinkPair {
+	source: string;
+	target: string;
+}
+
 export interface CrystalPluginSettings {
 	exportFolderPath: string;
 	aiProvider: 'gemini' | 'openai';
@@ -80,6 +91,10 @@ export interface CrystalPluginSettings {
 	 * while the *displayed* lifetime total stays the true, unadjusted figure.
 	 */
 	gamificationCharsBadgeBaseline: number;
+	/** Auto-detect list-property links (e.g. `next`) on save and add the
+	 * reciprocal link (e.g. `previous`) to the linked note. */
+	propertyLinkEnabled: boolean;
+	propertyLinkPairs: PropertyLinkPair[];
 }
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
@@ -132,6 +147,8 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	gamificationCharMilestonesDate: '',
 	gamificationCharMilestonesReached: [],
 	gamificationCharsBadgeBaseline: 0,
+	propertyLinkEnabled: false,
+	propertyLinkPairs: [],
 }
 
 export class CrystalSettingTab extends PluginSettingTab {
@@ -509,6 +526,25 @@ export class CrystalSettingTab extends PluginSettingTab {
 		this.textSetting(containerEl, 'Quartz Site Name', 'Name of the Quartz site', 'quartzSiteName', 'Enter Quartz Site Name');
 		this.textSetting(containerEl, 'Github User Name', 'Github user name', 'githubUserName', 'Enter Github User Name');
 
+		// Property link settings
+		this.sectionHeading(containerEl, 'Property link', 'link');
+
+		this.toggleSetting(containerEl, 'Enable Property Link', 'When a listed property links to another note, automatically add a reciprocal link back on that note (created as a list property if it doesn\'t exist). Existing property values are never removed or overwritten.', 'propertyLinkEnabled');
+
+		const propertyLinkContainer = containerEl.createDiv({ cls: 'property-link-pairs' });
+		this.displayPropertyLinkPairs(propertyLinkContainer);
+
+		new Setting(containerEl)
+			.setName('Add New Pair')
+			.setDesc('Directed pair (e.g. next → previous), or use the same name for both to make a symmetric relation (e.g. friends → friends)')
+			.addButton(button => button
+				.setButtonText('Add')
+				.onClick(async () => {
+					this.plugin.settings.propertyLinkPairs.push({ source: '', target: '' });
+					await this.plugin.saveSettings();
+					this.displayPropertyLinkPairs(propertyLinkContainer);
+				}));
+
 		// File Organization Rules settings
 		this.sectionHeading(containerEl, 'File organization rules', 'folder-tree')
 			.setDesc('Configure rules for file organization. You can set display name, tag, folder, prefix, and date inclusion.');
@@ -554,6 +590,44 @@ export class CrystalSettingTab extends PluginSettingTab {
 						const parsed = parseInt(value, 10);
 						this.plugin.settings.gamificationDailyCharGoal = Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
 						await this.plugin.saveSettings();
+					}));
+		});
+	}
+
+	private displayPropertyLinkPairs(container: HTMLElement) {
+		container.empty();
+
+		this.plugin.settings.propertyLinkPairs.forEach((pair, index) => {
+			new Setting(container)
+				.setName(`Pair ${index + 1}`)
+				.addText(text => {
+					text.setPlaceholder('Source (e.g. next)')
+						.setValue(pair.source)
+						.onChange(async (value) => {
+							pair.source = value.trim();
+							await this.plugin.saveSettings();
+						});
+					text.inputEl.style.width = '140px';
+					return text;
+				})
+				.addText(text => {
+					text.setPlaceholder('Target (e.g. previous)')
+						.setValue(pair.target)
+						.onChange(async (value) => {
+							pair.target = value.trim();
+							await this.plugin.saveSettings();
+						});
+					text.inputEl.style.width = '140px';
+					return text;
+				})
+				.addButton(button => button
+					.setButtonText('-')
+					.setClass('mod-destructive')
+					.setTooltip('Delete pair')
+					.onClick(async () => {
+						this.plugin.settings.propertyLinkPairs.splice(index, 1);
+						await this.plugin.saveSettings();
+						this.displayPropertyLinkPairs(container);
 					}));
 		});
 	}
