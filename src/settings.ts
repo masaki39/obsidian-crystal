@@ -1,4 +1,4 @@
-import { App, IconName, Notice, Plugin, PluginSettingTab, Setting, requestUrl, setIcon } from 'obsidian';
+import { App, IconName, Notice, Plugin, PluginSettingTab, SearchComponent, Setting, prepareSimpleSearch, requestUrl, setIcon } from 'obsidian';
 import { AtpAgent } from '@atproto/api';
 import { calculateLevel } from './gamification';
 import { defaultVaultStatsPath, hasVaultStatsFile, lifetimeCharactersWritten, readVaultStats } from './word-stats';
@@ -151,8 +151,26 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	propertyLinkPairs: [],
 }
 
+/** One entry in the settings tab's own top navigation (unrelated to Obsidian's
+ * left-hand settings sidebar). `render` paints that section's Settings into
+ * whatever container it's given, so the same function doubles as this tab's
+ * normal single-section view and as one chunk of the flattened search view. */
+interface SettingsSection {
+	id: string;
+	label: string;
+	icon: IconName;
+	render: (containerEl: HTMLElement) => void;
+}
+
 export class CrystalSettingTab extends PluginSettingTab {
 	plugin: Plugin & { settings: CrystalPluginSettings; saveSettings(): Promise<void> };
+
+	/** Which of the top-nav sections is showing; persists for the lifetime of
+	 * this tab instance so re-opening Settings returns to where you left off. */
+	private activeSectionId = 'general';
+	/** Live text of the search box; non-empty switches the content pane from
+	 * "one section" to "every section, filtered". */
+	private searchQuery = '';
 
 	constructor(app: App, plugin: Plugin & { settings: CrystalPluginSettings; saveSettings(): Promise<void> }) {
 		super(app, plugin);
@@ -270,17 +288,127 @@ export class CrystalSettingTab extends PluginSettingTab {
 		await agent.login({ identifier, password });
 	}
 
+	/** Ordered list of top-nav sections. Each `render` reproduces exactly what
+	 * used to be inlined in `display()`, just scoped to its own container so it
+	 * can be shown alone (normal browsing) or alongside the others (search). */
+	private getSections(): SettingsSection[] {
+		return [
+			{ id: 'general', label: 'General', icon: 'settings-2', render: (el) => this.renderGeneralSection(el) },
+			{ id: 'ai', label: 'AI', icon: 'bot', render: (el) => this.renderAiSection(el) },
+			{ id: 'bluesky', label: 'Bluesky', icon: 'cloud', render: (el) => this.renderBlueskySection(el) },
+			{ id: 'daily-notes', label: 'Daily notes', icon: 'calendar-days', render: (el) => this.renderDailyNotesSection(el) },
+			{ id: 'gamification', label: 'Gamification', icon: 'gamepad-2', render: (el) => this.renderGamificationSection(el) },
+			{ id: 'images', label: 'Images', icon: 'image', render: (el) => this.renderImageSection(el) },
+			{ id: 'marp', label: 'Marp', icon: 'presentation', render: (el) => this.renderMarpSection(el) },
+			{ id: 'quartz', label: 'Quartz', icon: 'globe', render: (el) => this.renderQuartzSection(el) },
+			{ id: 'property-link', label: 'Property link', icon: 'link', render: (el) => this.renderPropertyLinkSection(el) },
+			{ id: 'file-rules', label: 'File rules', icon: 'folder-tree', render: (el) => this.renderFileOrganizationSection(el) },
+		];
+	}
+
 	display(): void {
 		const { containerEl } = this;
 
 		containerEl.empty();
 
-		// General settings
+		const sections = this.getSections();
+		if (!sections.some(section => section.id === this.activeSectionId)) {
+			this.activeSectionId = sections[0].id;
+		}
+
+		// Search box: filters across every section at once, regardless of the
+		// active nav tab (matches how Obsidian's own Settings search works).
+		const searchWrapper = containerEl.createDiv({ cls: 'crystal-settings-search' });
+		const search = new SearchComponent(searchWrapper)
+			.setPlaceholder('Search settings…')
+			.setValue(this.searchQuery)
+			.onChange((value) => {
+				this.searchQuery = value;
+				renderContent();
+			});
+		search.inputEl.addClass('crystal-settings-search-input');
+
+		// Top nav: switches which single section is shown. Clicking a tab while
+		// a search is active clears it, since a tab click means "browse this
+		// section", not "keep filtering".
+		const nav = containerEl.createDiv({ cls: 'crystal-settings-nav' });
+		const tabButtons = new Map<string, HTMLElement>();
+		sections.forEach(section => {
+			const button = nav.createEl('button', { cls: 'crystal-settings-tab', text: section.label });
+			const iconEl = createSpan({ cls: 'crystal-settings-tab-icon' });
+			setIcon(iconEl, section.icon);
+			button.prepend(iconEl);
+			button.addEventListener('click', () => {
+				this.activeSectionId = section.id;
+				if (this.searchQuery) {
+					this.searchQuery = '';
+					search.setValue('');
+				}
+				renderContent();
+			});
+			tabButtons.set(section.id, button);
+		});
+
+		const contentEl = containerEl.createDiv({ cls: 'crystal-settings-content' });
+
+		const renderContent = () => {
+			const isSearching = !!this.searchQuery.trim();
+			tabButtons.forEach((button, id) => {
+				button.toggleClass('is-active', !isSearching && id === this.activeSectionId);
+			});
+			nav.toggleClass('is-searching', isSearching);
+
+			contentEl.empty();
+			if (isSearching) {
+				sections.forEach(section => section.render(contentEl));
+				this.applySearchFilter(contentEl, this.searchQuery);
+			} else {
+				const activeSection = sections.find(section => section.id === this.activeSectionId) ?? sections[0];
+				activeSection.render(contentEl);
+			}
+		};
+
+		renderContent();
+	}
+
+	/**
+	 * Hides every rendered `.setting-item` whose visible text doesn't match
+	 * `query`, and hides each section heading (`.setting-item-heading`, the
+	 * class `Setting.setHeading()` applies) once none of the settings under it
+	 * still match — so a search for e.g. "webp" shows only that one row, not
+	 * the whole Image processor section.
+	 */
+	private applySearchFilter(containerEl: HTMLElement, query: string) {
+		const search = prepareSimpleSearch(query.trim());
+		let currentHeading: HTMLElement | null = null;
+		let currentHeadingMatches = false;
+
+		const closeHeading = () => {
+			if (currentHeading) currentHeading.toggleClass('crystal-search-hidden', !currentHeadingMatches);
+		};
+
+		containerEl.querySelectorAll<HTMLElement>('.setting-item').forEach(item => {
+			const isHeading = item.hasClass('setting-item-heading');
+			const matches = !!search(item.textContent ?? '');
+			if (isHeading) {
+				closeHeading();
+				currentHeading = item;
+				currentHeadingMatches = matches;
+				return;
+			}
+			item.toggleClass('crystal-search-hidden', !matches);
+			if (matches) currentHeadingMatches = true;
+		});
+		closeHeading();
+	}
+
+	private renderGeneralSection(containerEl: HTMLElement) {
 		this.sectionHeading(containerEl, 'General settings', 'settings-2');
 
 		this.textSetting(containerEl, 'Export Folder Path', 'Folder where this plugin exports files (used by PDF and Marp features)', 'exportFolderPath', 'Enter Export Folder Path');
+	}
 
-		// AI settings
+	private renderAiSection(containerEl: HTMLElement) {
 		this.sectionHeading(containerEl, 'AI editor commands', 'bot');
 
 		new Setting(containerEl)
@@ -339,8 +467,9 @@ export class CrystalSettingTab extends PluginSettingTab {
 					this.plugin.settings.GeminiModel = value;
 					await this.plugin.saveSettings();
 				}));
+	}
 
-		// Bluesky settings
+	private renderBlueskySection(containerEl: HTMLElement) {
 		this.sectionHeading(containerEl, 'Bluesky', 'cloud');
 
 		this.secretSetting(containerEl, 'Bluesky Handle/Email', 'Your Bluesky handle (e.g., user.bsky.social) or email address', 'Enter your Bluesky handle or email', 'blueskyIdentifier');
@@ -352,15 +481,17 @@ export class CrystalSettingTab extends PluginSettingTab {
 
 		this.toggleSetting(containerEl, 'Append Bluesky posts to Daily Note timeline', 'Add each post to today\'s daily note timeline section', 'blueskyAppendToDailyNote');
 		this.textSetting(containerEl, 'Daily Note timeline heading', 'Heading text that marks the timeline section (exact match)', 'dailyNoteTimelineHeading', '# Time Line');
+	}
 
-		// Daily notes settings
+	private renderDailyNotesSection(containerEl: HTMLElement) {
 		this.sectionHeading(containerEl, 'Daily notes', 'calendar-days');
 
 		this.toggleSetting(containerEl, 'Auto Sort Tasks', 'Sort tasks in daily notes automatically', 'dailyNoteAutoSort');
 		this.toggleSetting(containerEl, 'Auto Link Notes', 'Add link to today\'s daily note when create any note', 'dailyNoteAutoLink');
 		this.toggleSetting(containerEl, 'Newest First (Daily Notes)', 'Place new daily note entries at the top (tasks, links, timeline)', 'dailyNoteNewestFirst');
+	}
 
-		// Gamification settings
+	private renderGamificationSection(containerEl: HTMLElement) {
 		this.sectionHeading(containerEl, 'Gamification', 'gamepad-2');
 
 		this.toggleSetting(containerEl, 'Enable Gamification', 'Earn XP (with occasional bonus rewards), levels, streaks and badges for completing tasks in daily notes. Open the Gamification view (ribbon icon, or the command palette) to see full details', 'gamificationEnabled');
@@ -450,8 +581,9 @@ export class CrystalSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 					this.display();
 				}));
+	}
 
-		// Image settings
+	private renderImageSection(containerEl: HTMLElement) {
 		this.sectionHeading(containerEl, 'Image processor', 'image');
 
 		new Setting(containerEl)
@@ -510,23 +642,26 @@ export class CrystalSettingTab extends PluginSettingTab {
 			this.secretSetting(containerEl, 'Gyazo access token', gyazoDesc, 'Enter Gyazo access token', 'gyazoAccessToken'),
 			() => this.verifyGyazoToken(this.plugin.settings.gyazoAccessToken)
 		);
+	}
 
-		// Marp settings
+	private renderMarpSection(containerEl: HTMLElement) {
 		this.sectionHeading(containerEl, 'Marp', 'presentation');
 
 		this.textSetting(containerEl, 'Marp Slide Folder Path (relative path)', 'Folder where slide files are organized', 'marpSlideFolderPath', 'e.g. Slides');
 		this.textSetting(containerEl, 'Marp Theme Directory', 'Absolute or relative path to a directory passed to Marp CLI --theme-set (optional)', 'marpThemePath', 'e.g. Slides/themes');
 		this.textSetting(containerEl, 'Marp Attachment Folder Path', 'Folder where Marp images are stored (relative path)', 'marpAttachmentFolderPath', 'e.g. Slides/attachments');
+	}
 
-		// Quartz settings
+	private renderQuartzSection(containerEl: HTMLElement) {
 		this.sectionHeading(containerEl, 'Quartz', 'globe');
 
 		this.textSetting(containerEl, 'Publish Folder Path', 'Path to Publish Folder (relative path from Obsidian Vault root)', 'publishFolderPath', 'Enter Publish Folder Path');
 		this.textSetting(containerEl, 'Path to Local Repository of Quartz', 'Path to Quartz (absolute path)', 'quartzPath', 'Enter Quartz Folder Path');
 		this.textSetting(containerEl, 'Quartz Site Name', 'Name of the Quartz site', 'quartzSiteName', 'Enter Quartz Site Name');
 		this.textSetting(containerEl, 'Github User Name', 'Github user name', 'githubUserName', 'Enter Github User Name');
+	}
 
-		// Property link settings
+	private renderPropertyLinkSection(containerEl: HTMLElement) {
 		this.sectionHeading(containerEl, 'Property link', 'link');
 
 		this.toggleSetting(containerEl, 'Enable Property Link', 'When a listed property links to another note, automatically add a reciprocal link back on that note (created as a list property if it doesn\'t exist). Existing property values are never removed or overwritten.', 'propertyLinkEnabled');
@@ -544,8 +679,9 @@ export class CrystalSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 					this.displayPropertyLinkPairs(propertyLinkContainer);
 				}));
+	}
 
-		// File Organization Rules settings
+	private renderFileOrganizationSection(containerEl: HTMLElement) {
 		this.sectionHeading(containerEl, 'File organization rules', 'folder-tree')
 			.setDesc('Configure rules for file organization. You can set display name, tag, folder, prefix, and date inclusion.');
 
@@ -722,4 +858,4 @@ export class CrystalSettingTab extends PluginSettingTab {
 					}));
 		});
 	}
-} 
+}

@@ -29,6 +29,63 @@
 	border-left: 2px solid var(--background-modifier-border);
 }
 
+/* Settings screen top nav (per-section tabs) + search */
+.crystal-settings-search {
+	margin-bottom: 0.75em;
+}
+
+.crystal-settings-search-input {
+	width: 100%;
+}
+
+.crystal-settings-nav {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35em;
+	margin-bottom: 1em;
+	padding-bottom: 0.75em;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.crystal-settings-nav.is-searching .crystal-settings-tab {
+	opacity: 0.5;
+}
+
+.crystal-settings-tab {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4em;
+	padding: 0.35em 0.75em;
+	border: none;
+	border-radius: var(--radius-m);
+	background: transparent;
+	box-shadow: none;
+	color: var(--text-muted);
+	font-size: 0.85em;
+	cursor: pointer;
+}
+
+.crystal-settings-tab:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.crystal-settings-tab.is-active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	opacity: 1;
+}
+
+.crystal-settings-tab-icon svg {
+	width: 1em;
+	height: 1em;
+}
+
+/* Rows hidden by the settings search filter */
+.crystal-search-hidden {
+	display: none !important;
+}
+
 /* Gamification status bar */
 .crystal-gamification-status {
 	display: inline-flex;
