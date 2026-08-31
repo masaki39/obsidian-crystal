@@ -8,7 +8,7 @@
 > [!warning]
 >
 > - デスクトップ版Obsidianでのみ動作する。
-> - 多くの機能は、外部サービス（OpenAI, Gemini, Gyazo, Marp CLI）の事前設定やインストールが必要である。
+> - 多くの機能は、外部サービス（OpenAI, Gemini, Ollama, Gyazo, Marp CLI）の事前設定やインストールが必要である。
 > - 個人用途に最適化されているため、利用者の環境に応じた設定調整が必要な場合がある。
 > - 一定以上の規模になったり独立した機能をもつコードは別リポジトリに適宜切り離される
 >   - [Tab Swap](https://github.com/masaki39/tab-swap)
@@ -26,7 +26,9 @@
 
 ### 🤖 AI Editor Commands
 
-[OpenAI API](https://platform.openai.com/api-keys)または[Gemini API](https://aistudio.google.com/api-keys)を利用して、文章作成や翻訳を強力にサポートする。設定の `AI Provider` でどちらを使うか選択でき（既定はOpenAI）、全AIコマンドが選択中のプロバイダーを使用する。
+[OpenAI API](https://platform.openai.com/api-keys)、[Gemini API](https://aistudio.google.com/api-keys)、または[Ollama](https://ollama.com/)によるローカルLLMを利用して、文章作成や翻訳を強力にサポートする。設定の `AI Provider` でどれを使うか選択でき（既定はOpenAI）、全AIコマンドが選択中のプロバイダーを使用する。
+
+Ollama を選ぶと、すべての処理がローカルで完結し、ノートの内容は外部に一切送信されない。事前に [Ollama](https://ollama.com/) をインストールしてサーバーを起動し（`ollama serve`）、使用するモデルを取得しておく（例: `ollama pull llama3.1`）。設定で `Ollama Base URL`（既定 `http://localhost:11434`）と `Ollama Model` を指定する。
 
 | コマンド | 機能 | 説明 |
 |---|---|---|

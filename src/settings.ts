@@ -25,11 +25,15 @@ export interface PropertyLinkPair {
 
 export interface CrystalPluginSettings {
 	exportFolderPath: string;
-	aiProvider: 'gemini' | 'openai';
+	aiProvider: 'gemini' | 'openai' | 'ollama';
 	GeminiAPIKey: string;
 	GeminiModel: string;
 	OpenAIAPIKey: string;
 	OpenAIModel: string;
+	/** Base URL of a local Ollama server (no trailing slash needed). */
+	OllamaBaseUrl: string;
+	/** Name of a locally pulled Ollama model (e.g. `llama3.1`, `gemma3`). */
+	OllamaModel: string;
 	blueskyIdentifier: string;
 	blueskyPassword: string;
 	blueskyAppendToDailyNote: boolean;
@@ -104,6 +108,8 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	GeminiModel: 'gemini-flash-latest',
 	OpenAIAPIKey: '',
 	OpenAIModel: 'gpt-4o-mini',
+	OllamaBaseUrl: 'http://localhost:11434',
+	OllamaModel: 'llama3.1',
 	blueskyIdentifier: '',
 	blueskyPassword: '',
 	blueskyAppendToDailyNote: false,
@@ -282,6 +288,17 @@ export class CrystalSettingTab extends PluginSettingTab {
 		if (response.status < 200 || response.status >= 300) throw new Error(`HTTP ${response.status}`);
 	}
 
+	private async verifyOllama(baseUrl: string): Promise<void> {
+		const url = (baseUrl || '').trim().replace(/\/+$/, '');
+		if (!url) throw new Error('Base URL is empty');
+		const response = await requestUrl({
+			url: `${url}/api/tags`,
+			method: 'GET',
+			throw: false,
+		});
+		if (response.status < 200 || response.status >= 300) throw new Error(`HTTP ${response.status} (is the Ollama server running?)`);
+	}
+
 	private async verifyBlueskyCredentials(identifier: string, password: string): Promise<void> {
 		if (!identifier || !password) throw new Error('Handle/email and app password are required');
 		const agent = new AtpAgent({ service: 'https://bsky.social' });
@@ -417,9 +434,10 @@ export class CrystalSettingTab extends PluginSettingTab {
 			.addDropdown(dropdown => dropdown
 				.addOption('openai', 'OpenAI')
 				.addOption('gemini', 'Gemini')
+				.addOption('ollama', 'Ollama (local)')
 				.setValue(this.plugin.settings.aiProvider)
 				.onChange(async (value) => {
-					this.plugin.settings.aiProvider = value as 'gemini' | 'openai';
+					this.plugin.settings.aiProvider = value as 'gemini' | 'openai' | 'ollama';
 					await this.plugin.saveSettings();
 				}));
 
@@ -467,6 +485,13 @@ export class CrystalSettingTab extends PluginSettingTab {
 					this.plugin.settings.GeminiModel = value;
 					await this.plugin.saveSettings();
 				}));
+
+		this.addVerifyButton(
+			this.textSetting(containerEl, 'Ollama Base URL', 'Base URL of your local Ollama server. Runs fully offline; no data leaves your machine.', 'OllamaBaseUrl', 'http://localhost:11434'),
+			() => this.verifyOllama(this.plugin.settings.OllamaBaseUrl)
+		);
+
+		this.textSetting(containerEl, 'Ollama Model', 'Name of a model already pulled with `ollama pull` (e.g. llama3.1, gemma3, qwen2.5).', 'OllamaModel', 'llama3.1');
 	}
 
 	private renderBlueskySection(containerEl: HTMLElement) {

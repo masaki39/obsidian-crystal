@@ -3,7 +3,7 @@ import { CrystalPluginSettings } from './settings';
 import { AIService } from './ai-service';
 import { promptForText } from './utils';
 
-const AI_KEY_MISSING_NOTICE = '⚠️ AIのAPIキーが設定されていません。設定でプロバイダーとAPIキーを確認してください。';
+const AI_KEY_MISSING_NOTICE = '⚠️ AIが設定されていません。設定でプロバイダーを確認してください（OpenAI/Gemini はAPIキー、Ollama はBase URLとモデル名）。';
 
 export class GeminiService {
 	private ai: AIService;
