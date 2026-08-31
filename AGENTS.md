@@ -97,8 +97,14 @@ pnpm run build
 
 - Bump `version` in `manifest.json` (SemVer) and update `versions.json` to map plugin version → minimum app version.
 - **Releases are automated**: `.github/workflows/release.yml` triggers on any pushed tag (`push: tags: "*"`). It builds the plugin (`pnpm install && pnpm run build`) and runs `gh release create` itself, attaching `main.js`, `manifest.json`, and `styles.css` (only if non-empty) as assets, using `changelog/<tag>.md` as release notes when present. **Do not manually run `gh release create`** — it's redundant with (and can conflict with) this workflow.
-- To cut a release: bump the version, add the `changelog/<version>.md` file, commit, create a git tag matching `manifest.json`'s `version` exactly (no leading `v` — enforced by `.npmrc`'s `tag-version-prefix=""`), and **push the tag** (`git push --follow-tags` or `git push origin <tag>`). The workflow does the rest.
-  - Simplest path: `git add -A && pnpm version <patch|minor|major> && git push --follow-tags` (this both commits and tags in one step, as long as everything you want in that commit — including the changelog file — is already staged first).
+- To cut a release: add the `changelog/<version>.md` file plus any feature changes, **commit them first**, then let `pnpm version` bump the version and create the tag (matching `manifest.json`'s `version` exactly — no leading `v`, enforced by `.npmrc`'s `tag-version-prefix=""`), and **push the tag** (`git push --follow-tags` or `git push origin <tag>`). The workflow does the rest.
+  - Standard path:
+    ```bash
+    git add -A && git commit -m "feat: ..."   # feature changes + changelog/<version>.md
+    pnpm version <patch|minor|major>           # bumps package.json/manifest.json/versions.json, commits "<version>", tags "<version>"
+    git push --follow-tags
+    ```
+  - `pnpm version` delegates to `npm version`, which **refuses to run while there are staged or uncommitted changes** ("Git working directory not clean"). You therefore cannot fold the feature changes into the version-bump commit — commit them separately first, as above. The result is two commits (`feat: ...` then `<version>`), which matches the existing history.
   - If you bump the version without letting `pnpm version`/`npm version` create the tag (e.g. via `--no-git-tag-version`), no tag exists to push, the workflow never fires, and no release gets created — you'd then have to create the tag and release manually as a fallback.
 - After the initial release, follow the process to add/update your plugin in the community catalog as required.
 
