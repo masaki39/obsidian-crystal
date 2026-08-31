@@ -3,6 +3,7 @@ import { AtpAgent } from '@atproto/api';
 import { calculateLevel } from './gamification';
 import { defaultVaultStatsPath, hasVaultStatsFile, lifetimeCharactersWritten, readVaultStats } from './word-stats';
 import { promptForConfirmation } from './utils';
+import type { StatusBarOrderService } from './status-bar-order';
 
 export interface FileOrganizationRule {
 	displayName: string;
@@ -99,6 +100,11 @@ export interface CrystalPluginSettings {
 	 * reciprocal link (e.g. `previous`) to the linked note. */
 	propertyLinkEnabled: boolean;
 	propertyLinkPairs: PropertyLinkPair[];
+	/** Ordered list of status-bar item keys (see `StatusBarOrderService`).
+	 * Empty means "don't touch the native order". */
+	statusBarOrder: string[];
+	/** Status-bar item keys to hide. */
+	statusBarHidden: string[];
 }
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
@@ -155,6 +161,8 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	gamificationCharsBadgeBaseline: 0,
 	propertyLinkEnabled: false,
 	propertyLinkPairs: [],
+	statusBarOrder: [],
+	statusBarHidden: [],
 }
 
 /** One entry in the settings tab's own top navigation (unrelated to Obsidian's
@@ -319,6 +327,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 			{ id: 'marp', label: 'Marp', icon: 'presentation', render: (el) => this.renderMarpSection(el) },
 			{ id: 'quartz', label: 'Quartz', icon: 'globe', render: (el) => this.renderQuartzSection(el) },
 			{ id: 'property-link', label: 'Property link', icon: 'link', render: (el) => this.renderPropertyLinkSection(el) },
+			{ id: 'status-bar', label: 'Status bar', icon: 'panel-bottom', render: (el) => this.renderStatusBarSection(el) },
 			{ id: 'file-rules', label: 'File rules', icon: 'folder-tree', render: (el) => this.renderFileOrganizationSection(el) },
 		];
 	}
@@ -704,6 +713,123 @@ export class CrystalSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 					this.displayPropertyLinkPairs(propertyLinkContainer);
 				}));
+	}
+
+	private renderStatusBarSection(containerEl: HTMLElement) {
+		this.sectionHeading(containerEl, 'Status bar', 'panel-bottom')
+			.setDesc('Reorder or hide the items in Obsidian\'s status bar, including items from other plugins and core features. Items only appear here once the plugin that owns them has loaded, so open the vault fully before arranging. Items already hidden elsewhere (by their own plugin, a core setting, or a CSS snippet) can\'t be detected and won\'t be listed.');
+
+		const listEl = containerEl.createDiv({ cls: 'crystal-status-bar-order' });
+		this.renderStatusBarOrderList(listEl);
+
+		new Setting(containerEl)
+			.addButton(button => button
+				.setButtonText('Rescan')
+				.setTooltip('Refresh the list of detected status bar items')
+				.onClick(() => this.renderStatusBarOrderList(listEl)))
+			.addButton(button => button
+				.setButtonText('Reset to default')
+				.setWarning()
+				.setTooltip('Clear all custom order and visibility')
+				.onClick(async () => {
+					this.plugin.settings.statusBarOrder = [];
+					this.plugin.settings.statusBarHidden = [];
+					await this.plugin.saveSettings();
+					this.renderStatusBarOrderList(listEl);
+				}));
+	}
+
+	private renderStatusBarOrderList(listEl: HTMLElement) {
+		listEl.empty();
+
+		const service = (this.plugin as unknown as { statusBarOrderService?: StatusBarOrderService }).statusBarOrderService;
+		const detected = service ? service.detectItems() : [];
+		const labelByKey = new Map(detected.map(item => [item.key, item.label]));
+		const saved = this.plugin.settings.statusBarOrder ?? [];
+		const hidden = new Set(this.plugin.settings.statusBarHidden ?? []);
+
+		// Saved keys first (keeping ones whose plugin isn't loaded right now, so
+		// the user doesn't lose their arrangement), then any newly-seen items.
+		const orderedKeys = [
+			...saved,
+			...detected.filter(item => !saved.includes(item.key)).map(item => item.key),
+		];
+
+		if (orderedKeys.length === 0) {
+			listEl.createDiv({ cls: 'crystal-status-bar-order-empty', text: 'No status bar items detected yet.' });
+			return;
+		}
+
+		const commitOrder = async (keys: string[]) => {
+			this.plugin.settings.statusBarOrder = keys;
+			await this.plugin.saveSettings();
+			this.renderStatusBarOrderList(listEl);
+		};
+
+		const toggleHidden = async (key: string) => {
+			const next = new Set(this.plugin.settings.statusBarHidden ?? []);
+			if (next.has(key)) next.delete(key); else next.add(key);
+			this.plugin.settings.statusBarHidden = [...next];
+			await this.plugin.saveSettings();
+			this.renderStatusBarOrderList(listEl);
+		};
+
+		orderedKeys.forEach((key, index) => {
+			const isHidden = hidden.has(key);
+			const row = listEl.createDiv({ cls: 'crystal-status-bar-order-row', attr: { draggable: 'true' } });
+			row.toggleClass('is-hidden', isHidden);
+
+			const handle = row.createSpan({ cls: 'crystal-status-bar-order-handle' });
+			setIcon(handle, 'grip-vertical');
+
+			row.createSpan({ cls: 'crystal-status-bar-order-label', text: labelByKey.get(key) ?? key });
+			if (!labelByKey.has(key)) {
+				row.createSpan({ cls: 'crystal-status-bar-order-missing', text: 'not loaded' });
+			}
+
+			const move = async (to: number) => {
+				if (to < 0 || to >= orderedKeys.length || to === index) return;
+				const next = [...orderedKeys];
+				const [moved] = next.splice(index, 1);
+				next.splice(to, 0, moved);
+				await commitOrder(next);
+			};
+
+			const visBtn = row.createEl('button', {
+				cls: 'crystal-status-bar-order-btn clickable-icon',
+				attr: { 'aria-label': isHidden ? 'Show item' : 'Hide item' },
+			});
+			setIcon(visBtn, isHidden ? 'eye-off' : 'eye');
+			visBtn.addEventListener('click', () => toggleHidden(key));
+
+			const up = row.createEl('button', { cls: 'crystal-status-bar-order-btn', text: '↑', attr: { 'aria-label': 'Move up' } });
+			up.addEventListener('click', () => move(index - 1));
+			const down = row.createEl('button', { cls: 'crystal-status-bar-order-btn', text: '↓', attr: { 'aria-label': 'Move down' } });
+			down.addEventListener('click', () => move(index + 1));
+
+			row.addEventListener('dragstart', (e) => {
+				e.dataTransfer?.setData('text/plain', String(index));
+				if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+				row.addClass('is-dragging');
+			});
+			row.addEventListener('dragend', () => row.removeClass('is-dragging'));
+			row.addEventListener('dragover', (e) => {
+				e.preventDefault();
+				if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+				row.addClass('is-drop-target');
+			});
+			row.addEventListener('dragleave', () => row.removeClass('is-drop-target'));
+			row.addEventListener('drop', async (e) => {
+				e.preventDefault();
+				row.removeClass('is-drop-target');
+				const from = parseInt(e.dataTransfer?.getData('text/plain') ?? '', 10);
+				if (!Number.isInteger(from) || from === index) return;
+				const next = [...orderedKeys];
+				const [moved] = next.splice(from, 1);
+				next.splice(index, 0, moved);
+				await commitOrder(next);
+			});
+		});
 	}
 
 	private renderFileOrganizationSection(containerEl: HTMLElement) {

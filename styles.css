@@ -736,3 +736,68 @@ textarea.crystal-modal-input {
 	color: var(--text-muted);
 	margin-top: 2px;
 }
+
+/* Status bar item order */
+.status-bar-item.crystal-status-bar-hidden {
+	display: none !important;
+}
+
+.crystal-status-bar-order {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin: 8px 0 12px;
+}
+
+.crystal-status-bar-order-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 10px;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	cursor: grab;
+}
+
+.crystal-status-bar-order-row.is-dragging {
+	opacity: 0.5;
+}
+
+.crystal-status-bar-order-row.is-drop-target {
+	border-color: var(--interactive-accent);
+}
+
+.crystal-status-bar-order-row.is-hidden .crystal-status-bar-order-label {
+	opacity: 0.5;
+	text-decoration: line-through;
+}
+
+.crystal-status-bar-order-handle {
+	display: flex;
+	color: var(--text-muted);
+}
+
+.crystal-status-bar-order-label {
+	flex: 1;
+}
+
+.crystal-status-bar-order-missing {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+.crystal-status-bar-order-btn {
+	padding: 0 8px;
+	cursor: pointer;
+}
+
+.crystal-status-bar-order-btn.clickable-icon {
+	padding: 4px;
+}
+
+.crystal-status-bar-order-empty {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
