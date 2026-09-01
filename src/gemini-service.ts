@@ -48,11 +48,14 @@ export class GeminiService {
 		});
 	}
 
-	private async getPureTextFromLine(lineText: string): Promise<string> {
+	private getLineIndent(lineText: string): string {
 		// インデント部分を抽出（先頭の空白、タブ、リストマーカーなど）
 		const indentMatch = lineText.match(/^(\s*(?:[-*+]\s+|\d+\.\s+|>\s*)*)/);
-		const indent = indentMatch ? indentMatch[1] : '';
-		return lineText.slice(indent.length).trim();
+		return indentMatch ? indentMatch[1] : '';
+	}
+
+	private async getPureTextFromLine(lineText: string): Promise<string> {
+		return lineText.slice(this.getLineIndent(lineText).length).trim();
 	}
 
 	/**
@@ -190,8 +193,16 @@ ${targetLinePureText}`;
 				// 選択範囲を翻訳結果で置換
 				editor.replaceSelection(translatedText);
 			} else {
-				// カーソル位置に翻訳結果を挿入
-				editor.replaceRange(translatedText, cursor);
+				// カーソルのある行を翻訳結果で置換（インデント・リストマーカーは保持）
+				const currentLineText = editor.getLine(currentLine);
+				const indent = this.getLineIndent(currentLineText);
+				const newLineText = indent + translatedText;
+				editor.replaceRange(
+					newLineText,
+					{ line: currentLine, ch: 0 },
+					{ line: currentLine, ch: currentLineText.length }
+				);
+				editor.setCursor({ line: currentLine, ch: newLineText.length });
 			}
 
 			new Notice(`✅ 翻訳完了: ${translatedText}`);
