@@ -4,6 +4,7 @@ import { calculateLevel } from './gamification';
 import { defaultVaultStatsPath, hasVaultStatsFile, lifetimeCharactersWritten, readVaultStats } from './word-stats';
 import { promptForConfirmation } from './utils';
 import type { StatusBarOrderService } from './status-bar-order';
+import type { OpacityService } from './opacity-service';
 
 export interface FileOrganizationRule {
 	displayName: string;
@@ -432,6 +433,20 @@ export class CrystalSettingTab extends PluginSettingTab {
 		this.sectionHeading(containerEl, 'General settings', 'settings-2');
 
 		this.textSetting(containerEl, 'Export Folder Path', 'Folder where this plugin exports files (used by PDF and Marp features)', 'exportFolderPath', 'Enter Export Folder Path');
+
+		new Setting(containerEl)
+			.setName('Window opacity')
+			.setDesc('Opacity of the Obsidian window (1.0 = fully opaque). Desktop only; reset to 1.0 when the plugin is disabled.')
+			.addSlider(slider => slider
+				.setLimits(0.5, 1.0, 0.05)
+				.setValue(this.plugin.settings.windowOpacity)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					this.plugin.settings.windowOpacity = value;
+					await this.plugin.saveSettings();
+					const opacityService = (this.plugin as unknown as { opacityService?: OpacityService }).opacityService;
+					opacityService?.applyOpacity(value);
+				}));
 	}
 
 	private renderAiSection(containerEl: HTMLElement) {
