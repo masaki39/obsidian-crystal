@@ -1,4 +1,4 @@
-import { spawn } from "child_process";
+import { ChildProcess, spawn } from "child_process";
 import { App } from 'obsidian';
 
 export class TerminalService {
@@ -7,6 +7,21 @@ export class TerminalService {
     constructor(app?: App) {
         this.vaultPath = app ? ((app.vault.adapter as any).basePath || '') : '';
     }
+    /**
+     * 長時間走るプロセス（Marpサーバーなど）を起動し、ChildProcess をそのまま返す。
+     * detached: true で独立したプロセスグループを作るため、呼び出し側は
+     * process.kill(-pid) でログインシェル配下の子孫プロセスごと停止できる。
+     * stdout/stderr は呼び出し側で必ず消費すること（未読のままだとパイプが詰まる）。
+     */
+    spawnBackgroundCommand(command: string, workingDirectory?: string): ChildProcess {
+        const shell = process.env.SHELL || 'zsh';
+        return spawn(shell, ['-l', '-c', command], {
+            stdio: ['ignore', 'pipe', 'pipe'],
+            cwd: workingDirectory || this.vaultPath || undefined,
+            detached: true
+        });
+    }
+
     async executeCommand(command: string, workingDirectory?: string): Promise<{ stdout: string; stderr: string; exitCode: number }> {
         return new Promise((resolve, reject) => {
             // ユーザーのログインシェルを使用（未設定時は zsh にフォールバック）

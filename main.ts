@@ -191,6 +191,8 @@ export default class CrystalPlugin extends Plugin {
 		this.gamificationManager?.flushPendingSave();
 		this.opacityService?.onunload();
 		this.statusBarOrderService?.onunload();
+		// 起動した Marp サーバーを残さない（Obsidian終了・プラグイン無効化・リロード時）
+		this.marpCommands?.onunload();
 	}
 
 	async activateGamificationView() {
