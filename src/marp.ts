@@ -6,6 +6,8 @@ const path = require('path');
 import { ChildProcess } from 'child_process';
 import { TerminalService } from './terminal-service';
 import { MARP_SERVER_ORIGIN, findMarpViewerLeaf, pageUrlForFile } from './marp-server-url';
+import { lineForSlideNumber, slideNumberForLine } from './marp-slide-index';
+import { moveSlide } from './marp-slide-ops';
 import { CrystalPluginSettings } from './settings';
 
 export class MarpCommands {
@@ -15,6 +17,8 @@ export class MarpCommands {
 	private serverMonitorId: number | null = null;
 	private serverProcess: ChildProcess | null = null;
 	private startPollTimeoutId: number | null = null;
+	private serverRunning = false;
+	private serverStateListeners: (() => void)[] = [];
 
 	constructor(terminalService: TerminalService, settings: CrystalPluginSettings, plugin: Plugin) {
 		this.terminalService = terminalService;
@@ -24,6 +28,27 @@ export class MarpCommands {
 
 	updateSettings(settings: CrystalPluginSettings) {
 		this.settings = settings;
+	}
+
+	/**
+	 * Marpサーバーが起動中か（このプラグインが把握している範囲で）
+	 */
+	isServerRunning(): boolean {
+		return this.serverRunning;
+	}
+
+	/**
+	 * サーバーの起動状態が変わったときに呼ばれるリスナーを登録する
+	 */
+	onServerStateChange(listener: () => void): void {
+		this.serverStateListeners.push(listener);
+	}
+
+	private setServerRunning(running: boolean): void {
+		if (this.serverRunning === running) return;
+
+		this.serverRunning = running;
+		this.serverStateListeners.forEach(listener => listener());
 	}
 
 	/**
@@ -269,6 +294,7 @@ export class MarpCommands {
 
 			if (await this.isServerAlive()) {
 				new Notice('ℹ️ Marpサーバーは既に起動しています');
+				this.setServerRunning(true);
 				await this.openServerInBrowser(pageUrl);
 				this.startServerMonitor();
 				return;
@@ -291,11 +317,13 @@ export class MarpCommands {
 			child.on('close', () => {
 				if (this.serverProcess === child) {
 					this.serverProcess = null;
+					this.setServerRunning(false);
 				}
 			});
 			child.on('error', (error: Error) => {
 				if (this.serverProcess === child) {
 					this.serverProcess = null;
+					this.setServerRunning(false);
 				}
 				console.error('Marp server process error:', error);
 			});
@@ -318,6 +346,7 @@ export class MarpCommands {
 			// プロセス監視と起動待ちを停止
 			this.stopServerMonitor();
 			this.stopStartPolling();
+			this.setServerRunning(false);
 
 			// このプラグインが起動したプロセスはプロセスグループごと停止する
 			const killed = this.killServerProcess();
@@ -404,6 +433,7 @@ export class MarpCommands {
 			attempts++;
 
 			if (await this.isServerAlive()) {
+				this.setServerRunning(true);
 				await this.openServerInBrowser(pageUrl);
 				new Notice('✅ Marpサーバーが起動しました');
 				// 起動を確認できたらプロセス監視を開始する
@@ -498,6 +528,7 @@ export class MarpCommands {
 		const intervalId = window.setInterval(async () => {
 			if (!(await this.isServerAlive())) {
 				this.stopServerMonitor();
+				this.setServerRunning(false);
 				new Notice('✅ Marpサーバーが停止しました');
 			}
 		}, 5000);
@@ -515,6 +546,45 @@ export class MarpCommands {
 			window.clearInterval(this.serverMonitorId);
 			this.serverMonitorId = null;
 		}
+	}
+
+	/**
+	 * カーソルを前後のスライドの先頭へ移動する
+	 */
+	goToAdjacentSlide(editor: Editor, direction: -1 | 1) {
+		const content = editor.getValue();
+		const current = slideNumberForLine(content, editor.getCursor().line);
+		const target = current + direction;
+
+		const line = lineForSlideNumber(content, target);
+		editor.setCursor({ line, ch: 0 });
+		editor.scrollIntoView({ from: { line, ch: 0 }, to: { line, ch: 0 } }, true);
+	}
+
+	/**
+	 * カーソルのあるスライドを前後のスライドと入れ替える
+	 */
+	moveCurrentSlide(editor: Editor, direction: -1 | 1) {
+		const content = editor.getValue();
+		const current = slideNumberForLine(content, editor.getCursor().line);
+		const move = moveSlide(content, current, direction);
+
+		if (!move) {
+			new Notice(direction === 1 ? '⚠️ これ以上後ろに移動できません' : '⚠️ これ以上前に移動できません');
+			return;
+		}
+
+		const endLength = content.split('\n')[move.toLine]?.length ?? 0;
+		editor.replaceRange(
+			move.text,
+			{ line: move.fromLine, ch: 0 },
+			{ line: move.toLine, ch: endLength }
+		);
+
+		// 移動したスライドを追いかける
+		const line = lineForSlideNumber(editor.getValue(), move.slideNumber);
+		editor.setCursor({ line, ch: 0 });
+		editor.scrollIntoView({ from: { line, ch: 0 }, to: { line, ch: 0 } }, true);
 	}
 
 	/**
@@ -733,6 +803,42 @@ export class MarpCommands {
 			icon: 'square',
 			callback: () => {
 				this.stopMarpServerCommand();
+			}
+		});
+
+		this.plugin.addCommand({
+			id: 'crystal-marp-next-slide',
+			name: 'Marp: Go to next slide',
+			icon: 'chevron-down',
+			editorCallback: (editor: Editor) => {
+				this.goToAdjacentSlide(editor, 1);
+			}
+		});
+
+		this.plugin.addCommand({
+			id: 'crystal-marp-previous-slide',
+			name: 'Marp: Go to previous slide',
+			icon: 'chevron-up',
+			editorCallback: (editor: Editor) => {
+				this.goToAdjacentSlide(editor, -1);
+			}
+		});
+
+		this.plugin.addCommand({
+			id: 'crystal-marp-move-slide-down',
+			name: 'Marp: Move slide down',
+			icon: 'arrow-down',
+			editorCallback: (editor: Editor) => {
+				this.moveCurrentSlide(editor, 1);
+			}
+		});
+
+		this.plugin.addCommand({
+			id: 'crystal-marp-move-slide-up',
+			name: 'Marp: Move slide up',
+			icon: 'arrow-up',
+			editorCallback: (editor: Editor) => {
+				this.moveCurrentSlide(editor, -1);
 			}
 		});
 

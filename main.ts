@@ -10,6 +10,7 @@ import { ImagePasteAndDropHandler } from './src/clipboard-paste-handler';
 import { EditorCommands } from './src/editor-commands';
 import { MarpCommands } from './src/marp';
 import { MarpCursorSync } from './src/marp-sync';
+import { MarpSlideToolbar } from './src/marp-toolbar';
 import { TerminalService } from './src/terminal-service';
 import { QuartzService } from './src/quartz-service';
 import { MacroCommands } from './src/macro';
@@ -55,6 +56,7 @@ export default class CrystalPlugin extends Plugin {
 	private editorCommands: EditorCommands;
 	private marpCommands: MarpCommands;
 	private marpCursorSync: MarpCursorSync;
+	private marpSlideToolbar: MarpSlideToolbar;
 	private terminalService: TerminalService;
 	private quartzService: QuartzService;
 	private macroCommands: MacroCommands;
@@ -80,6 +82,7 @@ export default class CrystalPlugin extends Plugin {
 		this.terminalService = new TerminalService(this.app);
 		this.marpCommands = new MarpCommands(this.terminalService, this.settings, this);
 		this.marpCursorSync = new MarpCursorSync(this, this.settings);
+		this.marpSlideToolbar = new MarpSlideToolbar(this, this.settings, this.marpCommands);
 		this.quartzService = new QuartzService(this, this.settings, this.terminalService);
 		this.macroCommands = new MacroCommands(this.marpCommands, this.editorCommands, this);
 		this.gitSummaryService = new GitSummaryService(
@@ -99,6 +102,7 @@ export default class CrystalPlugin extends Plugin {
 		this.dailyNotesManager.onLoad();
 		this.marpCommands.onload();
 		this.marpCursorSync.onload();
+		this.marpSlideToolbar.onload();
 		this.geminiService.onload();
 		this.editorCommands.onload();
 		this.macroCommands.onload();
@@ -198,6 +202,7 @@ export default class CrystalPlugin extends Plugin {
 		// 起動した Marp サーバーを残さない（Obsidian終了・プラグイン無効化・リロード時）
 		this.marpCommands?.onunload();
 		this.marpCursorSync?.onunload();
+		this.marpSlideToolbar?.onunload();
 	}
 
 	async activateGamificationView() {
@@ -256,6 +261,7 @@ export default class CrystalPlugin extends Plugin {
 		this.gyazoService.updateSettings(this.settings);
 		this.marpCommands.updateSettings(this.settings);
 		this.marpCursorSync.updateSettings(this.settings);
+		this.marpSlideToolbar.updateSettings(this.settings);
 		this.quartzService.updateSettings(this.settings);
 		this.gitSummaryService.updateSettings(this.settings);
 		this.gamificationManager.updateSettings(this.settings);

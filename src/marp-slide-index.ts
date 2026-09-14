@@ -14,6 +14,10 @@ export interface SlideRange {
 	separatorLine: number | null;
 	/** スライド本文の開始行（0始まり）。先頭の空行は読み飛ばす */
 	startLine: number;
+	/** スライドが占める領域の先頭行（区切り行の次の行。空行も含む） */
+	regionStart: number;
+	/** スライドが占める領域の末尾行（次の区切り行の手前。この行を含む） */
+	regionEnd: number;
 }
 
 /** thematic break（区切り線）かどうか */
@@ -121,16 +125,21 @@ export function scanSlides(content: string): SlideRange[] {
 		return Math.min(from, Math.max(lines.length - 1, 0));
 	};
 
+	const lastLine = Math.max(lines.length - 1, 0);
 	const slides: SlideRange[] = [{
 		separatorLine: null,
-		startLine: firstNonBlankFrom(contentStart, separators[0] ?? lines.length)
+		startLine: firstNonBlankFrom(contentStart, separators[0] ?? lines.length),
+		regionStart: contentStart,
+		regionEnd: separators.length > 0 ? separators[0] - 1 : lastLine
 	}];
 
 	separators.forEach((separator, index) => {
-		const limit = separators[index + 1] ?? lines.length;
+		const next = separators[index + 1];
 		slides.push({
 			separatorLine: separator,
-			startLine: firstNonBlankFrom(separator + 1, limit)
+			startLine: firstNonBlankFrom(separator + 1, next ?? lines.length),
+			regionStart: separator + 1,
+			regionEnd: next !== undefined ? next - 1 : lastLine
 		});
 	});
 
