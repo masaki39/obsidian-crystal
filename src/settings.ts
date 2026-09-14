@@ -52,6 +52,7 @@ export interface CrystalPluginSettings {
 	marpThemePath: string;
 	marpAttachmentFolderPath: string;
 	marpSyncCursorToServer: boolean;
+	marpSyncSlideToCursor: boolean;
 	publishFolderPath: string;
 	quartzPath: string;
 	quartzSiteName: string;
@@ -134,6 +135,7 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	marpThemePath: '',
 	marpAttachmentFolderPath: '',
 	marpSyncCursorToServer: false,
+	marpSyncSlideToCursor: false,
 	publishFolderPath: 'Publish',
 	quartzPath: '',
 	quartzSiteName: '',
@@ -701,7 +703,8 @@ export class CrystalSettingTab extends PluginSettingTab {
 		this.textSetting(containerEl, 'Marp Slide Folder Path (relative path)', 'Folder where slide files are organized', 'marpSlideFolderPath', 'e.g. Slides');
 		this.textSetting(containerEl, 'Marp Theme Directory', 'Absolute or relative path to a directory passed to Marp CLI --theme-set (optional)', 'marpThemePath', 'e.g. Slides/themes');
 		this.textSetting(containerEl, 'Marp Attachment Folder Path', 'Folder where Marp images are stored (relative path)', 'marpAttachmentFolderPath', 'e.g. Slides/attachments');
-		this.toggleSetting(containerEl, 'Sync cursor with server preview', 'Move the Marp server preview to the slide under the cursor (requires the Web viewer core plugin)', 'marpSyncCursorToServer');
+		this.toggleSetting(containerEl, 'Move preview slide to cursor', 'Follow the editor cursor in the Marp server preview (requires the Web viewer core plugin)', 'marpSyncCursorToServer');
+		this.toggleSetting(containerEl, 'Move cursor to preview slide', 'Follow the Marp server preview slide with the editor cursor (requires the Web viewer core plugin)', 'marpSyncSlideToCursor');
 	}
 
 	private renderQuartzSection(containerEl: HTMLElement) {

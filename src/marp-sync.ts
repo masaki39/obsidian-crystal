@@ -1,10 +1,18 @@
-import { MarkdownView, Plugin, TFile, WorkspaceLeaf, normalizePath } from 'obsidian';
+import { MarkdownView, Plugin, WorkspaceLeaf } from 'obsidian';
 import { EditorView, ViewUpdate } from '@codemirror/view';
 import { CrystalPluginSettings } from './settings';
-import { slideNumberForLine } from './marp-slide-index';
+import { lineForSlideNumber, slideNumberForLine } from './marp-slide-index';
+import {
+	WEBVIEWER_VIEW_TYPE,
+	findMarpViewerLeaf,
+	pageUrlForFile,
+	slideNumberFromUrl,
+	vaultPathForUrl,
+	webviewOf,
+	webviewerUrl
+} from './marp-server-url';
 
-const MARP_SERVER_ORIGIN = 'http://localhost:8080';
-const WEBVIEWER_VIEW_TYPE = 'webviewer';
+const MARKDOWN_VIEW_TYPE = 'markdown';
 const SYNC_DEBOUNCE_MS = 150;
 
 /**
@@ -14,12 +22,15 @@ const SYNC_DEBOUNCE_MS = 150;
  * Marpのbespokeテンプレートは location.hash（`#<1始まりのスライド番号>`）で
  * 表示スライドを決め、hashchange を監視している。そのためハッシュを書き換えるだけで
  * ページを再読み込みせずにスライドを切り替えられる。
+ * 逆方向（プレビュー側でスライドを送ったらカーソルも移動する）は、
+ * webview の did-navigate-in-page でハッシュの変化を受け取って実現する。
  * 外部ブラウザは制御できないため、コアプラグイン Web Viewer 使用時のみ動作する。
  */
 export class MarpCursorSync {
 	private plugin: Plugin;
 	private settings: CrystalPluginSettings;
 	private debounceId: number | null = null;
+	private listenedWebviews = new WeakSet<object>();
 
 	constructor(plugin: Plugin, settings: CrystalPluginSettings) {
 		this.plugin = plugin;
@@ -41,8 +52,17 @@ export class MarpCursorSync {
 
 		// ファイルを切り替えたときも追従させる
 		this.plugin.registerEvent(
-			this.plugin.app.workspace.on('active-leaf-change', () => this.scheduleSync())
+			this.plugin.app.workspace.on('active-leaf-change', () => {
+				this.scheduleSync();
+				this.attachViewerListeners();
+			})
 		);
+
+		// Web Viewer が開かれたら逆方向同期のリスナーを張る
+		this.plugin.registerEvent(
+			this.plugin.app.workspace.on('layout-change', () => this.attachViewerListeners())
+		);
+		this.plugin.app.workspace.onLayoutReady(() => this.attachViewerListeners());
 	}
 
 	onunload() {
@@ -73,17 +93,16 @@ export class MarpCursorSync {
 		const file = markdownView?.file;
 		if (!markdownView || !file) return;
 
-		const relativePath = this.slideRelativePath(file);
-		if (!relativePath) return;
+		const pageUrl = pageUrlForFile(file, this.settings.marpSlideFolderPath);
+		if (!pageUrl) return;
 
 		// Marpサーバーを開いている Web Viewer がなければ何もしない
-		const leaf = this.findServerLeaf();
+		const leaf = findMarpViewerLeaf(this.plugin.app);
 		if (!leaf) return;
 
-		const pageUrl = this.buildPageUrl(relativePath);
 		const slide = slideNumberForLine(markdownView.editor.getValue(), markdownView.editor.getCursor().line);
 		const targetUrl = `${pageUrl}#${slide}`;
-		const currentUrl = this.currentUrl(leaf);
+		const currentUrl = webviewerUrl(leaf);
 
 		if (currentUrl === targetUrl) return;
 
@@ -94,7 +113,7 @@ export class MarpCursorSync {
 		}
 
 		// 同じページならハッシュだけ差し替える（再読み込みなし）
-		const webview = this.getWebview(leaf);
+		const webview = webviewOf(leaf);
 		if (!webview || typeof webview.executeJavaScript !== 'function') {
 			await this.navigate(leaf, targetUrl);
 			return;
@@ -106,56 +125,6 @@ export class MarpCursorSync {
 			console.error('Failed to move Marp preview slide, falling back to navigation:', error);
 			await this.navigate(leaf, targetUrl);
 		}
-	}
-
-	/**
-	 * スライドフォルダ配下のファイルなら、フォルダからの相対パスを返す
-	 */
-	private slideRelativePath(file: TFile): string | null {
-		const folder = this.settings.marpSlideFolderPath?.trim();
-		if (!folder) return null;
-		if (file.extension !== 'md') return null;
-
-		const normalized = normalizePath(folder);
-		if (normalized === '/' || normalized === '') {
-			return file.path;
-		}
-
-		const prefix = `${normalized}/`;
-		return file.path.startsWith(prefix) ? file.path.slice(prefix.length) : null;
-	}
-
-	private buildPageUrl(relativePath: string): string {
-		const encoded = relativePath.split('/').map(encodeURIComponent).join('/');
-		return `${MARP_SERVER_ORIGIN}/${encoded}`;
-	}
-
-	/**
-	 * Marpサーバーを表示している Web Viewer のリーフを探す
-	 */
-	private findServerLeaf(): WorkspaceLeaf | null {
-		const leaves = this.plugin.app.workspace.getLeavesOfType(WEBVIEWER_VIEW_TYPE);
-		return leaves.find(leaf => this.currentUrl(leaf)?.startsWith(MARP_SERVER_ORIGIN)) ?? null;
-	}
-
-	private getWebview(leaf: WorkspaceLeaf): any {
-		return (leaf.view as any)?.webview ?? null;
-	}
-
-	private currentUrl(leaf: WorkspaceLeaf): string | null {
-		const view = leaf.view as any;
-
-		try {
-			const fromWebview = view?.webview?.getURL?.();
-			if (fromWebview) return fromWebview;
-		} catch {
-			// webview がまだ準備できていない場合は他の手段にフォールバックする
-		}
-
-		if (typeof view?.url === 'string' && view.url) return view.url;
-
-		const state = leaf.getViewState().state as { url?: string } | undefined;
-		return state?.url ?? null;
 	}
 
 	/**
@@ -185,5 +154,61 @@ export class MarpCursorSync {
 			type: WEBVIEWER_VIEW_TYPE,
 			state: { url, navigate: true }
 		});
+	}
+
+	/**
+	 * Marpサーバーを開いている webview に、ページ内遷移のリスナーを登録する
+	 */
+	private attachViewerListeners(): void {
+		for (const leaf of this.plugin.app.workspace.getLeavesOfType(WEBVIEWER_VIEW_TYPE)) {
+			const webview = webviewOf(leaf);
+			if (!webview || this.listenedWebviews.has(webview)) continue;
+
+			this.listenedWebviews.add(webview);
+
+			// registerDomEvent で登録しておくと unload 時に自動で解除される
+			const handler = (event: any) => this.handleViewerNavigation(event?.url);
+			this.plugin.registerDomEvent(webview as HTMLElement, 'did-navigate-in-page' as any, handler as any);
+			this.plugin.registerDomEvent(webview as HTMLElement, 'did-navigate' as any, handler as any);
+		}
+	}
+
+	/**
+	 * プレビュー側のスライド移動をエディタのカーソルに反映する
+	 */
+	private handleViewerNavigation(url?: string): void {
+		if (!this.settings.marpSyncSlideToCursor || !url) return;
+
+		const slide = slideNumberFromUrl(url);
+		if (slide === null) return;
+
+		const vaultPath = vaultPathForUrl(url, this.settings.marpSlideFolderPath);
+		if (!vaultPath) return;
+
+		const markdownView = this.findMarkdownView(vaultPath);
+		if (!markdownView) return;
+
+		const editor = markdownView.editor;
+		const content = editor.getValue();
+
+		// 既にそのスライドを編集中なら動かさない。
+		// （自分で書き換えたハッシュが返ってきたときにカーソルが飛ぶのも防げる）
+		if (slideNumberForLine(content, editor.getCursor().line) === slide) return;
+
+		const line = lineForSlideNumber(content, slide);
+		editor.setCursor({ line, ch: 0 });
+		editor.scrollIntoView({ from: { line, ch: 0 }, to: { line, ch: 0 } }, true);
+	}
+
+	/**
+	 * 指定パスのファイルを開いている Markdown ビューを探す
+	 */
+	private findMarkdownView(path: string): MarkdownView | null {
+		for (const leaf of this.plugin.app.workspace.getLeavesOfType(MARKDOWN_VIEW_TYPE)) {
+			const view = leaf.view as MarkdownView;
+			if (view?.file?.path === path) return view;
+		}
+
+		return null;
 	}
 }

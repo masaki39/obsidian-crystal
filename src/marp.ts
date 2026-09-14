@@ -5,6 +5,7 @@ const fs = require('fs').promises;
 const path = require('path');
 import { ChildProcess } from 'child_process';
 import { TerminalService } from './terminal-service';
+import { MARP_SERVER_ORIGIN, findMarpViewerLeaf, pageUrlForFile } from './marp-server-url';
 import { CrystalPluginSettings } from './settings';
 
 export class MarpCommands {
@@ -263,9 +264,12 @@ export class MarpCommands {
 			// 既に8080が応答している場合は二重起動しない。
 			// （前回起動したサーバーが残っている場合、新しい marp は
 			//   ポート衝突で即死するのに古いサーバーの応答で成功に見えてしまう）
+			// アクティブファイルがスライドフォルダ内ならそのページを直接開く
+			const pageUrl = this.activePageUrl();
+
 			if (await this.isServerAlive()) {
 				new Notice('ℹ️ Marpサーバーは既に起動しています');
-				await this.openServerInBrowser();
+				await this.openServerInBrowser(pageUrl);
 				this.startServerMonitor();
 				return;
 			}
@@ -297,7 +301,7 @@ export class MarpCommands {
 			});
 
 			// サーバーの応答を確認してからブラウザを開く
-			this.waitForServerAndOpen();
+			this.waitForServerAndOpen(pageUrl);
 		} catch (error) {
 			console.error('Failed to start Marp server:', error);
 			new Notice('❌ Marpサーバーの起動に失敗しました: ' + error.message);
@@ -373,7 +377,7 @@ export class MarpCommands {
 	 */
 	private async isServerAlive(): Promise<boolean> {
 		return new Promise((resolve) => {
-			const req = http.get('http://localhost:8080', (res: any) => {
+			const req = http.get(MARP_SERVER_ORIGIN, (res: any) => {
 				resolve(res.statusCode === 200);
 			});
 
@@ -391,7 +395,7 @@ export class MarpCommands {
 	/**
 	 * サーバーの応答を確認してからブラウザを開く
 	 */
-	private async waitForServerAndOpen(): Promise<void> {
+	private async waitForServerAndOpen(pageUrl: string): Promise<void> {
 		const maxAttempts = 30; // 最大30回試行（30秒）
 		let attempts = 0;
 
@@ -400,7 +404,7 @@ export class MarpCommands {
 			attempts++;
 
 			if (await this.isServerAlive()) {
-				await this.openServerInBrowser();
+				await this.openServerInBrowser(pageUrl);
 				new Notice('✅ Marpサーバーが起動しました');
 				// 起動を確認できたらプロセス監視を開始する
 				this.startServerMonitor();
@@ -416,7 +420,7 @@ export class MarpCommands {
 
 			if (attempts >= maxAttempts) {
 				new Notice('⚠️ Marpサーバーの起動を確認できませんでしたが、ブラウザを開きます');
-				shell.openExternal('http://localhost:8080');
+				shell.openExternal(pageUrl);
 				return;
 			}
 
@@ -428,18 +432,36 @@ export class MarpCommands {
 	}
 
 	/**
+	 * アクティブファイルに対応するページのURL。
+	 * スライドフォルダ外のファイル（または未選択）ならサーバーのトップを返す
+	 */
+	private activePageUrl(): string {
+		const file = this.plugin.app.workspace.getActiveFile();
+		const url = file ? pageUrlForFile(file, this.settings.marpSlideFolderPath) : null;
+		return url ?? MARP_SERVER_ORIGIN;
+	}
+
+	/**
 	 * 起動中のサーバーを WebViewer（無効なら外部ブラウザ）で開く
 	 */
-	private async openServerInBrowser(): Promise<void> {
+	private async openServerInBrowser(pageUrl: string = MARP_SERVER_ORIGIN): Promise<void> {
 		const isWebViewerEnabled = (this.plugin.app as any).internalPlugins.getEnabledPluginById?.('webviewer');
 
 		if (isWebViewerEnabled) {
+			// 既にサーバーを開いているタブがあれば使い回す
+			const existingLeaf = findMarpViewerLeaf(this.plugin.app);
+			if (existingLeaf && typeof (existingLeaf.view as any).navigate === 'function') {
+				(existingLeaf.view as any).navigate(pageUrl);
+				this.plugin.app.workspace.revealLeaf(existingLeaf);
+				return;
+			}
+
 			try {
 				const leaf = this.plugin.app.workspace.getLeaf("tab");
 				await leaf.setViewState({
 					type: 'webviewer',
 					state: {
-						url: 'http://localhost:8080',
+						url: pageUrl,
 						navigate: true,
 					},
 					active: true,
@@ -453,7 +475,7 @@ export class MarpCommands {
 			console.log('WebViewer core plugin is disabled, opening in external browser');
 		}
 
-		shell.openExternal('http://localhost:8080');
+		shell.openExternal(pageUrl);
 	}
 
 	/**

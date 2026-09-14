@@ -1,6 +1,6 @@
 /**
  * Marp（Marpit）のスライド区切り規則にしたがって、
- * カーソル行が何枚目のスライドに含まれるかを求めるユーティリティ。
+ * ソース上の行とスライド番号を相互に変換するユーティリティ。
  *
  * Marpit は markdown の thematic break（`---` / `***` / `___`）でスライドを分割する。
  * 以下は区切りにならないため除外する必要がある:
@@ -8,6 +8,13 @@
  * - フェンスドコードブロック内の `---`
  * - 段落直下の `---`（setext 見出しの下線として解釈される）
  */
+
+export interface SlideRange {
+	/** スライドの直前にある区切り行（0始まり）。先頭スライドは null */
+	separatorLine: number | null;
+	/** スライド本文の開始行（0始まり）。先頭の空行は読み飛ばす */
+	startLine: number;
+}
 
 /** thematic break（区切り線）かどうか */
 function isThematicBreak(line: string): boolean {
@@ -68,18 +75,13 @@ function skipFrontMatter(lines: string[]): number {
 }
 
 /**
- * カーソル行（0始まり）が属するスライド番号（1始まり）を返す。
- * カーソルが区切り行そのものにある場合は、その次のスライドを指す。
+ * 区切り行の一覧（0始まりの行番号）を返す
  */
-export function slideNumberForLine(content: string, cursorLine: number): number {
-	const lines = content.split('\n');
-	const start = skipFrontMatter(lines);
-	const end = Math.min(cursorLine, lines.length - 1);
-
-	let slide = 1;
+function findSeparatorLines(lines: string[], start: number): number[] {
+	const separators: number[] = [];
 	let fence: string | null = null;
 
-	for (let i = start; i <= end; i++) {
+	for (let i = start; i < lines.length; i++) {
 		const line = lines[i];
 		const fenceMatch = /^ {0,3}(`{3,}|~{3,})/.exec(line);
 
@@ -97,9 +99,66 @@ export function slideNumberForLine(content: string, cursorLine: number): number 
 		}
 
 		if (isThematicBreak(line) && !isSetextUnderline(lines, i)) {
-			slide++;
+			separators.push(i);
+		}
+	}
+
+	return separators;
+}
+
+/**
+ * 各スライドの区切り行と本文開始行を求める
+ */
+export function scanSlides(content: string): SlideRange[] {
+	const lines = content.split('\n');
+	const contentStart = skipFrontMatter(lines);
+	const separators = findSeparatorLines(lines, contentStart);
+
+	const firstNonBlankFrom = (from: number, limit: number): number => {
+		for (let i = from; i < Math.min(limit, lines.length); i++) {
+			if (lines[i].trim() !== '') return i;
+		}
+		return Math.min(from, Math.max(lines.length - 1, 0));
+	};
+
+	const slides: SlideRange[] = [{
+		separatorLine: null,
+		startLine: firstNonBlankFrom(contentStart, separators[0] ?? lines.length)
+	}];
+
+	separators.forEach((separator, index) => {
+		const limit = separators[index + 1] ?? lines.length;
+		slides.push({
+			separatorLine: separator,
+			startLine: firstNonBlankFrom(separator + 1, limit)
+		});
+	});
+
+	return slides;
+}
+
+/**
+ * カーソル行（0始まり）が属するスライド番号（1始まり）を返す。
+ * カーソルが区切り行そのものにある場合は、その次のスライドを指す。
+ */
+export function slideNumberForLine(content: string, cursorLine: number): number {
+	const slides = scanSlides(content);
+
+	let slide = 1;
+	for (let i = 1; i < slides.length; i++) {
+		if ((slides[i].separatorLine ?? 0) <= cursorLine) {
+			slide = i + 1;
 		}
 	}
 
 	return slide;
+}
+
+/**
+ * スライド番号（1始まり）に対応する本文開始行（0始まり）を返す
+ */
+export function lineForSlideNumber(content: string, slideNumber: number): number {
+	const slides = scanSlides(content);
+	const index = Math.min(Math.max(slideNumber, 1), slides.length) - 1;
+	return slides[index].startLine;
 }

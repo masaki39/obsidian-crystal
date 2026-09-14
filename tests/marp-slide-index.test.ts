@@ -1,4 +1,4 @@
-import { slideNumberForLine } from '../src/marp-slide-index';
+import { lineForSlideNumber, slideNumberForLine } from '../src/marp-slide-index';
 
 const deck = [
 	'---',              // 0 front matter 開始
@@ -69,5 +69,31 @@ describe('slideNumberForLine', () => {
 
 	it('カーソル行が範囲外でも最後のスライド番号を返す', () => {
 		expect(slideNumberForLine(deck, 9999)).toBe(5);
+	});
+});
+
+describe('lineForSlideNumber', () => {
+	it('各スライドの本文開始行を返す（空行は読み飛ばす）', () => {
+		expect(lineForSlideNumber(deck, 1)).toBe(4);   // # A
+		expect(lineForSlideNumber(deck, 2)).toBe(8);   // # B
+		expect(lineForSlideNumber(deck, 3)).toBe(12);  // # C
+		expect(lineForSlideNumber(deck, 4)).toBe(16);  // # D
+		expect(lineForSlideNumber(deck, 5)).toBe(20);  // # E
+	});
+
+	it('範囲外のスライド番号は端に丸める', () => {
+		expect(lineForSlideNumber(deck, 0)).toBe(4);
+		expect(lineForSlideNumber(deck, 99)).toBe(20);
+	});
+
+	it('slideNumberForLine と往復しても同じスライドになる', () => {
+		for (let slide = 1; slide <= 5; slide++) {
+			expect(slideNumberForLine(deck, lineForSlideNumber(deck, slide))).toBe(slide);
+		}
+	});
+
+	it('front matter のみのファイルでも例外にならない', () => {
+		const content = ['---', 'marp: true', '---', ''].join('\n');
+		expect(lineForSlideNumber(content, 1)).toBe(3);
 	});
 });
