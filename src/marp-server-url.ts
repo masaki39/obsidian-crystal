@@ -113,9 +113,16 @@ export function webviewerUrl(leaf: WorkspaceLeaf): string | null {
 }
 
 /**
+ * Marpサーバーを表示している Web Viewer のリーフをすべて返す
+ */
+export function findMarpViewerLeaves(app: App): WorkspaceLeaf[] {
+	const leaves = app.workspace.getLeavesOfType(WEBVIEWER_VIEW_TYPE);
+	return leaves.filter(leaf => webviewerUrl(leaf)?.startsWith(MARP_SERVER_ORIGIN));
+}
+
+/**
  * Marpサーバーを表示している Web Viewer のリーフを探す
  */
 export function findMarpViewerLeaf(app: App): WorkspaceLeaf | null {
-	const leaves = app.workspace.getLeavesOfType(WEBVIEWER_VIEW_TYPE);
-	return leaves.find(leaf => webviewerUrl(leaf)?.startsWith(MARP_SERVER_ORIGIN)) ?? null;
+	return findMarpViewerLeaves(app)[0] ?? null;
 }

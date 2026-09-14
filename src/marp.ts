@@ -5,7 +5,7 @@ const fs = require('fs').promises;
 const path = require('path');
 import { ChildProcess } from 'child_process';
 import { TerminalService } from './terminal-service';
-import { MARP_SERVER_ORIGIN, findMarpViewerLeaf, pageUrlForFile } from './marp-server-url';
+import { MARP_SERVER_ORIGIN, findMarpViewerLeaf, findMarpViewerLeaves, pageUrlForFile } from './marp-server-url';
 import { lineForSlideNumber, slideNumberForLine } from './marp-slide-index';
 import { moveSlide } from './marp-slide-ops';
 import { CrystalPluginSettings } from './settings';
@@ -348,6 +348,10 @@ export class MarpCommands {
 			this.stopStartPolling();
 			this.setServerRunning(false);
 
+			// プレビューのタブを閉じる。プロセスを止めた後だと webview が
+			// エラーページに遷移してURLで判定できなくなるため、kill より先に行う
+			this.closeViewerTabs();
+
 			// このプラグインが起動したプロセスはプロセスグループごと停止する
 			const killed = this.killServerProcess();
 
@@ -366,6 +370,16 @@ export class MarpCommands {
 		} catch (error) {
 			console.error('Failed to stop Marp server:', error);
 			new Notice('❌ Marpサーバーの停止に失敗しました: ' + error.message);
+		}
+	}
+
+	/**
+	 * Marpサーバーを表示している Web Viewer のタブを閉じる。
+	 * 外部ブラウザで開いた場合は制御できないため何もしない
+	 */
+	private closeViewerTabs(): void {
+		for (const leaf of findMarpViewerLeaves(this.plugin.app)) {
+			leaf.detach();
 		}
 	}
 
@@ -468,7 +482,15 @@ export class MarpCommands {
 	private activePageUrl(): string {
 		const file = this.plugin.app.workspace.getActiveFile();
 		const url = file ? pageUrlForFile(file, this.settings.marpSlideFolderPath) : null;
-		return url ?? MARP_SERVER_ORIGIN;
+		if (!url) return MARP_SERVER_ORIGIN;
+
+		// 開いた直後に1枚目ではなく編集中のスライドが出るよう、
+		// カーソル位置のスライド番号をハッシュ（bespokeの `#5` 形式）で渡す
+		const view = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
+		if (!view?.editor || view.file !== file) return url;
+
+		const slide = slideNumberForLine(view.editor.getValue(), view.editor.getCursor().line);
+		return `${url}#${slide}`;
 	}
 
 	/**
