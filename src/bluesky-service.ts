@@ -18,6 +18,33 @@ interface PostResult {
 
 const MAX_IMAGES = 4;
 
+/** XRPC error codes that mean the session was rejected, not the post itself. */
+const AUTH_ERROR_CODES = new Set([
+	'ExpiredToken',
+	'InvalidToken',
+	'AuthMissing',
+	'AuthRequired',
+	'AuthenticationRequired',
+]);
+
+function isAuthError(error: unknown): boolean {
+	const e = error as { status?: number; error?: string } | null;
+	if (!e || typeof e !== 'object') return false;
+	if (typeof e.error === 'string' && AUTH_ERROR_CODES.has(e.error)) return true;
+	return e.status === 401;
+}
+
+/** Surface the HTTP status and XRPC error code, not just the bare message. */
+function formatXrpcError(error: unknown): string {
+	const e = error as { status?: number; error?: string; message?: string } | null;
+	if (!e || typeof e !== 'object') return String(error);
+	const parts: string[] = [];
+	if (typeof e.status === 'number') parts.push(`HTTP ${e.status}`);
+	if (typeof e.error === 'string' && e.error) parts.push(e.error);
+	const detail = parts.length > 0 ? ` (${parts.join(' ')})` : '';
+	return `${e.message || String(error)}${detail}`;
+}
+
 function getImageDimensions(file: File): Promise<{ width: number; height: number }> {
 	return new Promise((resolve, reject) => {
 		const img = new Image();
@@ -276,7 +303,7 @@ export class BlueskyService {
 		} catch (error) {
 			console.error('Bluesky login failed:', error);
 			this.agent = null;
-			throw new Error('Bluesky認証に失敗しました');
+			throw new Error(`Bluesky認証に失敗しました: ${formatXrpcError(error)}`);
 		}
 	}
 
@@ -462,56 +489,73 @@ export class BlueskyService {
 		}
 
 		try {
-			const rt = new RichText({ text });
-			await rt.detectFacets(this.agent!);
-
-			let embed;
-			if (imageFiles.length > 0) {
-				const images = [];
-				for (const file of imageFiles.slice(0, MAX_IMAGES)) {
-					const arrayBuffer = await file.arrayBuffer();
-					const uint8Array = new Uint8Array(arrayBuffer);
-					const { data } = await this.agent!.uploadBlob(uint8Array, { encoding: file.type });
-					let aspectRatio: { width: number; height: number } | undefined;
-					try {
-						aspectRatio = await getImageDimensions(file);
-					} catch {
-						// aspectRatio省略でも投稿可能
-					}
-					images.push({ image: data.blob, alt: '', ...(aspectRatio && { aspectRatio }) });
-				}
-				embed = {
-					$type: 'app.bsky.embed.images',
-					images,
-				};
-			} else {
-				const urls = this.extractUrls(text);
-				if (urls.length > 0) {
-					embed = await this.createEmbedCard(urls[0]);
-				}
-			}
-
-			const postRecord = {
-				$type: 'app.bsky.feed.post',
-				text: rt.text,
-				facets: rt.facets,
-				createdAt: new Date().toISOString(),
-				langs: ['ja'],
-				...(embed && { embed }),
-			};
-
-			await this.agent!.com.atproto.repo.createRecord({
-				repo: this.agent!.session?.did || '',
-				collection: 'app.bsky.feed.post',
-				record: postRecord,
-			});
-
-			await this.appendPostToDailyNote(text, gyazoUrls);
-
+			await this.createPost(text, imageFiles);
 		} catch (error) {
-			console.error('Error posting to Bluesky:', error);
-			throw new Error(`Bluesky投稿に失敗しました: ${error.message}`);
+			if (!isAuthError(error)) {
+				console.error('Error posting to Bluesky:', error);
+				throw new Error(`Bluesky投稿に失敗しました: ${formatXrpcError(error)}`);
+			}
+			// The cached session was rejected (expired or revoked token). Drop it and
+			// re-authenticate once, so one stale session doesn't fail every post until
+			// Obsidian is restarted.
+			console.warn('Bluesky session rejected; re-authenticating and retrying once:', error);
+			this.agent = null;
+			await this.initializeAgent();
+			try {
+				await this.createPost(text, imageFiles);
+			} catch (retryError) {
+				console.error('Error posting to Bluesky after re-authentication:', retryError);
+				throw new Error(`Bluesky投稿に失敗しました: ${formatXrpcError(retryError)}`);
+			}
 		}
+
+		await this.appendPostToDailyNote(text, gyazoUrls);
+	}
+
+	private async createPost(text: string, imageFiles: File[]): Promise<void> {
+		const rt = new RichText({ text });
+		await rt.detectFacets(this.agent!);
+
+		let embed;
+		if (imageFiles.length > 0) {
+			const images = [];
+			for (const file of imageFiles.slice(0, MAX_IMAGES)) {
+				const arrayBuffer = await file.arrayBuffer();
+				const uint8Array = new Uint8Array(arrayBuffer);
+				const { data } = await this.agent!.uploadBlob(uint8Array, { encoding: file.type });
+				let aspectRatio: { width: number; height: number } | undefined;
+				try {
+					aspectRatio = await getImageDimensions(file);
+				} catch {
+					// aspectRatio省略でも投稿可能
+				}
+				images.push({ image: data.blob, alt: '', ...(aspectRatio && { aspectRatio }) });
+			}
+			embed = {
+				$type: 'app.bsky.embed.images',
+				images,
+			};
+		} else {
+			const urls = this.extractUrls(text);
+			if (urls.length > 0) {
+				embed = await this.createEmbedCard(urls[0]);
+			}
+		}
+
+		const postRecord = {
+			$type: 'app.bsky.feed.post',
+			text: rt.text,
+			facets: rt.facets,
+			createdAt: new Date().toISOString(),
+			langs: ['ja'],
+			...(embed && { embed }),
+		};
+
+		await this.agent!.com.atproto.repo.createRecord({
+			repo: this.agent!.session?.did || '',
+			collection: 'app.bsky.feed.post',
+			record: postRecord,
+		});
 	}
 
 	private async appendPostToDailyNote(text: string, gyazoUrls: string[]): Promise<void> {
