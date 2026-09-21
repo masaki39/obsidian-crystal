@@ -43,6 +43,10 @@ export interface CrystalPluginSettings {
 	dailyNoteAutoSort: boolean;
 	dailyNoteAutoLink: boolean;
 	dailyNoteNewestFirst: boolean;
+	/** Show the day of the week after a daily note's inline title. */
+	dailyNoteShowWeekday: boolean;
+	/** moment.js format for the weekday label (follows Obsidian's language). */
+	dailyNoteWeekdayFormat: string;
 	webpQuality: number;
 	imageResizeScale: number;
 	imageMaxSize: number;
@@ -127,6 +131,8 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	dailyNoteAutoSort: true,
 	dailyNoteAutoLink: true,
 	dailyNoteNewestFirst: false,
+	dailyNoteShowWeekday: true,
+	dailyNoteWeekdayFormat: 'dddd',
 	webpQuality: 0.85,
 	imageResizeScale: 0.8,
 	imageMaxSize: 700,
@@ -544,6 +550,8 @@ export class CrystalSettingTab extends PluginSettingTab {
 		this.toggleSetting(containerEl, 'Auto Sort Tasks', 'Sort tasks in daily notes automatically', 'dailyNoteAutoSort');
 		this.toggleSetting(containerEl, 'Auto Link Notes', 'Add link to today\'s daily note when create any note', 'dailyNoteAutoLink');
 		this.toggleSetting(containerEl, 'Newest First (Daily Notes)', 'Place new daily note entries at the top (tasks, links, timeline)', 'dailyNoteNewestFirst');
+		this.toggleSetting(containerEl, 'Show weekday after inline title', 'Display the day of the week next to the inline title of daily notes', 'dailyNoteShowWeekday');
+		this.textSetting(containerEl, 'Weekday format', 'moment.js format for the weekday label (e.g. dddd, ddd, (ddd)). Follows Obsidian\'s language', 'dailyNoteWeekdayFormat', 'dddd');
 	}
 
 	private renderGamificationSection(containerEl: HTMLElement) {

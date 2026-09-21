@@ -837,3 +837,14 @@ textarea.crystal-modal-input {
 	margin: var(--size-2-1) var(--size-2-2);
 	background-color: var(--background-modifier-border);
 }
+
+/* Daily note weekday after the inline title */
+.inline-title[data-crystal-weekday]::after {
+	content: attr(data-crystal-weekday);
+	margin-left: 0.5em;
+	font-size: 0.6em;
+	font-weight: var(--font-normal);
+	color: var(--text-muted);
+	pointer-events: none;
+	user-select: none;
+}
