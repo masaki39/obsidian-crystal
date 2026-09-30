@@ -848,3 +848,40 @@ textarea.crystal-modal-input {
 	pointer-events: none;
 	user-select: none;
 }
+
+/* Property colors settings */
+.crystal-property-color-row .setting-item-control {
+	flex-wrap: wrap;
+	row-gap: 0.5em;
+}
+
+.crystal-property-color-names {
+	width: 180px;
+	font-weight: var(--font-medium);
+}
+
+.crystal-color-swatches {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.crystal-color-swatches .crystal-color-swatch {
+	flex-shrink: 0;
+	width: 18px;
+	min-width: 0;
+	height: 18px;
+	padding: 0;
+	border: 2px solid var(--background-primary);
+	border-radius: 50%;
+	box-shadow: none;
+	cursor: pointer;
+}
+
+.crystal-color-swatches .crystal-color-swatch:hover {
+	transform: scale(1.15);
+}
+
+.crystal-color-swatches .crystal-color-swatch.is-active {
+	box-shadow: 0 0 0 2px var(--text-normal);
+}

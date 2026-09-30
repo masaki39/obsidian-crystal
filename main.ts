@@ -21,6 +21,7 @@ import { GamificationManager, VIEW_TYPE_GAMIFICATION } from './src/gamification'
 import { GamificationView } from './src/gamification-view';
 import { SidebarFocusCommands } from './src/sidebar-focus';
 import { PropertyLinkService } from './src/property-link';
+import { PropertyColorService } from './src/property-color';
 import { StatusBarOrderService } from './src/status-bar-order';
 
 // Crystal Plugin for Obsidian
@@ -67,6 +68,7 @@ export default class CrystalPlugin extends Plugin {
 	private gamificationManager: GamificationManager;
 	private sidebarFocusCommands: SidebarFocusCommands;
 	private propertyLinkService: PropertyLinkService;
+	private propertyColorService: PropertyColorService;
 	statusBarOrderService: StatusBarOrderService;
 
 	async onload() {
@@ -97,6 +99,7 @@ export default class CrystalPlugin extends Plugin {
 		);
 		this.sidebarFocusCommands = new SidebarFocusCommands(this.app, this);
 		this.propertyLinkService = new PropertyLinkService(this.app, this, this.settings);
+		this.propertyColorService = new PropertyColorService(this.app, this, this.settings);
 		this.statusBarOrderService = new StatusBarOrderService(this);
 
 		// Load Services
@@ -115,6 +118,7 @@ export default class CrystalPlugin extends Plugin {
 		this.gamificationManager.onLoad();
 		this.sidebarFocusCommands.onload();
 		this.propertyLinkService.onload();
+		this.propertyColorService.onload();
 		this.statusBarOrderService.onload();
 
 		// Gamification view (sidebar): full Lv/XP/streak/badge picture
@@ -271,6 +275,7 @@ export default class CrystalPlugin extends Plugin {
 		this.gitSummaryService.updateSettings(this.settings);
 		this.gamificationManager.updateSettings(this.settings);
 		this.propertyLinkService.updateSettings(this.settings);
+		this.propertyColorService.updateSettings(this.settings);
 		this.statusBarOrderService.updateSettings(this.settings);
 	}
 

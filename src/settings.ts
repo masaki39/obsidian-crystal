@@ -5,6 +5,7 @@ import { defaultVaultStatsPath, hasVaultStatsFile, lifetimeCharactersWritten, re
 import { promptForConfirmation } from './utils';
 import type { StatusBarOrderService } from './status-bar-order';
 import type { OpacityService } from './opacity-service';
+import { renderPropertyColorSection } from './property-color-settings';
 
 export interface FileOrganizationRule {
 	displayName: string;
@@ -23,6 +24,14 @@ export interface FileOrganizationRule {
 export interface PropertyLinkPair {
 	source: string;
 	target: string;
+}
+
+/** Text color for the name of one or more properties in the Properties editor. */
+export interface PropertyColorRule {
+	/** Property name, or several separated by commas (e.g. `status, priority`). */
+	property: string;
+	/** Hex color, e.g. `#e5484d`. */
+	color: string;
 }
 
 export interface CrystalPluginSettings {
@@ -108,6 +117,12 @@ export interface CrystalPluginSettings {
 	 * reciprocal link (e.g. `previous`) to the linked note. */
 	propertyLinkEnabled: boolean;
 	propertyLinkPairs: PropertyLinkPair[];
+	/** Per-property text colors for property names (see `PropertyColorService`). */
+	propertyColors: PropertyColorRule[];
+	/** Hex color for every property name without its own rule; empty keeps the theme's color. */
+	propertyColorDefault: string;
+	/** Id of the swatch palette offered in the settings (see `COLOR_PALETTES`). */
+	propertyColorPalette: string;
 	/** Ordered list of status-bar item keys (see `StatusBarOrderService`).
 	 * Empty means "don't touch the native order". */
 	statusBarOrder: string[];
@@ -174,6 +189,9 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	gamificationCharsBadgeBaseline: 0,
 	propertyLinkEnabled: false,
 	propertyLinkPairs: [],
+	propertyColors: [],
+	propertyColorDefault: '',
+	propertyColorPalette: 'tokyo-night',
 	statusBarOrder: [],
 	statusBarHidden: [],
 }
@@ -340,6 +358,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 			{ id: 'marp', label: 'Marp', icon: 'presentation', render: (el) => this.renderMarpSection(el) },
 			{ id: 'quartz', label: 'Quartz', icon: 'globe', render: (el) => this.renderQuartzSection(el) },
 			{ id: 'property-link', label: 'Property link', icon: 'link', render: (el) => this.renderPropertyLinkSection(el) },
+			{ id: 'property-colors', label: 'Property colors', icon: 'palette', render: (el) => renderPropertyColorSection(el, this.app, this.plugin) },
 			{ id: 'status-bar', label: 'Status bar', icon: 'panel-bottom', render: (el) => this.renderStatusBarSection(el) },
 			{ id: 'file-rules', label: 'File rules', icon: 'folder-tree', render: (el) => this.renderFileOrganizationSection(el) },
 		];

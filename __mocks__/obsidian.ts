@@ -36,6 +36,7 @@ export class Plugin {
 
 export class PluginSettingTab {}
 export class Setting {}
+export class AbstractInputSuggest {}
 export class App {}
 
 export class ItemView {
