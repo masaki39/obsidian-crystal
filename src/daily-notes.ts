@@ -152,14 +152,30 @@ export class DailyNotesManager {
                 const todo: string[] = [];
                 const otherBullets: string[] = [];
 
+                // Group each top-level item with its nested lines so children move with their parent.
+                const indentOf = (line: string) => line.length - line.trimStart().length;
+                const baseIndent = Math.min(...buffer.map(indentOf));
+                const groups: string[][] = [];
                 for (const line of buffer) {
-                    const trimmed = line.trim();
-                    if (/^- \[[xX]\]/.test(trimmed)) {
-                        done.push(line);
-                    } else if (/^- \[\s?\]/.test(trimmed)) {
-                        todo.push(line);
+                    if (indentOf(line) <= baseIndent || groups.length === 0) {
+                        groups.push([line]);
                     } else {
-                        otherBullets.push(line);
+                        groups[groups.length - 1].push(line);
+                    }
+                }
+
+                const isDone = (line: string) => /^- \[[xX]\]/.test(line.trim());
+                const isTodo = (line: string) => /^- \[\s?\]/.test(line.trim());
+
+                for (const group of groups) {
+                    const [head, ...children] = group;
+                    if (isDone(head)) {
+                        // A checked parent stays with the todos until every nested task is checked.
+                        (children.some(isTodo) ? todo : done).push(...group);
+                    } else if (isTodo(head)) {
+                        todo.push(...group);
+                    } else {
+                        otherBullets.push(...group);
                     }
                 }
 

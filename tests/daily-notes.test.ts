@@ -220,4 +220,36 @@ describe('DailyNotesManager auto sort before timeline', () => {
 			].join('\n')
 		);
 	});
+	it('keeps nested items with their parent and treats a parent as done only when all nested tasks are done', () => {
+		const { manager } = createManager();
+		const before = [
+			'- [ ] todo1',
+			'- [x] parent-partial',
+			'\t- [x] child-done',
+			'\t- [ ] child-todo',
+			'- [x] parent-complete',
+			'\t- [x] child-a',
+			'\t- note',
+			'- [ ] parent-todo',
+			'\t- [x] child-b',
+			''
+		].join('\n');
+
+		const ordered = (manager as any).orderTaskList(before);
+
+		expect(ordered).toBe(
+			[
+				'- [x] parent-complete',
+				'\t- [x] child-a',
+				'\t- note',
+				'- [ ] todo1',
+				'- [x] parent-partial',
+				'\t- [x] child-done',
+				'\t- [ ] child-todo',
+				'- [ ] parent-todo',
+				'\t- [x] child-b',
+				''
+			].join('\n')
+		);
+	});
 });
