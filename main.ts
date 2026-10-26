@@ -23,6 +23,7 @@ import { SidebarFocusCommands } from './src/sidebar-focus';
 import { PropertyLinkService } from './src/property-link';
 import { PropertyColorService } from './src/property-color';
 import { StatusBarOrderService } from './src/status-bar-order';
+import { HackerModeService } from './src/hacker-mode';
 
 // Crystal Plugin for Obsidian
 
@@ -70,6 +71,7 @@ export default class CrystalPlugin extends Plugin {
 	private propertyLinkService: PropertyLinkService;
 	private propertyColorService: PropertyColorService;
 	statusBarOrderService: StatusBarOrderService;
+	hackerModeService: HackerModeService;
 
 	async onload() {
 		await this.loadSettings();
@@ -101,6 +103,7 @@ export default class CrystalPlugin extends Plugin {
 		this.propertyLinkService = new PropertyLinkService(this.app, this, this.settings);
 		this.propertyColorService = new PropertyColorService(this.app, this, this.settings);
 		this.statusBarOrderService = new StatusBarOrderService(this);
+		this.hackerModeService = new HackerModeService(this);
 
 		// Load Services
 		this.blueskyService.onload();
@@ -120,6 +123,7 @@ export default class CrystalPlugin extends Plugin {
 		this.propertyLinkService.onload();
 		this.propertyColorService.onload();
 		this.statusBarOrderService.onload();
+		this.hackerModeService.onload();
 
 		// Gamification view (sidebar): full Lv/XP/streak/badge picture
 		this.registerView(
@@ -207,6 +211,7 @@ export default class CrystalPlugin extends Plugin {
 		this.gamificationManager?.flushPendingSave();
 		this.opacityService?.onunload();
 		this.statusBarOrderService?.onunload();
+		this.hackerModeService?.onunload();
 		// 起動した Marp サーバーを残さない（Obsidian終了・プラグイン無効化・リロード時）
 		this.marpCommands?.onunload();
 		this.marpCursorSync?.onunload();
@@ -277,6 +282,7 @@ export default class CrystalPlugin extends Plugin {
 		this.propertyLinkService.updateSettings(this.settings);
 		this.propertyColorService.updateSettings(this.settings);
 		this.statusBarOrderService.updateSettings(this.settings);
+		this.hackerModeService.updateSettings();
 	}
 
 }

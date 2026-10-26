@@ -1268,6 +1268,8 @@ export class GamificationManager {
     private flash(segments: StatusSegment[], duration: number) {
         if (!this.statusBarItem || !this.settings.gamificationEnabled) return;
 
+        // Lets hacker mode echo the moment with its own banner.
+        this.app.workspace.trigger(GAMIFICATION_FLASH_EVENT, segments.map(seg => seg.text).join(' '), duration);
         this.setStatusBarContent(segments);
         this.statusBarItem.addClass('crystal-gamification-status--flash');
 
@@ -1315,6 +1317,9 @@ export class GamificationManager {
         });
     }
 }
+
+/** Workspace event fired on every reward flash with `(text, durationMs)`; hacker mode listens to it. */
+export const GAMIFICATION_FLASH_EVENT = 'crystal:gamification-flash';
 
 interface StatusSegment {
     icon?: string;

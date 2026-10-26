@@ -885,3 +885,269 @@ textarea.crystal-modal-input {
 .crystal-color-swatches .crystal-color-swatch.is-active {
 	box-shadow: 0 0 0 2px var(--text-normal);
 }
+
+/* Hacker mode ------------------------------------------------------------ */
+body {
+	--crystal-hx-color-fallback: #00ff9c;
+}
+
+.crystal-hx-canvas {
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+}
+
+.crystal-hx-typing-canvas {
+	z-index: 40;
+}
+
+.crystal-hx-matrix-bg {
+	z-index: 25;
+	mix-blend-mode: screen;
+}
+
+/* CRT: scanlines + vignette + faint flicker, never intercepts input */
+.crystal-hx-crt {
+	position: fixed;
+	inset: 0;
+	z-index: 90;
+	pointer-events: none;
+	background:
+		radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.35) 100%),
+		repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.12) 0, rgba(0, 0, 0, 0.12) 1px, transparent 1px, transparent 3px);
+	animation: crystal-hx-flicker 4s infinite steps(1);
+}
+
+@keyframes crystal-hx-flicker {
+	0%, 100% { opacity: 1; }
+	47% { opacity: 0.92; }
+	48% { opacity: 1; }
+	83% { opacity: 0.96; }
+}
+
+/* Phosphor glow + accent caret */
+body.crystal-hacker .markdown-source-view .cm-content {
+	caret-color: var(--crystal-hx-color, var(--crystal-hx-color-fallback));
+}
+
+body.crystal-hx-glow .markdown-source-view .cm-content,
+body.crystal-hx-glow .markdown-preview-view {
+	text-shadow: 0 0 6px color-mix(in srgb, var(--crystal-hx-color, var(--crystal-hx-color-fallback)) 40%, transparent);
+}
+
+/* Combo counter */
+.crystal-hx-combo {
+	position: fixed;
+	right: 28px;
+	bottom: 48px;
+	z-index: 40;
+	pointer-events: none;
+	font-family: var(--font-monospace);
+	color: var(--crystal-hx-color, var(--crystal-hx-color-fallback));
+	text-align: right;
+	opacity: 0;
+	transition: opacity 0.3s;
+	text-shadow: 0 0 8px currentColor;
+}
+
+.crystal-hx-combo.is-visible {
+	opacity: 1;
+}
+
+.crystal-hx-combo.is-hot {
+	color: #ff3b5c;
+}
+
+.crystal-hx-combo-label {
+	font-size: 11px;
+	letter-spacing: 0.3em;
+}
+
+.crystal-hx-combo-count {
+	font-size: 36px;
+	font-weight: 700;
+	line-height: 1;
+}
+
+.crystal-hx-combo-count.is-pop {
+	animation: crystal-hx-pop 0.15s ease-out;
+}
+
+@keyframes crystal-hx-pop {
+	from { transform: scale(1.35); }
+	to { transform: scale(1); }
+}
+
+/* Boot sequence */
+.crystal-hx-boot {
+	position: fixed;
+	inset: 0;
+	z-index: 100;
+	padding: 48px;
+	background: #000;
+	color: var(--crystal-hx-color, var(--crystal-hx-color-fallback));
+	font-family: var(--font-monospace);
+	font-size: 14px;
+	line-height: 1.7;
+	text-shadow: 0 0 6px currentColor;
+	transition: opacity 0.4s;
+}
+
+.crystal-hx-boot.is-leaving {
+	opacity: 0;
+}
+
+.crystal-hx-boot-line {
+	display: flex;
+	gap: 1em;
+	max-width: 720px;
+	animation: crystal-hx-line-in 0.08s steps(2);
+}
+
+.crystal-hx-boot-text {
+	flex: 1;
+}
+
+.crystal-hx-boot-status.is-ok {
+	color: var(--crystal-hx-color, var(--crystal-hx-color-fallback));
+}
+
+.crystal-hx-boot-status.is-warn {
+	color: #ffcc00;
+}
+
+.crystal-hx-boot-granted {
+	margin-top: 1.5em;
+	font-size: 32px;
+	font-weight: 700;
+	letter-spacing: 0.2em;
+	animation: crystal-hx-blink 0.25s steps(1) 3;
+}
+
+@keyframes crystal-hx-line-in {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+@keyframes crystal-hx-blink {
+	50% { opacity: 0; }
+}
+
+/* Status bar HUD */
+.crystal-hx-hud {
+	gap: 0.8em;
+	font-family: var(--font-monospace);
+	color: var(--crystal-hx-color, var(--crystal-hx-color-fallback));
+}
+
+.crystal-hx-hud-spark {
+	letter-spacing: -0.05em;
+}
+
+/* Title decode */
+.crystal-hx-decoding {
+	color: transparent !important;
+}
+
+.crystal-hx-decode {
+	position: fixed;
+	z-index: 40;
+	pointer-events: none;
+	overflow: hidden;
+	white-space: pre-wrap;
+	color: var(--crystal-hx-color, var(--crystal-hx-color-fallback));
+	text-shadow: 0 0 8px currentColor;
+}
+
+/* Reward banner / toast */
+.crystal-hx-banner {
+	position: fixed;
+	top: 38%;
+	left: 50%;
+	z-index: 95;
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+	padding: 18px 36px;
+	border: 1px solid var(--crystal-hx-color, var(--crystal-hx-color-fallback));
+	background: rgba(0, 0, 0, 0.85);
+	box-shadow: 0 0 24px color-mix(in srgb, var(--crystal-hx-color, var(--crystal-hx-color-fallback)) 50%, transparent);
+	color: var(--crystal-hx-color, var(--crystal-hx-color-fallback));
+	font-family: var(--font-monospace);
+	text-align: center;
+	animation: crystal-hx-banner-in 0.35s steps(4);
+	transition: opacity 0.4s;
+}
+
+.crystal-hx-banner-kicker {
+	font-size: 12px;
+	letter-spacing: 0.4em;
+	opacity: 0.8;
+}
+
+.crystal-hx-banner-text {
+	position: relative;
+	font-size: 40px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-shadow: 0 0 10px currentColor;
+}
+
+.crystal-hx-banner-text::before,
+.crystal-hx-banner-text::after {
+	content: attr(data-text);
+	position: absolute;
+	inset: 0;
+	text-shadow: none;
+}
+
+.crystal-hx-banner-text::before {
+	color: #ff0050;
+	animation: crystal-hx-split 1.2s infinite steps(1);
+}
+
+.crystal-hx-banner-text::after {
+	color: #00e5ff;
+	animation: crystal-hx-split 1.2s infinite steps(1) reverse;
+}
+
+@keyframes crystal-hx-split {
+	0% { clip-path: inset(0 0 70% 0); transform: translate(-3px, 0); }
+	25% { clip-path: inset(60% 0 10% 0); transform: translate(3px, 0); }
+	50% { clip-path: inset(30% 0 40% 0); transform: translate(-2px, 0); }
+	75% { clip-path: inset(0 0 100% 0); transform: none; }
+}
+
+@keyframes crystal-hx-banner-in {
+	0% { opacity: 0; transform: translate(-50%, -50%) scaleY(0.05); }
+	50% { opacity: 1; transform: translate(-50%, -50%) scaleY(0.05); }
+	100% { transform: translate(-50%, -50%) scaleY(1); }
+}
+
+.crystal-hx-toast {
+	position: fixed;
+	top: 48px;
+	right: 24px;
+	z-index: 95;
+	pointer-events: none;
+	padding: 4px 12px;
+	border-left: 2px solid var(--crystal-hx-color, var(--crystal-hx-color-fallback));
+	background: rgba(0, 0, 0, 0.8);
+	color: var(--crystal-hx-color, var(--crystal-hx-color-fallback));
+	font-family: var(--font-monospace);
+	font-size: 13px;
+	animation: crystal-hx-line-in 0.15s steps(3);
+	transition: opacity 0.4s;
+}
+
+.crystal-hx-banner.is-leaving,
+.crystal-hx-toast.is-leaving {
+	opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.crystal-hx-crt,
+	.crystal-hx-banner-text::before,
+	.crystal-hx-banner-text::after {
+		animation: none;
+	}
+}

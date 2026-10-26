@@ -6,6 +6,7 @@ import { promptForConfirmation } from './utils';
 import type { StatusBarOrderService } from './status-bar-order';
 import type { OpacityService } from './opacity-service';
 import { renderPropertyColorSection } from './property-color-settings';
+import { renderHackerModeSection } from './hacker-settings';
 
 export interface FileOrganizationRule {
 	displayName: string;
@@ -33,6 +34,29 @@ export interface PropertyColorRule {
 	/** Hex color, e.g. `#e5484d`. */
 	color: string;
 }
+
+/** Individual effects of hacker mode (see `HackerModeService`). */
+export interface HackerEffectToggles {
+	crt: boolean;
+	glow: boolean;
+	typingParticles: boolean;
+	boot: boolean;
+	hud: boolean;
+	matrixBackground: boolean;
+	titleDecode: boolean;
+	rewardBanner: boolean;
+}
+
+export const DEFAULT_HACKER_EFFECTS: HackerEffectToggles = {
+	crt: true,
+	glow: true,
+	typingParticles: true,
+	boot: true,
+	hud: true,
+	matrixBackground: false,
+	titleDecode: true,
+	rewardBanner: true,
+};
 
 export interface CrystalPluginSettings {
 	exportFolderPath: string;
@@ -128,6 +152,13 @@ export interface CrystalPluginSettings {
 	statusBarOrder: string[];
 	/** Status-bar item keys to hide. */
 	statusBarHidden: string[];
+	/** Master switch for the visual/sound effects of hacker mode. */
+	hackerModeEnabled: boolean;
+	/** Accent color shared by every hacker-mode effect. */
+	hackerColor: string;
+	hackerEffects: HackerEffectToggles;
+	/** Opacity of the background digital rain (0–1). */
+	hackerMatrixOpacity: number;
 }
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
@@ -194,6 +225,10 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	propertyColorPalette: 'tokyo-night',
 	statusBarOrder: [],
 	statusBarHidden: [],
+	hackerModeEnabled: false,
+	hackerColor: '#00ff9c',
+	hackerEffects: { ...DEFAULT_HACKER_EFFECTS },
+	hackerMatrixOpacity: 0.15,
 }
 
 /** One entry in the settings tab's own top navigation (unrelated to Obsidian's
@@ -359,6 +394,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 			{ id: 'quartz', label: 'Quartz', icon: 'globe', render: (el) => this.renderQuartzSection(el) },
 			{ id: 'property-link', label: 'Property link', icon: 'link', render: (el) => this.renderPropertyLinkSection(el) },
 			{ id: 'property-colors', label: 'Property colors', icon: 'palette', render: (el) => renderPropertyColorSection(el, this.app, this.plugin) },
+			{ id: 'hacker-mode', label: 'Hacker mode', icon: 'terminal', render: (el) => renderHackerModeSection(el, this.plugin) },
 			{ id: 'status-bar', label: 'Status bar', icon: 'panel-bottom', render: (el) => this.renderStatusBarSection(el) },
 			{ id: 'file-rules', label: 'File rules', icon: 'folder-tree', render: (el) => this.renderFileOrganizationSection(el) },
 		];
