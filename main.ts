@@ -4,6 +4,7 @@ import { GeminiService } from './src/gemini-service';
 import { BlueskyService } from './src/bluesky-service';
 import { DailyNotesManager } from './src/daily-notes';
 import { DailyNoteWeekday } from './src/daily-note-weekday';
+import { DailyDraft } from './src/daily-draft';
 import { GyazoService } from './src/gyazo-service';
 import { GyazoImageMigrator } from './src/gyazo-image-migrator';
 import { GyazoLocalImageMigrator } from './src/gyazo-local-image-migrator';
@@ -53,6 +54,7 @@ export default class CrystalPlugin extends Plugin {
 	private blueskyService: BlueskyService;
 	private dailyNotesManager: DailyNotesManager;
 	private dailyNoteWeekday: DailyNoteWeekday;
+	private dailyDraft: DailyDraft;
 	private gyazoService: GyazoService;
 	private gyazoImageMigrator: GyazoImageMigrator;
 	private gyazoLocalImageMigrator: GyazoLocalImageMigrator;
@@ -80,6 +82,7 @@ export default class CrystalPlugin extends Plugin {
 		this.geminiService = new GeminiService(this.app, this, this.settings);
 		this.dailyNotesManager = new DailyNotesManager(this.app, this.settings, this);
 		this.dailyNoteWeekday = new DailyNoteWeekday(this.app, this, this.settings);
+		this.dailyDraft = new DailyDraft(this.app, this, this.settings, this.dailyNotesManager);
 		this.gyazoService = new GyazoService(this.settings);
 		this.gyazoImageMigrator = new GyazoImageMigrator(this.gyazoService);
 		this.gyazoLocalImageMigrator = new GyazoLocalImageMigrator(this.app, this.gyazoService);
@@ -110,6 +113,7 @@ export default class CrystalPlugin extends Plugin {
 		this.quartzService.onload();
 		this.dailyNotesManager.onLoad();
 		this.dailyNoteWeekday.onload();
+		this.dailyDraft.onload();
 		this.marpCommands.onload();
 		this.marpCursorSync.onload();
 		this.marpSlideToolbar.onload();
@@ -270,6 +274,7 @@ export default class CrystalPlugin extends Plugin {
 		await this.blueskyService.updateSettings(this.settings);
 		this.dailyNotesManager.updateSettings(this.settings);
 		this.dailyNoteWeekday.updateSettings(this.settings);
+		this.dailyDraft.updateSettings(this.settings);
 		this.imagePasteAndDropHandler.updateSettings(this.settings);
 		this.editorCommands.updateSettings(this.settings);
 		this.gyazoService.updateSettings(this.settings);

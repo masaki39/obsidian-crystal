@@ -80,6 +80,8 @@ export interface CrystalPluginSettings {
 	dailyNoteShowWeekday: boolean;
 	/** moment.js format for the weekday label (follows Obsidian's language). */
 	dailyNoteWeekdayFormat: string;
+	/** Note used by "Daily: Open draft" / "Daily: Post draft to timeline". */
+	dailyNoteDraftPath: string;
 	webpQuality: number;
 	imageResizeScale: number;
 	imageMaxSize: number;
@@ -179,6 +181,7 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	dailyNoteNewestFirst: false,
 	dailyNoteShowWeekday: true,
 	dailyNoteWeekdayFormat: 'dddd',
+	dailyNoteDraftPath: 'tmp.md',
 	webpQuality: 0.85,
 	imageResizeScale: 0.8,
 	imageMaxSize: 700,
@@ -607,6 +610,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 		this.toggleSetting(containerEl, 'Newest First (Daily Notes)', 'Place new daily note entries at the top (tasks, links, timeline)', 'dailyNoteNewestFirst');
 		this.toggleSetting(containerEl, 'Show weekday after inline title', 'Display the day of the week next to the inline title of daily notes', 'dailyNoteShowWeekday');
 		this.textSetting(containerEl, 'Weekday format', 'moment.js format for the weekday label (e.g. dddd, ddd, (ddd)). Follows Obsidian\'s language', 'dailyNoteWeekdayFormat', 'dddd');
+		this.textSetting(containerEl, 'Draft note path', 'Note opened by "Daily: Open draft". "Daily: Post draft to timeline" appends its text to today\'s timeline and empties it', 'dailyNoteDraftPath', 'tmp.md');
 	}
 
 	private renderGamificationSection(containerEl: HTMLElement) {

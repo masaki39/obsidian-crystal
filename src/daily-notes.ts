@@ -1,6 +1,7 @@
 import { App, Plugin, TFile, MarkdownView, Notice } from 'obsidian';
 import { CrystalPluginSettings } from './settings';
 import { parseFrontmatter, promptForText } from './utils';
+import { resolveDraftPath } from './daily-draft';
 import {
     appHasDailyNotesPluginLoaded,
     createDailyNote,
@@ -239,11 +240,12 @@ export class DailyNotesManager {
         }
     }
 
-    async appendToTimeline(text: string, date: Date = new Date(), color?: string): Promise<void> {
+    /** Returns whether the block was written. */
+    async appendToTimeline(text: string, date: Date = new Date(), color?: string): Promise<boolean> {
         try {
             const file = await this.ensureDailyNoteFile(date);
             if (!file) {
-                return;
+                return false;
             }
             const heading = this.settings.dailyNoteTimelineHeading || '# Time Line';
             const content = await this.app.vault.read(file);
@@ -284,8 +286,10 @@ export class DailyNotesManager {
             const updatedTimeline = timelineLines.join('\n');
             const newContent = recombineSections(before, updatedTimeline);
             await this.app.vault.modify(file, newContent.endsWith('\n') ? newContent : newContent + '\n');
+            return true;
         } catch (error) {
             console.error('Error appending to timeline:', error);
+            return false;
         }
     }
 
@@ -434,6 +438,10 @@ export class DailyNotesManager {
                     const todayNotePath = this.getDailyNoteFilePath(new Date());
                     // Skip when the created file is today's note itself (avoids a self-link).
                     if (todayNotePath && file.path === todayNotePath) {
+                        return;
+                    }
+                    // The draft note is scratch space, not a note worth linking.
+                    if (file.path === resolveDraftPath(this.settings.dailyNoteDraftPath)) {
                         return;
                     }
                     const todayNote = todayNotePath ? this.app.vault.getAbstractFileByPath(todayNotePath) : null;
