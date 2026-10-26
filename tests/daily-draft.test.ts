@@ -1,4 +1,4 @@
-import { extractDraftBody, resolveDraftPath } from '../src/daily-draft';
+import { extractDraftBody, resolveDraftPath, splitDraftImages } from '../src/daily-draft';
 
 describe('resolveDraftPath', () => {
 	test('appends .md and strips a leading slash', () => {
@@ -21,5 +21,26 @@ describe('extractDraftBody', () => {
 
 	test('returns an empty string for a blank draft', () => {
 		expect(extractDraftBody('---\ntags: draft\n---\n\n  \n')).toBe('');
+	});
+});
+
+describe('splitDraftImages', () => {
+	test('pulls out remote, relative and wiki image embeds', () => {
+		const body = 'hello\n![](https://i.gyazo.com/abc.png)\n![x](attachments/a%20b.webp)\n![[shot.jpg|300]]\nbye';
+		expect(splitDraftImages(body)).toEqual({
+			text: 'hello\n\nbye',
+			images: [
+				{ kind: 'url', target: 'https://i.gyazo.com/abc.png' },
+				{ kind: 'vault', target: 'attachments/a b.webp' },
+				{ kind: 'vault', target: 'shot.jpg' },
+			],
+		});
+	});
+
+	test('leaves non-image embeds in the text', () => {
+		expect(splitDraftImages('see ![[note]] and ![](doc.pdf)')).toEqual({
+			text: 'see ![[note]] and ![](doc.pdf)',
+			images: [],
+		});
 	});
 });

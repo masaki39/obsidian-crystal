@@ -479,7 +479,8 @@ export class BlueskyService {
 	}
 
 	// imageFiles: up to 4 images; gyazoUrls: corresponding Gyazo URLs for daily note
-	async post(text: string, gyazoUrls: string[] = [], imageFiles: File[] = []): Promise<void> {
+	/** `dailyNoteText` replaces the text (and images) added to the daily note, when given. */
+	async post(text: string, gyazoUrls: string[] = [], imageFiles: File[] = [], dailyNoteText?: string): Promise<void> {
 		if (!this.isAvailable()) {
 			throw new Error('Bluesky認証情報が設定されていません');
 		}
@@ -509,7 +510,7 @@ export class BlueskyService {
 			}
 		}
 
-		await this.appendPostToDailyNote(text, gyazoUrls);
+		await this.appendPostToDailyNote(dailyNoteText ?? text, dailyNoteText === undefined ? gyazoUrls : []);
 	}
 
 	private async createPost(text: string, imageFiles: File[]): Promise<void> {
