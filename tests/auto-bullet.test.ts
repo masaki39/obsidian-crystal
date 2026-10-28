@@ -55,6 +55,10 @@ describe('auto bullet: fires', () => {
 		expect(type('---\ntitle: x\n...\n|', ' ')).toEqual({ line: '- ', ch: 2 });
 	});
 
+	it('4b. a #tag line is not a heading', () => {
+		expect(type('|#tag', ' ')).toEqual({ line: '- #tag', ch: 2 });
+	});
+
 	it('7. after a closed code block', () => {
 		expect(type('```js\nconst a = 1;\n```\n|', ' ')).toEqual({ line: '- ', ch: 2 });
 		expect(type('~~~\ncode\n~~~\n|', ' ')).toEqual({ line: '- ', ch: 2 });
@@ -99,6 +103,12 @@ describe('auto bullet: does not fire', () => {
 			expect(type(`${line.slice(0, indent)}|${line.slice(indent)}`, ' ')).toBeNull();
 		}
 	);
+
+	it('11b. on an existing list item with a full-width space', () => {
+		expect(type('|- a', FULL)).toBeNull();
+		expect(type('|1. a', FULL)).toBeNull();
+		expect(type(`${FULL}|- [ ] a`, FULL)).toBeNull();
+	});
 
 	it.each(['# a', '### a', '> a', '> [!note] title'])('12. on a heading / quote / callout %j', (line) => {
 		expect(type(`|${line}`, ' ')).toBeNull();
@@ -208,6 +218,33 @@ describe('auto bullet: CodeMirror input filter', () => {
 		expect(insert(state, ' ', 'input.type').state.doc.toString()).toBe('- ');
 	});
 
+	it.each(['undo', 'redo', 'input.drop'])('leaves %s alone', (userEvent) => {
+		expect(insert(stateWith('', 0), ' ', userEvent).state.doc.toString()).toBe(' ');
+	});
+
+	it('leaves typing over a selection alone', () => {
+		const start = EditorState.create({
+			doc: 'foo',
+			selection: EditorSelection.range(0, 3),
+			extensions: [autoBulletInputFilter(() => ALL_ON)],
+		});
+		const tr = start.update({ changes: { from: 0, to: 3, insert: ' ' }, userEvent: 'input.type' });
+		expect(tr.state.doc.toString()).toBe(' ');
+	});
+
+	it('leaves an insert away from the cursor alone', () => {
+		const start = stateWith('foo\n', 2);
+		expect(insert(start, ' ', 'input.type', 4).state.doc.toString()).toBe('foo\n ');
+	});
+
+	it('works on a line after frontmatter and code in a real document', () => {
+		const doc = '---\nt: 1\n---\n```\ncode\n```\nfoo';
+		const tr = insert(stateWith(doc, doc.length - 3), ' ', 'input.type');
+		expect(tr.state.doc.toString()).toBe('---\nt: 1\n---\n```\ncode\n```\n- foo');
+		const inside = insert(stateWith(doc, doc.indexOf('code')), ' ', 'input.type');
+		expect(inside.state.doc.toString()).toBe('---\nt: 1\n---\n```\n code\n```\nfoo');
+	});
+
 	it('leaves excluded lines alone', () => {
 		expect(insert(stateWith('# a', 0), ' ', 'input.type').state.doc.toString()).toBe(' # a');
 	});
@@ -283,6 +320,22 @@ describe('auto bullet: Tab command', () => {
 		const target = view('foo', 0);
 		target.state = target.state.update({ selection: EditorSelection.range(0, 3) }).state;
 		expect(autoBulletTabCommand(() => ALL_ON)(target)).toBe(false);
+	});
+
+	it.each([
+		['a heading', '# a', 0],
+		['a table row', '| a | b |', 0],
+		['the frontmatter', '---\nt: 1\n---', 4],
+	])('falls through on %s', (_name, doc, cursor) => {
+		const target = view(doc, cursor);
+		expect(autoBulletTabCommand(() => ALL_ON)(target)).toBe(false);
+		expect(target.state.doc.toString()).toBe(doc);
+	});
+
+	it('replaces a whitespace-only line', () => {
+		const target = view('  ', 2);
+		expect(autoBulletTabCommand(() => ALL_ON)(target)).toBe(true);
+		expect(target.state.doc.toString()).toBe('- ');
 	});
 
 	it('falls through inside a code block', () => {
