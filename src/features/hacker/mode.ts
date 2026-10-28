@@ -7,7 +7,7 @@ import { MatrixRain } from './matrix';
 import { TypingFx } from './typing';
 import { BootSequence } from './boot';
 import { HackerHud } from './hud';
-import { GAMIFICATION_FLASH_EVENT } from '../gamification/manager';
+import { GAMIFICATION_FLASH_EVENT } from '../gamification/types';
 import { clearGlitchOverlays, decodeTitle, showRewardBanner } from './glitch';
 
 type PluginHost = Plugin & { settings: CrystalPluginSettings; saveSettings(): Promise<void> };

@@ -19,7 +19,7 @@ import {
 	SPECIAL_BADGE_IDS,
 	sumRecentXP,
 	titleForLevel,
-} from '../src/features/gamification/manager';
+} from '../src/features/gamification';
 
 describe('countCompletedTasks', () => {
 	it('counts checked tasks and ignores unchecked ones', () => {

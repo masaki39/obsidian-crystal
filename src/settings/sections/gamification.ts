@@ -1,6 +1,6 @@
 import { App, Setting } from 'obsidian';
 import type { CrystalPluginHost } from '../../types';
-import { calculateLevel } from '../../features/gamification/manager';
+import { calculateLevel } from '../../features/gamification/rules/level';
 import { defaultVaultStatsPath, hasVaultStatsFile, lifetimeCharactersWritten, readVaultStats } from '../../features/gamification/word-stats';
 import { promptForConfirmation } from '../../shared/ui/confirm-modal';
 import { sectionHeading, toggleSetting } from '../components';
