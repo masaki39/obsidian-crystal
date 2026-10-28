@@ -82,10 +82,10 @@ function startsMath(line: string): boolean {
 	return line.trimStart().startsWith('$$');
 }
 
-/** `$$ ... $$` on a single line opens and closes at once. */
+/** `$$ ... $$` (anything may follow the closing `$$`) opens and closes on one line. */
 function isOneLineMath(line: string): boolean {
 	const trimmed = line.trim();
-	return trimmed.length >= 4 && trimmed.startsWith('$$') && trimmed.endsWith('$$');
+	return trimmed.startsWith('$$') && trimmed.indexOf('$$', 2) !== -1;
 }
 
 /**

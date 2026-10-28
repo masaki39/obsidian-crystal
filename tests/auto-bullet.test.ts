@@ -63,6 +63,10 @@ describe('auto bullet: fires', () => {
 	it('8. after a one-line $$x$$ math block', () => {
 		expect(type('$$x$$\n|', ' ')).toEqual({ line: '- ', ch: 2 });
 	});
+
+	it('8b. after a one-line math block with text after the closing $$', () => {
+		expect(type('$$a$$ b\n\n|x', ' ')).toEqual({ line: '- x', ch: 2 });
+	});
 });
 
 describe('auto bullet: does not fire', () => {
