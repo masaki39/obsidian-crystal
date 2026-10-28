@@ -1,5 +1,5 @@
 import { Notice } from 'obsidian';
-import type { CrystalPluginSettings } from './settings';
+import type { CrystalPluginSettings } from '../settings';
 const moment = require('moment');
 
 export interface ProcessedImage {

@@ -2,7 +2,7 @@ import { App, Notice, Plugin, TFile } from 'obsidian';
 import { getDateFromFile, getDailyNote, getAllDailyNotes } from 'obsidian-daily-notes-interface';
 const moment = require('moment');
 import type { CrystalPluginSettings } from './settings';
-import type { TerminalService } from './terminal-service';
+import type { TerminalService } from './shared/terminal-service';
 import type { GeminiService } from './gemini-service';
 
 export class GitSummaryService {

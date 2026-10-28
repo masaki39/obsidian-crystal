@@ -2,7 +2,7 @@ import { App, type IconName, Notice, PluginSettingTab, SearchComponent, Setting,
 import { AtpAgent } from '@atproto/api';
 import { calculateLevel } from '../gamification';
 import { defaultVaultStatsPath, hasVaultStatsFile, lifetimeCharactersWritten, readVaultStats } from '../word-stats';
-import { promptForConfirmation } from '../utils';
+import { promptForConfirmation } from '../shared/ui/prompt-modal';
 import type { StatusBarOrderService } from '../status-bar-order';
 import type { OpacityService } from '../opacity-service';
 import { renderPropertyColorSection } from '../property-color-settings';

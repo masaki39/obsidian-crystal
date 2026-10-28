@@ -1,6 +1,6 @@
 import { App, Editor, MarkdownView, Plugin } from 'obsidian';
 import type { CrystalPluginSettings } from './settings';
-import { ImageProcessor } from './image-processor';
+import { ImageProcessor } from './shared/image-processor';
 
 export class ImagePasteAndDropHandler {
 	private app: App;

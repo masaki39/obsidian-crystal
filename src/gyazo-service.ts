@@ -1,5 +1,5 @@
 import { Notice, Editor, requestUrl } from 'obsidian';
-import { ImageProcessor } from './image-processor';
+import { ImageProcessor } from './shared/image-processor';
 import type { CrystalPluginSettings } from './settings';
 
 export const EXTENSION_TO_MIME: Record<string, string> = {

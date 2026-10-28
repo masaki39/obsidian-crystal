@@ -1,6 +1,6 @@
 import { App, Plugin, TFile, MarkdownView, Notice } from 'obsidian';
 import type { CrystalPluginSettings } from './settings';
-import { parseFrontmatter, promptForText } from './utils';
+import { parseFrontmatter, promptForText } from './shared/ui/prompt-modal';
 import { resolveDraftPath } from './daily-draft';
 import {
     appHasDailyNotesPluginLoaded,

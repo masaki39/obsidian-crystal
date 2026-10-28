@@ -13,7 +13,7 @@ import { EditorCommands } from './src/editor-commands';
 import { MarpCommands } from './src/marp';
 import { MarpCursorSync } from './src/marp-sync';
 import { MarpSlideToolbar } from './src/marp-toolbar';
-import { TerminalService } from './src/terminal-service';
+import { TerminalService } from './src/shared/terminal-service';
 import { QuartzService } from './src/quartz-service';
 import { MacroCommands } from './src/macro';
 import { GitSummaryService } from './src/git-summary-service';
