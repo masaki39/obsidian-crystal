@@ -93,7 +93,7 @@ export default class CrystalPlugin extends Plugin {
 		// Load Services
 		this.blueskyService.onload();
 		this.quartzService.onload();
-		this.dailyNotesManager.onLoad();
+		this.dailyNotesManager.onload();
 		this.dailyNoteWeekday.onload();
 		this.dailyDraft.onload();
 		this.marpCommands.onload();
@@ -104,7 +104,7 @@ export default class CrystalPlugin extends Plugin {
 		this.macroCommands.onload();
 		this.gitSummaryService.onload();
 		this.opacityService.onload();
-		this.gamificationManager.onLoad();
+		this.gamificationManager.onload();
 		this.sidebarFocusCommands.onload();
 		this.propertyLinkService.onload();
 		this.propertyColorService.onload();

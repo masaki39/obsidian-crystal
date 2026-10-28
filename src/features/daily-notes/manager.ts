@@ -261,7 +261,7 @@ export class DailyNotesManager {
         }
     }
 
-    async onLoad() {
+    async onload() {
         registerDailyNoteCommands(this.plugin, this);
         registerDailyNoteAutoSort(this.app, this.plugin, () => this.settings);
         registerDailyNoteAutoLink(this.app, this.plugin, () => this.settings);

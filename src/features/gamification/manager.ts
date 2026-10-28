@@ -55,7 +55,7 @@ export class GamificationManager {
     private charStatsAvailable = false;
     private charStatsDebounceId: number | null = null;
     /** Reentrancy guard for `refreshWordStats`: it's invoked from three
-     * uncoordinated entry points (`onLoad`, `updateSettings`, and the
+     * uncoordinated entry points (`onload`, `updateSettings`, and the
      * debounced file-watch handler) and awaits a file read, so without this
      * two overlapping calls could both read the same pre-mutation state and
      * double-grant XP for the same milestone/goal crossing. */
@@ -91,7 +91,7 @@ export class GamificationManager {
         }
     }
 
-    onLoad() {
+    onload() {
         this.statusBar.mount(this.onStatusBarClick);
 
         this.plugin.registerEvent(
@@ -402,7 +402,7 @@ export class GamificationManager {
     /**
      * Re-read the Better Word Count stats file and update the cached snapshot
      * of it. Guarded against reentrancy: this is invoked from three
-     * uncoordinated entry points (`onLoad`, `updateSettings`, and the
+     * uncoordinated entry points (`onload`, `updateSettings`, and the
      * debounced file-watch handler), and its body awaits a file read before
      * mutating XP/milestone state — without this guard, two overlapping
      * calls could both read the same pre-mutation state and double-grant XP
