@@ -1,4 +1,4 @@
-import { weekdayLabel } from '../src/daily-note-weekday';
+import { weekdayLabel } from '../src/features/daily-notes/weekday';
 import { DEFAULT_SETTINGS } from '../src/settings';
 
 const moment = jest.requireActual('moment');

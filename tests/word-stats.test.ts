@@ -7,7 +7,7 @@ import {
 	lifetimeCharactersWritten,
 	sumCharactersInWindow,
 	VaultStatsFile,
-} from '../src/word-stats';
+} from '../src/features/gamification/word-stats';
 
 function statsFrom(history: Record<string, number>): VaultStatsFile {
 	const entries = Object.fromEntries(
