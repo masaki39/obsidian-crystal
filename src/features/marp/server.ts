@@ -4,7 +4,7 @@ const http = require('http');
 import type { ChildProcess } from 'child_process';
 import type { TerminalService } from '../../shared/terminal-service';
 import type { CrystalPluginSettings } from '../../settings';
-import { getThemeSetOption } from './export';
+import { getThemeSetOption } from './options';
 import { MARP_SERVER_ORIGIN, findMarpViewerLeaf, findMarpViewerLeaves, pageUrlForFile } from './server-url';
 import { slideNumberForLine } from './slide-index';
 

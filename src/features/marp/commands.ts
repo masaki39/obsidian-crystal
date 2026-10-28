@@ -1,7 +1,8 @@
 import { Editor, MarkdownView, Plugin } from 'obsidian';
 import type { TerminalService } from '../../shared/terminal-service';
 import type { CrystalPluginSettings } from '../../settings';
-import { MarpExporter, getThemeSetOption } from './export';
+import { MarpExporter } from './export';
+import { getThemeSetOption } from './options';
 import { MarpImages } from './images';
 import { goToAdjacentSlide, moveCurrentSlide } from './navigation';
 import { MarpServer } from './server';

@@ -1,7 +1,7 @@
 import { Editor, MarkdownView, Notice, Plugin, normalizePath, TFile } from 'obsidian';
 const path = require('path');
 import type { CrystalPluginSettings } from '../../settings';
-import { normalizeSettingPath } from './export';
+import { normalizeSettingPath } from './options';
 
 /** `![[image.png]]` embeds of the image types Marp handles; group 1 is the path. */
 export function wikilinkImageRegex(): RegExp {
