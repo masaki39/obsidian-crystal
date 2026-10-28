@@ -1,5 +1,5 @@
 import type { Plugin } from 'obsidian';
-import type { CrystalPluginSettings } from './settings';
+import type { CrystalPluginSettings } from '../../settings';
 
 type PluginHost = Plugin & { settings: CrystalPluginSettings; saveSettings(): Promise<void> };
 

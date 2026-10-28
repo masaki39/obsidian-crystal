@@ -1,5 +1,5 @@
 import { Platform, Plugin } from 'obsidian';
-import type { CrystalPluginSettings } from './settings';
+import type { CrystalPluginSettings } from '../../settings';
 
 export class OpacityService {
 	private plugin: Plugin & { settings: CrystalPluginSettings; saveSettings(): Promise<void> };
