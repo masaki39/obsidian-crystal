@@ -11,10 +11,6 @@ export function monospaceFont(size: number): string {
 	return `${size}px ${family || 'monospace'}`;
 }
 
-export function prefersReducedMotion(): boolean {
-	return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-}
-
 /**
  * A canvas covering the whole window (or `parent`) that never takes pointer
  * events, so effects can be drawn on top of the UI without blocking it.

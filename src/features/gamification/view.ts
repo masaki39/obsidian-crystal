@@ -1,5 +1,6 @@
 import { ItemView, setIcon, WorkspaceLeaf } from 'obsidian';
 import { type GamificationSnapshot, VIEW_TYPE_GAMIFICATION } from './types';
+import { prefersReducedMotion } from '../../shared/dom';
 
 export { VIEW_TYPE_GAMIFICATION };
 
@@ -74,14 +75,9 @@ export class GamificationView extends ItemView {
         return true;
     }
 
-    /** Respect the OS/browser-level "reduce motion" preference for every animation in this view. */
-    private prefersReducedMotion(): boolean {
-        return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    }
-
     /** Animate a bar's fill from 0 to `pct`% so every update feels like it's "filling up". */
     private animateBar(fillEl: HTMLElement, pct: number) {
-        if (this.prefersReducedMotion()) {
+        if (prefersReducedMotion()) {
             fillEl.style.width = `${pct}%`;
             return;
         }
@@ -95,7 +91,7 @@ export class GamificationView extends ItemView {
 
     /** Count a number up (or down) from `from` to `to` with an ease-out curve, instead of snapping. */
     private animateNumber(el: HTMLElement, from: number, to: number, duration = 500) {
-        if (from === to || this.prefersReducedMotion()) {
+        if (from === to || prefersReducedMotion()) {
             el.setText(String(to));
             return;
         }
