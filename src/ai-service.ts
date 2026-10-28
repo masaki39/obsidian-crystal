@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import { requestUrl } from 'obsidian';
-import { CrystalPluginSettings, DEFAULT_SETTINGS } from './settings';
+import { type CrystalPluginSettings, DEFAULT_SETTINGS } from './settings';
 
 export type AIProvider = 'gemini' | 'openai' | 'ollama';
 

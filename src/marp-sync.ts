@@ -1,6 +1,6 @@
 import { MarkdownView, Plugin, WorkspaceLeaf } from 'obsidian';
 import { EditorView, ViewUpdate } from '@codemirror/view';
-import { CrystalPluginSettings } from './settings';
+import type { CrystalPluginSettings } from './settings';
 import { lineForSlideNumber, slideNumberForLine } from './marp-slide-index';
 import {
 	WEBVIEWER_VIEW_TYPE,

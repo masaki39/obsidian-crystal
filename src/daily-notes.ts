@@ -1,5 +1,5 @@
 import { App, Plugin, TFile, MarkdownView, Notice } from 'obsidian';
-import { CrystalPluginSettings } from './settings';
+import type { CrystalPluginSettings } from './settings';
 import { parseFrontmatter, promptForText } from './utils';
 import { resolveDraftPath } from './daily-draft';
 import {

@@ -1,6 +1,6 @@
 import { Notice, Editor, requestUrl } from 'obsidian';
 import { ImageProcessor } from './image-processor';
-import { CrystalPluginSettings } from './settings';
+import type { CrystalPluginSettings } from './settings';
 
 export const EXTENSION_TO_MIME: Record<string, string> = {
 	png: 'image/png',

@@ -1,4 +1,4 @@
-import { App, IconName, Notice, Plugin, PluginSettingTab, SearchComponent, Setting, prepareSimpleSearch, requestUrl, setIcon } from 'obsidian';
+import { App, type IconName, Notice, Plugin, PluginSettingTab, SearchComponent, Setting, prepareSimpleSearch, requestUrl, setIcon } from 'obsidian';
 import { AtpAgent } from '@atproto/api';
 import { calculateLevel } from './gamification';
 import { defaultVaultStatsPath, hasVaultStatsFile, lifetimeCharactersWritten, readVaultStats } from './word-stats';

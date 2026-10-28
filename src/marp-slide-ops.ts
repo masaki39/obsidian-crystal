@@ -1,4 +1,4 @@
-import { SlideRange, scanSlides } from './marp-slide-index';
+import { type SlideRange, scanSlides } from './marp-slide-index';
 
 /** スライドの入れ替え結果（エディタへの置換指示） */
 export interface SlideMove {

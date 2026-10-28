@@ -1,5 +1,5 @@
 import { ItemView, setIcon, WorkspaceLeaf } from 'obsidian';
-import { GamificationSnapshot, VIEW_TYPE_GAMIFICATION } from './gamification';
+import { type GamificationSnapshot, VIEW_TYPE_GAMIFICATION } from './gamification';
 
 export { VIEW_TYPE_GAMIFICATION };
 

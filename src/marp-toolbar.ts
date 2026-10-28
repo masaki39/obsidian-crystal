@@ -1,6 +1,6 @@
 import { MarkdownView, Plugin, setIcon } from 'obsidian';
-import { CrystalPluginSettings } from './settings';
-import { MarpCommands } from './marp';
+import type { CrystalPluginSettings } from './settings';
+import type { MarpCommands } from './marp';
 import { slideRelativePath } from './marp-server-url';
 
 const HOST_CLASS = 'crystal-marp-toolbar-host';

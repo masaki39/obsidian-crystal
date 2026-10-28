@@ -1,5 +1,5 @@
-import { TerminalService } from "./terminal-service";
-import { CrystalPluginSettings } from "./settings";
+import type { TerminalService } from "./terminal-service";
+import type { CrystalPluginSettings } from "./settings";
 import { Plugin, Notice } from "obsidian";
 
 export class QuartzService {

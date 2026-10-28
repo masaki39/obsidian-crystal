@@ -1,5 +1,5 @@
 import { App, Editor, MarkdownView, Notice, TFile, Plugin } from 'obsidian';
-import { CrystalPluginSettings } from './settings';
+import type { CrystalPluginSettings } from './settings';
 import { AIService } from './ai-service';
 import { promptForText } from './utils';
 

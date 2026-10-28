@@ -1,5 +1,5 @@
 import { App, MarkdownView, Notice, Plugin, TFile, requestUrl } from 'obsidian';
-import { CrystalPluginSettings } from './settings';
+import type { CrystalPluginSettings } from './settings';
 import { parseFrontmatter } from './utils';
 import type { DailyNotesManager } from './daily-notes';
 import type { BlueskyService } from './bluesky-service';

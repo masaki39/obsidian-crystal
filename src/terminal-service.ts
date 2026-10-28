@@ -1,5 +1,5 @@
 import { ChildProcess, spawn } from "child_process";
-import { App } from 'obsidian';
+import type { App } from 'obsidian';
 
 export class TerminalService {
     private vaultPath: string;

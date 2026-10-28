@@ -3,12 +3,12 @@ const { shell } = require('electron');
 const http = require('http');
 const fs = require('fs').promises;
 const path = require('path');
-import { ChildProcess } from 'child_process';
-import { TerminalService } from './terminal-service';
+import type { ChildProcess } from 'child_process';
+import type { TerminalService } from './terminal-service';
 import { MARP_SERVER_ORIGIN, findMarpViewerLeaf, findMarpViewerLeaves, pageUrlForFile } from './marp-server-url';
 import { lineForSlideNumber, slideNumberForLine } from './marp-slide-index';
 import { moveSlide } from './marp-slide-ops';
-import { CrystalPluginSettings } from './settings';
+import type { CrystalPluginSettings } from './settings';
 
 export class MarpCommands {
 	private terminalService: TerminalService;

@@ -1,5 +1,5 @@
 import { Editor, MarkdownView, Plugin } from 'obsidian';
-import { CrystalPluginSettings, DEFAULT_SETTINGS, CrystalSettingTab } from './src/settings';
+import { type CrystalPluginSettings, DEFAULT_SETTINGS, CrystalSettingTab } from './src/settings';
 import { GeminiService } from './src/gemini-service';
 import { BlueskyService } from './src/bluesky-service';
 import { DailyNotesManager } from './src/daily-notes';

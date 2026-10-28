@@ -1,6 +1,6 @@
-import { Editor, MarkdownView, Plugin } from 'obsidian';
-import { MarpCommands } from './marp';
-import { EditorCommands } from './editor-commands';
+import type { Editor, MarkdownView, Plugin } from 'obsidian';
+import type { MarpCommands } from './marp';
+import type { EditorCommands } from './editor-commands';
 
 export class MacroCommands {
 	private marpCommands: MarpCommands;

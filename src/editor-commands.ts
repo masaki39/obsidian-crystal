@@ -1,5 +1,5 @@
 import { App, Editor, MarkdownView, Notice, SuggestModal, Plugin, WorkspaceLeaf, setIcon } from 'obsidian';
-import { CrystalPluginSettings, FileOrganizationRule } from './settings';
+import type { CrystalPluginSettings, FileOrganizationRule } from './settings';
 import { parseFrontmatter, promptForText } from './utils';
 import * as path from 'path';
 

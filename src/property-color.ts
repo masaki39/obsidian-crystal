@@ -1,4 +1,4 @@
-import { App, Plugin } from 'obsidian';
+import type { App, Plugin } from 'obsidian';
 import type { CrystalPluginSettings, PropertyColorRule } from './settings';
 
 export const PROPERTY_COLOR_STYLE_ID = 'crystal-property-colors';

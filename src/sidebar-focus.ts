@@ -1,4 +1,4 @@
-import { App, Plugin, WorkspaceLeaf, WorkspaceParent } from 'obsidian';
+import type { App, Plugin, WorkspaceLeaf, WorkspaceParent } from 'obsidian';
 
 type Direction = 'left' | 'right';
 

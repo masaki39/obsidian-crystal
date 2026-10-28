@@ -1,4 +1,4 @@
-import { Plugin } from 'obsidian';
+import type { Plugin } from 'obsidian';
 
 const SPARK = '▁▂▃▄▅▆▇█';
 const WPM_WINDOW_MS = 60_000;

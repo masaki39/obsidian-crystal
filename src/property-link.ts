@@ -1,5 +1,5 @@
 import { App, Notice, Plugin, TFile } from 'obsidian';
-import { CrystalPluginSettings } from './settings';
+import type { CrystalPluginSettings } from './settings';
 
 /**
  * Property link: when a note's frontmatter list property (e.g. `next`) links

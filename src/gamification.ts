@@ -1,16 +1,16 @@
 import { App, Plugin, setIcon, TFile } from 'obsidian';
 import { getAllDailyNotes, getDailyNote, getDateFromFile } from 'obsidian-daily-notes-interface';
-import { CrystalPluginSettings } from './settings';
+import type { CrystalPluginSettings } from './settings';
 import {
     bestDayCharacters,
     bestWeekCharacters,
     charactersOn,
     defaultVaultStatsPath,
-    DailyChars,
+    type DailyChars,
     getWeeklyCharSeries,
     lifetimeCharactersWritten,
     readVaultStats,
-    VaultStatsFile,
+    type VaultStatsFile,
 } from './word-stats';
 import { rollCharMilestoneBonus, resolveWordStatsTick } from './writing-goal';
 const moment = require('moment');

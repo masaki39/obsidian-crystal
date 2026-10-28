@@ -1,4 +1,4 @@
-import { App } from 'obsidian';
+import type { App } from 'obsidian';
 
 // Optional integration with the "Better Word Count" community plugin: when its
 // "Collect Stats" option is on, it writes a running per-day word/character

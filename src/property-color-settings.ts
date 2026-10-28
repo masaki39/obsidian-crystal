@@ -1,6 +1,6 @@
 import { AbstractInputSuggest, App, ColorComponent, Plugin, Setting, setIcon } from 'obsidian';
 import type { CrystalPluginSettings } from './settings';
-import { COLOR_PALETTES, ColorPalette, getColorPalette, nextPaletteColor } from './property-color';
+import { COLOR_PALETTES, type ColorPalette, getColorPalette, nextPaletteColor } from './property-color';
 
 type CrystalPlugin = Plugin & { settings: CrystalPluginSettings; saveSettings(): Promise<void> };
 
