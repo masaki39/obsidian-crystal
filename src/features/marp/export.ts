@@ -3,7 +3,7 @@ const fs = require('fs').promises;
 const path = require('path');
 import type { TerminalService } from '../../shared/terminal-service';
 import type { CrystalPluginSettings } from '../../settings';
-import { extractImageLinks } from './images';
+import { extractImageLinks, wikilinkImageRegex } from './images';
 
 /**
  * 設定済みのテーマディレクトリからMarp CLIの --theme-set オプションを生成
@@ -168,7 +168,7 @@ export class MarpExporter {
 			// wikilink・markdownリンクを相対パス（basenameのみ）に変換
 			let modifiedContent = content;
 			modifiedContent = modifiedContent.replace(
-				/!\[\[([^\]]+\.(jpg|jpeg|png|gif|bmp|svg|webp))\]\]/gi,
+				wikilinkImageRegex(),
 				(_match: string, imagePath: string) => `![](${path.basename(imagePath)})`
 			);
 			modifiedContent = modifiedContent.replace(

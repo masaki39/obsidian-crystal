@@ -3,6 +3,11 @@ const path = require('path');
 import type { CrystalPluginSettings } from '../../settings';
 import { normalizeSettingPath } from './export';
 
+/** `![[image.png]]` embeds of the image types Marp handles; group 1 is the path. */
+export function wikilinkImageRegex(): RegExp {
+	return /!\[\[([^\]]+\.(jpg|jpeg|png|gif|bmp|svg|webp))\]\]/gi;
+}
+
 /**
  * マークダウンテキストから画像リンクを抽出
  */
@@ -10,7 +15,7 @@ export function extractImageLinks(content: string): string[] {
 	const imageLinks: string[] = [];
 	
 	// Wikilink形式の画像 ![[image.jpg]]
-	const wikilinkRegex = /!\[\[([^\]]+\.(jpg|jpeg|png|gif|bmp|svg|webp))\]\]/gi;
+	const wikilinkRegex = wikilinkImageRegex();
 	let match;
 	while ((match = wikilinkRegex.exec(content)) !== null) {
 		imageLinks.push(match[1]);
