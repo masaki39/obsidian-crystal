@@ -1,29 +1,26 @@
-import { Editor, MarkdownView, Notice, Plugin, normalizePath, TFile } from 'obsidian';
-const { shell } = require('electron');
-const http = require('http');
-const fs = require('fs').promises;
-const path = require('path');
-import type { ChildProcess } from 'child_process';
+import { Editor, MarkdownView, Plugin } from 'obsidian';
 import type { TerminalService } from '../../shared/terminal-service';
-import { MARP_SERVER_ORIGIN, findMarpViewerLeaf, findMarpViewerLeaves, pageUrlForFile } from './server-url';
-import { lineForSlideNumber, slideNumberForLine } from './slide-index';
-import { moveSlide } from './slide-ops';
 import type { CrystalPluginSettings } from '../../settings';
+import { MarpExporter, getThemeSetOption } from './export';
+import { MarpImages } from './images';
+import { goToAdjacentSlide, moveCurrentSlide } from './navigation';
+import { MarpServer } from './server';
 
 export class MarpCommands {
 	private terminalService: TerminalService;
 	private settings: CrystalPluginSettings;
 	private plugin: Plugin;
-	private serverMonitorId: number | null = null;
-	private serverProcess: ChildProcess | null = null;
-	private startPollTimeoutId: number | null = null;
-	private serverRunning = false;
-	private serverStateListeners: (() => void)[] = [];
+	private exporter: MarpExporter;
+	private server: MarpServer;
+	private images: MarpImages;
 
 	constructor(terminalService: TerminalService, settings: CrystalPluginSettings, plugin: Plugin) {
 		this.terminalService = terminalService;
 		this.settings = settings;
 		this.plugin = plugin;
+		this.exporter = new MarpExporter(terminalService, plugin, () => this.settings);
+		this.server = new MarpServer(terminalService, plugin, () => this.settings);
+		this.images = new MarpImages(plugin, () => this.settings);
 	}
 
 	updateSettings(settings: CrystalPluginSettings) {
@@ -34,725 +31,62 @@ export class MarpCommands {
 	 * Marpサーバーが起動中か（このプラグインが把握している範囲で）
 	 */
 	isServerRunning(): boolean {
-		return this.serverRunning;
+		return this.server.isServerRunning();
 	}
 
 	/**
 	 * サーバーの起動状態が変わったときに呼ばれるリスナーを登録する
 	 */
 	onServerStateChange(listener: () => void): void {
-		this.serverStateListeners.push(listener);
+		this.server.onServerStateChange(listener);
 	}
 
-	private setServerRunning(running: boolean): void {
-		if (this.serverRunning === running) return;
-
-		this.serverRunning = running;
-		this.serverStateListeners.forEach(listener => listener());
-	}
-
-	/**
-	 * 設定済みのテーマディレクトリからMarp CLIの --theme-set オプションを生成
-	 */
 	private getThemeSetOption(): string {
-		const normalizedThemePath = this.normalizeSettingPath(this.settings.marpThemePath);
-		if (!normalizedThemePath) {
-			return '';
-		}
-
-		return ` --theme-set "${normalizedThemePath}"`;
+		return getThemeSetOption(this.settings);
 	}
 
-	/**
-	 * 設定に保存されたパス（相対/絶対）を正規化して返す
-	 */
-	private normalizeSettingPath(settingPath?: string): string | null {
-		const trimmed = settingPath?.trim();
-		return trimmed ? normalizePath(trimmed) : null;
+	executeMarpPreviewCommand(editor: Editor, view: MarkdownView) {
+		return this.exporter.executeMarpPreviewCommand(editor, view);
 	}
 
-	/**
-	 * Marpプレビューコマンドを直接実行する
-	 */
-	async executeMarpPreviewCommand(_editor: Editor, view: MarkdownView) {
-		const file = view.file;
-		if (!file) return;
-
-		try {
-			// アクティブファイルの相対パス
-			const activeFilePath = normalizePath(file.path);
-			
-			// 出力ファイル名 - Markdownファイルと同じディレクトリに出力
-			const parentPath = file.parent?.path === '/' ? '' : (file.parent?.path || '');
-			const outputPath = parentPath ? `${parentPath}/marp-preview.html` : 'marp-preview.html';
-
-			const themeOption = this.getThemeSetOption();
-
-				// Marpコマンドを生成（-- 以降でMarkdownファイルを指定）
-				const marpCommand = `marp -p${themeOption} -o "${outputPath}" -- "${activeFilePath}"`;
-
-			new Notice('⏳ Marpプレビューを実行中...');
-			
-			// コマンドを実行
-			const result = await this.terminalService.executeCommand(marpCommand);
-			
-			if (result.exitCode === 0) {
-				new Notice('✅ Marpプレビューが完了しました');
-			} else {
-				new Notice(`❌ Marpプレビューでエラーが発生しました: ${result.stderr}`);
-			}
-		} catch (error) {
-			console.error('Failed to execute Marp preview command:', error);
-			new Notice('❌ Marpプレビューの実行に失敗しました: ' + error.message);
-		}
+	executeMarpExportCommand(editor: Editor, view: MarkdownView, format: string = 'pptx', editable: boolean = false) {
+		return this.exporter.executeMarpExportCommand(editor, view, format, editable);
 	}
 
-	/**
-	 * Marpエクスポートコマンドを直接実行する
-	 */
-	async executeMarpExportCommand(_editor: Editor, view: MarkdownView, format: string = 'pptx', editable: boolean = false) {
-		const file = view.file;
-		if (!file) return;
-
-		try {
-			// アクティブファイルの相対パス
-			const activeFilePath = normalizePath(file.path);
-
-			// エクスポート先フォルダの決定
-			const parentPath = file.parent?.path === '/' ? '' : (file.parent?.path || '');
-			const exportFolderPath = this.settings.exportFolderPath || parentPath;
-			
-			// 出力ファイルパス
-			const outputPath = exportFolderPath 
-				? `${exportFolderPath}/${file.basename}.${format}`
-				: `${file.basename}.${format}`;
-
-			const themeOption = this.getThemeSetOption();
-
-			// Marpエクスポートコマンドを生成
-			const editableOption = (editable && format === 'pptx') ? ' --pptx-editable' : '';
-				const marpCommand = `marp --allow-local-files${editableOption}${themeOption} -o "${outputPath}" -- "${activeFilePath}"`;
-			console.log('Executing Marp command:', marpCommand);
-
-			const noticeMessage = (editable && format === 'pptx')
-				? `⏳ Marpエクスポート（${format.toUpperCase()}・編集可能）を実行中...`
-				: `⏳ Marpエクスポート（${format.toUpperCase()}）を実行中...`;
-			new Notice(noticeMessage);
-
-			// コマンドを実行
-			const result = await this.terminalService.executeCommand(marpCommand);
-
-			if (result.exitCode === 0) {
-				const successMessage = (editable && format === 'pptx')
-					? `✅ Marpエクスポート（${format.toUpperCase()}・編集可能）が完了しました`
-					: `✅ Marpエクスポート（${format.toUpperCase()}）が完了しました`;
-				new Notice(successMessage);
-			} else {
-				new Notice(`❌ Marpエクスポートでエラーが発生しました: ${result.stderr}`);
-			}
-		} catch (error) {
-			console.error('Failed to execute Marp export command:', error);
-			new Notice('❌ Marpエクスポートの実行に失敗しました: ' + error.message);
-		}
+	executeMarpExportHtmlFolderCommand(editor: Editor, view: MarkdownView) {
+		return this.exporter.executeMarpExportHtmlFolderCommand(editor, view);
 	}
 
-	/**
-	 * Marp HTML + 画像をフォルダにまとめてエクスポートする
-	 */
-	async executeMarpExportHtmlFolderCommand(_editor: Editor, view: MarkdownView) {
-		const file = view.file;
-		if (!file) return;
-
-		try {
-			const vaultBase = (this.plugin.app.vault.adapter as any).basePath as string;
-
-			// markdown を読み込み画像リンクを抽出
-			const content = await this.plugin.app.vault.read(file);
-			const imageLinks = this.extractImageLinks(content);
-
-			// 出力フォルダの絶対パスを決定（exportFolderPath が絶対/相対どちらでも正しく解決する）
-			const parentPath = file.parent?.path === '/' ? '' : (file.parent?.path || '');
-			const folderName = `${file.basename}-html`;
-			const exportSetting = this.settings.exportFolderPath;
-			let baseAbsPath: string;
-			if (exportSetting) {
-				baseAbsPath = path.isAbsolute(exportSetting)
-					? exportSetting
-					: path.join(vaultBase, exportSetting);
-			} else {
-				baseAbsPath = parentPath ? path.join(vaultBase, parentPath) : vaultBase;
-			}
-			const outputFolderAbsPath = path.join(baseAbsPath, folderName);
-
-			// フォルダ作成
-			await fs.mkdir(outputFolderAbsPath, { recursive: true });
-
-			// 画像をフォルダにコピー
-			const allFiles = this.plugin.app.vault.getFiles();
-			for (const imageLink of imageLinks) {
-				const fileName = path.basename(imageLink);
-				const imageFile = allFiles.find(f => f.name === fileName || f.path === imageLink);
-				if (imageFile) {
-					const srcAbsPath = path.join(vaultBase, imageFile.path);
-					const destAbsPath = path.join(outputFolderAbsPath, fileName);
-					await fs.copyFile(srcAbsPath, destAbsPath);
-				}
-			}
-
-			// wikilink・markdownリンクを相対パス（basenameのみ）に変換
-			let modifiedContent = content;
-			modifiedContent = modifiedContent.replace(
-				/!\[\[([^\]]+\.(jpg|jpeg|png|gif|bmp|svg|webp))\]\]/gi,
-				(_match: string, imagePath: string) => `![](${path.basename(imagePath)})`
-			);
-			modifiedContent = modifiedContent.replace(
-				/!\[([^\]]*)\]\(([^)]+\.(jpg|jpeg|png|gif|bmp|svg|webp))\)/gi,
-				(_match: string, alt: string, imagePath: string) => `![${alt}](${path.basename(imagePath)})`
-			);
-
-			// 変換済み markdown をコピーとして書き込み
-			const mdCopyAbsPath = path.join(outputFolderAbsPath, file.name);
-			await fs.writeFile(mdCopyAbsPath, modifiedContent, 'utf-8');
-
-			// marp コマンド実行（絶対パスを使用）
-			const mdCopyPath = path.join(outputFolderAbsPath, file.name);
-			const htmlOutputPath = path.join(outputFolderAbsPath, `${file.basename}.html`);
-			const themeOption = this.getThemeSetOption();
-			const marpCommand = `marp --allow-local-files${themeOption} -o "${htmlOutputPath}" -- "${mdCopyPath}"`;
-
-			new Notice('⏳ Marp HTML（添付ファイル付き）をエクスポート中...');
-
-			const result = await this.terminalService.executeCommand(marpCommand);
-
-			if (result.exitCode === 0) {
-				new Notice(`✅ エクスポート完了: ${outputFolderAbsPath}`);
-			} else {
-				new Notice(`❌ Marpエクスポートでエラーが発生しました: ${result.stderr}`);
-			}
-		} catch (error) {
-			console.error('Failed to export Marp HTML with attachments:', error);
-			new Notice('❌ エクスポートに失敗しました: ' + error.message);
-		}
+	executeMarpNotesCommand(editor: Editor, view: MarkdownView) {
+		return this.exporter.executeMarpNotesCommand(editor, view);
 	}
 
-	/**
-	 * Marp Presenter Notesをテキストファイルとして出力する
-	 */
-	async executeMarpNotesCommand(_editor: Editor, view: MarkdownView) {
-		const file = view.file;
-		if (!file) return;
-
-		try {
-			// アクティブファイルの相対パス
-			const activeFilePath = normalizePath(file.path);
-
-			// エクスポート先フォルダの決定
-			const parentPath = file.parent?.path === '/' ? '' : (file.parent?.path || '');
-			const exportFolderPath = this.settings.exportFolderPath || parentPath;
-			
-			// 出力ファイルパス（.txtファイル）
-			const outputPath = exportFolderPath 
-				? `${exportFolderPath}/${file.basename}-notes.txt`
-				: `${file.basename}-notes.txt`;
-
-			// Marp notesコマンドを生成
-			const marpCommand = `marp --notes "${activeFilePath}" -o "${outputPath}"`;
-			console.log('Executing Marp notes command:', marpCommand);
-
-			new Notice('⏳ Marp Presenter Notesを出力中...');
-			
-			// コマンドを実行
-			const result = await this.terminalService.executeCommand(marpCommand);
-			
-			if (result.exitCode === 0) {
-				new Notice('✅ Marp Presenter Notesの出力が完了しました');
-			} else {
-				new Notice(`❌ Marp Presenter Notesの出力でエラーが発生しました: ${result.stderr}`);
-			}
-		} catch (error) {
-			console.error('Failed to execute Marp notes command:', error);
-			new Notice('❌ Marp Presenter Notesの出力に失敗しました: ' + error.message);
-		}
+	executeMarpServerCommand() {
+		return this.server.executeMarpServerCommand();
 	}
 
-	/**
-	 * Marpサーバーを起動してSlidesフォルダ全体を対象にする
-	 */
-	async executeMarpServerCommand() {
-		// 設定チェック
-		if (!this.settings.marpSlideFolderPath) {
-			new Notice('⚠️ Marp Slide Folder Path is not configured in settings');
-			return;
-		}
-
-		try {
-			// 既に8080が応答している場合は二重起動しない。
-			// （前回起動したサーバーが残っている場合、新しい marp は
-			//   ポート衝突で即死するのに古いサーバーの応答で成功に見えてしまう）
-			// アクティブファイルがスライドフォルダ内ならそのページを直接開く
-			const pageUrl = this.activePageUrl();
-
-			if (await this.isServerAlive()) {
-				new Notice('ℹ️ Marpサーバーは既に起動しています');
-				this.setServerRunning(true);
-				await this.openServerInBrowser(pageUrl);
-				this.startServerMonitor();
-				return;
-			}
-
-			const themeOption = this.getThemeSetOption();
-
-			// Marpサーバーコマンドを生成
-				const marpCommand = `marp -s --allow-local-files${themeOption} -- "${this.settings.marpSlideFolderPath}"`;
-
-			new Notice('⏳ Marpサーバーを起動中...');
-
-			// サーバーをバックグラウンドで起動し、停止できるようプロセスを保持する
-			const child = this.terminalService.spawnBackgroundCommand(marpCommand);
-			this.serverProcess = child;
-
-			// パイプが詰まらないよう出力は必ず消費する（ポート衝突の検知にも使う）
-			child.stdout?.on('data', (data: Buffer) => console.log('[marp server]', data.toString().trim()));
-			child.stderr?.on('data', (data: Buffer) => console.error('[marp server]', data.toString().trim()));
-			child.on('close', () => {
-				if (this.serverProcess === child) {
-					this.serverProcess = null;
-					this.setServerRunning(false);
-				}
-			});
-			child.on('error', (error: Error) => {
-				if (this.serverProcess === child) {
-					this.serverProcess = null;
-					this.setServerRunning(false);
-				}
-				console.error('Marp server process error:', error);
-			});
-
-			// サーバーの応答を確認してからブラウザを開く
-			this.waitForServerAndOpen(pageUrl);
-		} catch (error) {
-			console.error('Failed to start Marp server:', error);
-			new Notice('❌ Marpサーバーの起動に失敗しました: ' + error.message);
-		}
-	}
-
-	/**
-	 * Marpサーバーを停止する
-	 */
-	async stopMarpServerCommand() {
-		try {
-			new Notice('⏳ Marpサーバーを停止中...');
-
-			// プロセス監視と起動待ちを停止
-			this.stopServerMonitor();
-			this.stopStartPolling();
-			this.setServerRunning(false);
-
-			// プレビューのタブを閉じる。プロセスを止めた後だと webview が
-			// エラーページに遷移してURLで判定できなくなるため、kill より先に行う
-			this.closeViewerTabs();
-
-			// このプラグインが起動したプロセスはプロセスグループごと停止する
-			const killed = this.killServerProcess();
-
-			if (!killed) {
-				// ハンドルを持っていない場合（Obsidian再起動後に残った孤児プロセスなど）の
-				// フォールバック。ポート8080の持ち主が marp の場合のみ終了させる。
-				const killCommand = process.platform === 'win32'
-					? 'for /f "tokens=5" %a in (\'netstat -ano ^| findstr :8080\') do taskkill /F /PID %a'
-					: 'for pid in $(lsof -ti:8080); do ps -p "$pid" -o args= 2>/dev/null | grep -qi marp && kill "$pid"; done';
-
-				await this.terminalService.executeCommand(killCommand);
-			}
-
-			// プロセスが見つからない場合も停止済みとみなす
-			new Notice('✅ Marpサーバーを停止しました');
-		} catch (error) {
-			console.error('Failed to stop Marp server:', error);
-			new Notice('❌ Marpサーバーの停止に失敗しました: ' + error.message);
-		}
-	}
-
-	/**
-	 * Marpサーバーを表示している Web Viewer のタブを閉じる。
-	 * 外部ブラウザで開いた場合は制御できないため何もしない
-	 */
-	private closeViewerTabs(): void {
-		for (const leaf of findMarpViewerLeaves(this.plugin.app)) {
-			leaf.detach();
-		}
-	}
-
-	/**
-	 * 保持しているサーバープロセスをプロセスグループごと停止する
-	 * @returns 停止シグナルを送れた場合 true
-	 */
-	private killServerProcess(): boolean {
-		const child = this.serverProcess;
-		this.serverProcess = null;
-
-		if (!child || child.pid === undefined || child.exitCode !== null || child.signalCode !== null) {
-			return false;
-		}
-
-		try {
-			// detached で起動しているのでプロセスグループ(-pid)に送り、
-			// ログインシェル配下の marp 本体まで確実に終了させる
-			process.kill(-child.pid, 'SIGTERM');
-			return true;
-		} catch (error) {
-			console.error('Failed to kill Marp server process:', error);
-			return false;
-		}
+	stopMarpServerCommand() {
+		return this.server.stopMarpServerCommand();
 	}
 
 	/**
 	 * プラグインのアンロード時に呼び出し、サーバーを残さず後片付けする
 	 */
 	onunload(): void {
-		this.stopServerMonitor();
-		this.stopStartPolling();
-		this.killServerProcess();
+		this.server.onunload();
 	}
 
-	/**
-	 * Marpサーバー(localhost:8080)が応答するか確認する
-	 */
-	private async isServerAlive(): Promise<boolean> {
-		return new Promise((resolve) => {
-			const req = http.get(MARP_SERVER_ORIGIN, (res: any) => {
-				resolve(res.statusCode === 200);
-			});
-
-			req.on('error', () => {
-				resolve(false);
-			});
-
-			req.setTimeout(1000, () => {
-				req.destroy();
-				resolve(false);
-			});
-		});
-	}
-
-	/**
-	 * サーバーの応答を確認してからブラウザを開く
-	 */
-	private async waitForServerAndOpen(pageUrl: string): Promise<void> {
-		const maxAttempts = 30; // 最大30回試行（30秒）
-		let attempts = 0;
-
-		const tryOpenBrowser = async () => {
-			this.startPollTimeoutId = null;
-			attempts++;
-
-			if (await this.isServerAlive()) {
-				this.setServerRunning(true);
-				await this.openServerInBrowser(pageUrl);
-				new Notice('✅ Marpサーバーが起動しました');
-				// 起動を確認できたらプロセス監視を開始する
-				this.startServerMonitor();
-				return;
-			}
-
-			// 起動に失敗してプロセスが終了している場合は待ち続けない
-			// （ポート衝突などはここで検知される）
-			if (!this.serverProcess) {
-				new Notice('❌ Marpサーバーの起動に失敗しました');
-				return;
-			}
-
-			if (attempts >= maxAttempts) {
-				new Notice('⚠️ Marpサーバーの起動を確認できませんでしたが、ブラウザを開きます');
-				shell.openExternal(pageUrl);
-				return;
-			}
-
-			// 1秒後に再試行
-			this.startPollTimeoutId = window.setTimeout(tryOpenBrowser, 1000);
-		};
-
-		tryOpenBrowser();
-	}
-
-	/**
-	 * アクティブファイルに対応するページのURL。
-	 * スライドフォルダ外のファイル（または未選択）ならサーバーのトップを返す
-	 */
-	private activePageUrl(): string {
-		const file = this.plugin.app.workspace.getActiveFile();
-		const url = file ? pageUrlForFile(file, this.settings.marpSlideFolderPath) : null;
-		if (!url) return MARP_SERVER_ORIGIN;
-
-		// 開いた直後に1枚目ではなく編集中のスライドが出るよう、
-		// カーソル位置のスライド番号をハッシュ（bespokeの `#5` 形式）で渡す
-		const view = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
-		if (!view?.editor || view.file !== file) return url;
-
-		const slide = slideNumberForLine(view.editor.getValue(), view.editor.getCursor().line);
-		return `${url}#${slide}`;
-	}
-
-	/**
-	 * 起動中のサーバーを WebViewer（無効なら外部ブラウザ）で開く
-	 */
-	private async openServerInBrowser(pageUrl: string = MARP_SERVER_ORIGIN): Promise<void> {
-		const isWebViewerEnabled = (this.plugin.app as any).internalPlugins.getEnabledPluginById?.('webviewer');
-
-		if (isWebViewerEnabled) {
-			// 既にサーバーを開いているタブがあれば使い回す
-			const existingLeaf = findMarpViewerLeaf(this.plugin.app);
-			if (existingLeaf && typeof (existingLeaf.view as any).navigate === 'function') {
-				(existingLeaf.view as any).navigate(pageUrl);
-				this.plugin.app.workspace.revealLeaf(existingLeaf);
-				return;
-			}
-
-			try {
-				const leaf = this.plugin.app.workspace.getLeaf("tab");
-				await leaf.setViewState({
-					type: 'webviewer',
-					state: {
-						url: pageUrl,
-						navigate: true,
-					},
-					active: true,
-				});
-				console.log('WebViewer opened successfully');
-				return;
-			} catch (error) {
-				console.log('WebViewer failed to open, falling back to external browser:', error);
-			}
-		} else {
-			console.log('WebViewer core plugin is disabled, opening in external browser');
-		}
-
-		shell.openExternal(pageUrl);
-	}
-
-	/**
-	 * 起動待ちのポーリングを止める
-	 */
-	private stopStartPolling(): void {
-		if (this.startPollTimeoutId !== null) {
-			window.clearTimeout(this.startPollTimeoutId);
-			this.startPollTimeoutId = null;
-		}
-	}
-
-	/**
-	 * サーバープロセスを定期的にポーリングし、停止を検知したら通知する
-	 */
-	private startServerMonitor(): void {
-		// 既存の監視があればクリアしてから開始（二重起動防止）
-		this.stopServerMonitor();
-
-		const intervalId = window.setInterval(async () => {
-			if (!(await this.isServerAlive())) {
-				this.stopServerMonitor();
-				this.setServerRunning(false);
-				new Notice('✅ Marpサーバーが停止しました');
-			}
-		}, 5000);
-
-		// unload 時に確実にクリーンアップされるよう登録
-		this.plugin.registerInterval(intervalId);
-		this.serverMonitorId = intervalId;
-	}
-
-	/**
-	 * サーバープロセスの監視を停止する
-	 */
-	private stopServerMonitor(): void {
-		if (this.serverMonitorId !== null) {
-			window.clearInterval(this.serverMonitorId);
-			this.serverMonitorId = null;
-		}
-	}
-
-	/**
-	 * カーソルを前後のスライドの先頭へ移動する
-	 */
 	goToAdjacentSlide(editor: Editor, direction: -1 | 1) {
-		const content = editor.getValue();
-		const current = slideNumberForLine(content, editor.getCursor().line);
-		const target = current + direction;
-
-		const line = lineForSlideNumber(content, target);
-		editor.setCursor({ line, ch: 0 });
-		editor.scrollIntoView({ from: { line, ch: 0 }, to: { line, ch: 0 } }, true);
+		goToAdjacentSlide(editor, direction);
 	}
 
-	/**
-	 * カーソルのあるスライドを前後のスライドと入れ替える
-	 */
 	moveCurrentSlide(editor: Editor, direction: -1 | 1) {
-		const content = editor.getValue();
-		const current = slideNumberForLine(content, editor.getCursor().line);
-		const move = moveSlide(content, current, direction);
-
-		if (!move) {
-			new Notice(direction === 1 ? '⚠️ これ以上後ろに移動できません' : '⚠️ これ以上前に移動できません');
-			return;
-		}
-
-		const endLength = content.split('\n')[move.toLine]?.length ?? 0;
-		editor.replaceRange(
-			move.text,
-			{ line: move.fromLine, ch: 0 },
-			{ line: move.toLine, ch: endLength }
-		);
-
-		// 移動したスライドを追いかける
-		const line = lineForSlideNumber(editor.getValue(), move.slideNumber);
-		editor.setCursor({ line, ch: 0 });
-		editor.scrollIntoView({ from: { line, ch: 0 }, to: { line, ch: 0 } }, true);
+		moveCurrentSlide(editor, direction);
 	}
 
-	/**
-	 * マークダウンファイル内の画像リンクを検出して移動する
-	 */
-	async moveImagesToMarpFolder(_editor: Editor, view: MarkdownView) {
-		const file = view.file;
-		if (!file) {
-			new Notice('⚠️ アクティブなファイルが見つかりません');
-			return;
-		}
-
-		try {
-			// 設定からmarp用のattachmentフォルダパスを取得
-			const marpAttachmentFolder = this.normalizeSettingPath(this.settings.marpAttachmentFolderPath);
-			if (!marpAttachmentFolder) {
-				new Notice('⚠️ Marp Attachment Folder Path が設定されていません');
-				return;
-			}
-
-			// フォルダの存在確認
-			const folder = this.plugin.app.vault.getAbstractFileByPath(marpAttachmentFolder);
-			if (!folder) {
-				new Notice(`⚠️ Marp Attachment Folder が存在しません: ${marpAttachmentFolder}`);
-				return;
-			}
-
-			// ファイルの内容を読み取り
-			const content = await this.plugin.app.vault.read(file);
-			
-			// 画像リンクを検出
-			const imageLinks = this.extractImageLinks(content);
-			
-			if (imageLinks.length === 0) {
-				new Notice('⚠️ 画像リンクが見つかりませんでした');
-				return;
-			}
-
-			let movedCount = 0;
-			let updatedContent = content;
-
-			// 各画像を処理
-			for (const imageLink of imageLinks) {
-				// パスからファイル名を抽出
-				const fileName = imageLink.includes('/') ? path.basename(imageLink) : imageLink;
-				
-				// 既に正しいディレクトリにある場合はスキップ
-				const expectedPath = normalizePath(`${marpAttachmentFolder}/${fileName}`);
-				const existingFile = this.plugin.app.vault.getAbstractFileByPath(expectedPath);
-				
-				if (existingFile) {
-					continue;
-				}
-				
-				const moveResult = await this.moveImage(fileName, marpAttachmentFolder);
-				if (moveResult) {
-					movedCount++;
-					// ファイル内のリンクを更新
-					updatedContent = this.updateImageLink(updatedContent, imageLink);
-				}
-			}
-
-			// ファイルを更新
-			if (movedCount > 0) {
-				await this.plugin.app.vault.modify(file, updatedContent);
-				new Notice(`✅ ${movedCount}個の画像をMarpフォルダに移動しました`);
-			} else {
-				new Notice('⚠️ 移動できる画像がありませんでした');
-			}
-
-		} catch (error) {
-			console.error('Failed to move images to Marp folder:', error);
-			new Notice('❌ 画像の移動に失敗しました: ' + error.message);
-		}
-	}
-
-	/**
-	 * マークダウンテキストから画像リンクを抽出
-	 */
-	private extractImageLinks(content: string): string[] {
-		const imageLinks: string[] = [];
-		
-		// Wikilink形式の画像 ![[image.jpg]]
-		const wikilinkRegex = /!\[\[([^\]]+\.(jpg|jpeg|png|gif|bmp|svg|webp))\]\]/gi;
-		let match;
-		while ((match = wikilinkRegex.exec(content)) !== null) {
-			imageLinks.push(match[1]);
-		}
-
-		// マークダウンリンク形式の画像 ![alt](image.jpg)
-		const markdownLinkRegex = /!\[[^\]]*\]\(([^)]+\.(jpg|jpeg|png|gif|bmp|svg|webp))\)/gi;
-		while ((match = markdownLinkRegex.exec(content)) !== null) {
-			imageLinks.push(match[1]);
-		}
-
-		return [...new Set(imageLinks)]; // 重複を除去
-	}
-
-	/**
-	 * 画像ファイルを移動
-	 */
-	private async moveImage(imagePath: string, destinationFolder: string): Promise<boolean> {
-		try {
-			// ファイル名で検索
-			const allFiles = this.plugin.app.vault.getFiles();
-			const imageFile = allFiles.find(f => f.name === imagePath);
-			
-			if (!imageFile || !(imageFile instanceof TFile)) {
-				return false;
-			}
-
-			// 移動先パスを作成（imagePathはファイル名の場合があるため）
-			const fileName = imagePath.includes('/') ? path.basename(imagePath) : imagePath;
-			const destinationPath = normalizePath(`${destinationFolder}/${fileName}`);
-
-			// 既に移動先に存在する場合はスキップ
-			const existingFile = this.plugin.app.vault.getAbstractFileByPath(destinationPath);
-			if (existingFile) {
-				return true; // 既に存在するので移動済みとみなす
-			}
-
-			// ファイルを移動
-			await this.plugin.app.fileManager.renameFile(imageFile, destinationPath);
-			return true;
-
-		} catch (error) {
-			console.error(`Failed to move image ${imagePath}:`, error);
-			return false;
-		}
-	}
-
-	/**
-	 * ファイル内の画像リンクを更新
-	 */
-	private updateImageLink(content: string, originalPath: string): string {
-		const fileName = originalPath.includes('/') ? path.basename(originalPath) : originalPath;
-		
-		// Wikilink形式を更新（ファイル名のみ使用）
-		const wikilinkRegex = new RegExp(`!\\[\\[${originalPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]\\]`, 'gi');
-		content = content.replace(wikilinkRegex, `![[${fileName}]]`);
-		
-		// マークダウンリンク形式を更新（ファイル名のみ使用）
-		const markdownLinkRegex = new RegExp(`(!\\[[^\\]]*\\]\\()${originalPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\))`, 'gi');
-		content = content.replace(markdownLinkRegex, `$1${fileName}$2`);
-		
-		return content;
+	/** Also used by the macro command. */
+	moveImagesToMarpFolder(editor: Editor, view: MarkdownView) {
+		return this.images.moveImagesToMarpFolder(editor, view);
 	}
 
 	async onload() {
