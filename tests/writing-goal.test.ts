@@ -2,7 +2,7 @@ import {
 	checkNewlyReachedCharMilestones,
 	resolveWordStatsTick,
 	rollCharMilestoneBonus,
-} from '../src/writing-goal';
+} from '../src/features/gamification/writing-goal';
 
 describe('checkNewlyReachedCharMilestones', () => {
 	it('returns milestones newly crossed by current/goal', () => {

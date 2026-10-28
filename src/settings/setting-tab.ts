@@ -1,7 +1,7 @@
 import { App, type IconName, Notice, PluginSettingTab, SearchComponent, Setting, prepareSimpleSearch, requestUrl, setIcon } from 'obsidian';
 import { AtpAgent } from '@atproto/api';
-import { calculateLevel } from '../gamification';
-import { defaultVaultStatsPath, hasVaultStatsFile, lifetimeCharactersWritten, readVaultStats } from '../word-stats';
+import { calculateLevel } from '../features/gamification/manager';
+import { defaultVaultStatsPath, hasVaultStatsFile, lifetimeCharactersWritten, readVaultStats } from '../features/gamification/word-stats';
 import { promptForConfirmation } from '../shared/ui/confirm-modal';
 import type { StatusBarOrderService } from '../features/workspace/status-bar-order';
 import type { OpacityService } from '../features/workspace/opacity';

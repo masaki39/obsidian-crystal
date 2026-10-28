@@ -1,6 +1,6 @@
 import type { App, Plugin } from 'obsidian';
-import { type GamificationSnapshot, VIEW_TYPE_GAMIFICATION } from './gamification';
-import { GamificationView } from './gamification-view';
+import { type GamificationSnapshot, VIEW_TYPE_GAMIFICATION } from './manager';
+import { GamificationView } from './view';
 
 export async function activateGamificationView(app: App) {
 	const { workspace } = app;

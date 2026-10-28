@@ -1,6 +1,6 @@
 import { App, Plugin, setIcon, TFile } from 'obsidian';
 import { getAllDailyNotes, getDailyNote, getDateFromFile } from 'obsidian-daily-notes-interface';
-import type { CrystalPluginSettings } from './settings';
+import type { CrystalPluginSettings } from '../../settings';
 import {
     bestDayCharacters,
     bestWeekCharacters,
