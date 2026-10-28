@@ -1,6 +1,7 @@
 import { App, Editor, MarkdownView, Notice, SuggestModal, Plugin, WorkspaceLeaf, setIcon } from 'obsidian';
 import type { CrystalPluginSettings, FileOrganizationRule } from './settings';
-import { parseFrontmatter, promptForText } from './shared/ui/prompt-modal';
+import { parseFrontmatter } from './shared/markdown/frontmatter';
+import { promptForText } from './shared/ui/prompt-modal';
 import * as path from 'path';
 
 class RuleSuggestModal extends SuggestModal<FileOrganizationRule> {
