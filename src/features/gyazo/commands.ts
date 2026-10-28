@@ -1,7 +1,7 @@
 import type { Editor, MarkdownView, Plugin } from 'obsidian';
-import type { GyazoService } from './gyazo-service';
-import type { GyazoImageMigrator } from './gyazo-image-migrator';
-import type { GyazoLocalImageMigrator } from './gyazo-local-image-migrator';
+import type { GyazoService } from './service';
+import type { GyazoImageMigrator } from './image-migrator';
+import type { GyazoLocalImageMigrator } from './local-image-migrator';
 
 export class GyazoCommands {
 	constructor(

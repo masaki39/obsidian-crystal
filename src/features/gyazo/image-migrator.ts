@@ -1,5 +1,5 @@
 import { Editor, MarkdownView, Notice } from 'obsidian';
-import type { GyazoService } from './gyazo-service';
+import type { GyazoService } from './service';
 
 /**
  * Scans the active note for external image URLs, re-uploads them to Gyazo,

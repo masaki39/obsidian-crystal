@@ -5,9 +5,9 @@ import { BlueskyService } from './src/bluesky-service';
 import { DailyNotesManager } from './src/daily-notes';
 import { DailyNoteWeekday } from './src/daily-note-weekday';
 import { DailyDraft } from './src/daily-draft';
-import { GyazoService } from './src/gyazo-service';
-import { GyazoImageMigrator } from './src/gyazo-image-migrator';
-import { GyazoLocalImageMigrator } from './src/gyazo-local-image-migrator';
+import { GyazoService } from './src/features/gyazo/service';
+import { GyazoImageMigrator } from './src/features/gyazo/image-migrator';
+import { GyazoLocalImageMigrator } from './src/features/gyazo/local-image-migrator';
 import { ImagePasteAndDropHandler } from './src/clipboard-paste-handler';
 import { EditorCommands } from './src/editor-commands';
 import { MarpCommands } from './src/marp';
@@ -25,7 +25,7 @@ import { PropertyLinkService } from './src/features/properties/link';
 import { PropertyColorService } from './src/features/properties/color';
 import { StatusBarOrderService } from './src/features/workspace/status-bar-order';
 import { HackerModeService } from './src/features/hacker/mode';
-import { GyazoCommands } from './src/gyazo-commands';
+import { GyazoCommands } from './src/features/gyazo/commands';
 import { loadSecrets, saveSecrets, withoutSecrets } from './src/settings/secrets';
 
 export default class CrystalPlugin extends Plugin {

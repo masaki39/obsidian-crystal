@@ -1,5 +1,5 @@
 import { App, Editor, MarkdownView, Notice, TFile } from 'obsidian';
-import { GyazoService, EXTENSION_TO_MIME } from './gyazo-service';
+import { GyazoService, EXTENSION_TO_MIME } from './service';
 
 const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg']);
 
