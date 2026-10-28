@@ -1,14 +1,14 @@
 import { EditorView, ViewUpdate } from '@codemirror/view';
 import { MarkdownView, Plugin, TFile, WorkspaceLeaf } from 'obsidian';
-import type { CrystalPluginSettings, HackerEffectToggles } from './settings';
-import { DEFAULT_HACKER_EFFECTS } from './settings/defaults';
-import { OverlayCanvas, prefersReducedMotion } from './hacker-fx-canvas';
-import { MatrixRain } from './hacker-matrix';
-import { TypingFx } from './hacker-typing';
-import { BootSequence } from './hacker-boot';
-import { HackerHud } from './hacker-hud';
-import { GAMIFICATION_FLASH_EVENT } from './gamification';
-import { clearGlitchOverlays, decodeTitle, showRewardBanner } from './hacker-glitch';
+import type { CrystalPluginSettings, HackerEffectToggles } from '../../settings';
+import { DEFAULT_HACKER_EFFECTS } from '../../settings/defaults';
+import { OverlayCanvas, prefersReducedMotion } from './fx-canvas';
+import { MatrixRain } from './matrix';
+import { TypingFx } from './typing';
+import { BootSequence } from './boot';
+import { HackerHud } from './hud';
+import { GAMIFICATION_FLASH_EVENT } from '../../gamification';
+import { clearGlitchOverlays, decodeTitle, showRewardBanner } from './glitch';
 
 type PluginHost = Plugin & { settings: CrystalPluginSettings; saveSettings(): Promise<void> };
 

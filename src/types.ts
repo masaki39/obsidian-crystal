@@ -1,6 +1,6 @@
 import type { Plugin } from 'obsidian';
 import type { CrystalPluginSettings } from './settings';
-import type { HackerModeService } from './hacker-mode';
+import type { HackerModeService } from './features/hacker/mode';
 
 /**
  * The plugin as seen from feature modules. Declared here (not imported from

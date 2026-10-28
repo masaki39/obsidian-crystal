@@ -1,7 +1,7 @@
 import { Setting } from 'obsidian';
-import type { HackerEffectToggles } from './settings';
-import type { CrystalPluginHost } from './types';
-import { showRewardBanner } from './hacker-glitch';
+import type { HackerEffectToggles } from '../../settings';
+import type { CrystalPluginHost } from '../../types';
+import { showRewardBanner } from './glitch';
 
 const EFFECTS: Array<{ key: keyof HackerEffectToggles; name: string; desc: string }> = [
 	{ key: 'crt', name: 'CRT overlay', desc: 'Scanlines, vignette and a faint flicker over the whole window.' },

@@ -24,7 +24,7 @@ import { SidebarFocusCommands } from './src/sidebar-focus';
 import { PropertyLinkService } from './src/property-link';
 import { PropertyColorService } from './src/property-color';
 import { StatusBarOrderService } from './src/status-bar-order';
-import { HackerModeService } from './src/hacker-mode';
+import { HackerModeService } from './src/features/hacker/mode';
 import { GyazoCommands } from './src/gyazo-commands';
 import { loadSecrets, saveSecrets, withoutSecrets } from './src/settings/secrets';
 

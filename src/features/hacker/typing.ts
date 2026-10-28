@@ -1,4 +1,4 @@
-import { FrameLoop, OverlayCanvas, monospaceFont } from './hacker-fx-canvas';
+import { FrameLoop, OverlayCanvas, monospaceFont } from './fx-canvas';
 
 interface Particle {
 	x: number;

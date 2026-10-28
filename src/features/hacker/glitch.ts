@@ -1,4 +1,4 @@
-import { randomGlyph } from './hacker-fx-canvas';
+import { randomGlyph } from './fx-canvas';
 
 const DECODE_MS = 550;
 const BANNER_MS = 1800;

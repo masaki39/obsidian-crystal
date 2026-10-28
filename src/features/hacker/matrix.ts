@@ -1,4 +1,4 @@
-import { FrameLoop, OverlayCanvas, monospaceFont, randomGlyph } from './hacker-fx-canvas';
+import { FrameLoop, OverlayCanvas, monospaceFont, randomGlyph } from './fx-canvas';
 
 const FONT_SIZE = 16;
 
