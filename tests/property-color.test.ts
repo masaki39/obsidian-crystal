@@ -1,4 +1,4 @@
-import { COLOR_PALETTES, buildPropertyColorCss, getColorPalette, nextPaletteColor, parsePropertyNames } from '../src/property-color';
+import { COLOR_PALETTES, buildPropertyColorCss, getColorPalette, nextPaletteColor, parsePropertyNames } from '../src/features/properties/color';
 
 describe('buildPropertyColorCss', () => {
 	it('returns an empty string without rules', () => {

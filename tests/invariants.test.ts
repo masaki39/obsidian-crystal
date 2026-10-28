@@ -4,7 +4,7 @@
 import CrystalPlugin from '../main';
 import { DEFAULT_SETTINGS } from '../src/settings';
 import { VIEW_TYPE_GAMIFICATION, GAMIFICATION_FLASH_EVENT } from '../src/gamification';
-import { PROPERTY_COLOR_STYLE_ID } from '../src/property-color';
+import { PROPERTY_COLOR_STYLE_ID } from '../src/features/properties/color';
 import { WEEKDAY_ATTR } from '../src/daily-note-weekday';
 
 describe('settings invariants', () => {

@@ -5,7 +5,7 @@ import { defaultVaultStatsPath, hasVaultStatsFile, lifetimeCharactersWritten, re
 import { promptForConfirmation } from '../shared/ui/confirm-modal';
 import type { StatusBarOrderService } from '../status-bar-order';
 import type { OpacityService } from '../opacity-service';
-import { renderPropertyColorSection } from '../property-color-settings';
+import { renderPropertyColorSection } from '../features/properties/color-settings';
 import { renderHackerModeSection } from '../features/hacker/settings-section';
 import type { CrystalPluginHost } from '../types';
 import type { CrystalPluginSettings } from './types';

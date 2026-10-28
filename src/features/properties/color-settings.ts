@@ -1,6 +1,6 @@
 import { AbstractInputSuggest, App, ColorComponent, Setting, setIcon } from 'obsidian';
-import type { CrystalPluginHost } from './types';
-import { COLOR_PALETTES, type ColorPalette, getColorPalette, nextPaletteColor } from './property-color';
+import type { CrystalPluginHost } from '../../types';
+import { COLOR_PALETTES, type ColorPalette, getColorPalette, nextPaletteColor } from './color';
 
 /** Names of every property known to the vault, for the name field's suggestions. */
 function knownPropertyNames(app: App): string[] {
