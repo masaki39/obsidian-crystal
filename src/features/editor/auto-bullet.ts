@@ -91,9 +91,10 @@ export function composedSpaceBulletSpec(tr: Transaction, composing: boolean, set
 
 /**
  * Applies `composedSpaceBulletSpec` after the composition has ended. It runs
- * as a separate transaction, so this path takes two undo steps (bullet back to
- * the space, then the space) instead of one. Nothing is touched while the IME
- * is composing.
+ * as a separate transaction after the composed one, so undo may take two
+ * steps (bullet back to the space, then the space), or the history may merge
+ * both with the preceding input into one step; which happens depends on
+ * CodeMirror's history grouping. Nothing is touched while the IME is composing.
  */
 export function autoBulletComposeFallback(getSettings: () => AutoBulletSettings): Extension {
 	return EditorView.updateListener.of((update) => {
