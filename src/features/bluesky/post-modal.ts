@@ -1,5 +1,6 @@
 import { App, Modal, Notice } from 'obsidian';
 import type { GyazoService } from '../gyazo/service';
+import { pickImageFiles } from '../../shared/ui/pick-image-files';
 
 export interface PostResult {
 	text: string;
@@ -130,17 +131,11 @@ export class PostModal extends Modal {
 		refreshPreview();
 
 		uploadButton.addEventListener('click', () => {
-			const input = document.createElement('input');
-			input.type = 'file';
-			input.accept = 'image/*';
-			input.multiple = true;
-			input.addEventListener('change', () => {
-				const incoming = Array.from(input.files || []);
+			pickImageFiles(true, (incoming) => {
 				const remaining = MAX_IMAGES - this.selectedFiles.length;
 				this.selectedFiles = [...this.selectedFiles, ...incoming.slice(0, remaining)];
 				refreshPreview();
 			});
-			input.click();
 		});
 
 		clipboardButton.addEventListener('click', async () => {

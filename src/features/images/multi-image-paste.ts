@@ -1,6 +1,7 @@
 import type { App, Editor } from 'obsidian';
 import type { CrystalPluginSettings } from '../../settings';
 import type { ImageProcessor } from '../../shared/image-processor';
+import { pickImageFiles } from '../../shared/ui/pick-image-files';
 import { resolveAttachmentFolder } from './attachment-folder';
 
 /**
@@ -8,18 +9,9 @@ import { resolveAttachmentFolder } from './attachment-folder';
  */
 export async function promptMultipleImagePaste(app: App, settings: CrystalPluginSettings, imageProcessor: ImageProcessor, editor: Editor): Promise<void> {
 	return new Promise((resolve) => {
-		// Create file input element
-		const input = document.createElement('input');
-		input.type = 'file';
-		input.accept = 'image/*';
-		input.multiple = true; // Enable multiple file selection
-
-		// Handle file selection
-		input.addEventListener('change', async (event) => {
-			const target = event.target as HTMLInputElement;
-			const files = target.files;
-
-			if (files && files.length > 0) {
+		// Let the user pick images (multiple selection allowed)
+		pickImageFiles(true, async (files) => {
+			if (files.length > 0) {
 				try {
 					// Resolve the configured attachment folder ("/", ".", "./sub" forms)
 					const attachmentFolder = await resolveAttachmentFolder(app);
@@ -106,8 +98,5 @@ export async function promptMultipleImagePaste(app: App, settings: CrystalPlugin
 				resolve();
 			}
 		});
-
-		// Trigger file selection dialog
-		input.click();
 	});
 }

@@ -1,5 +1,6 @@
 import { Notice, Editor, requestUrl } from 'obsidian';
 import { ImageProcessor } from '../../shared/image-processor';
+import { pickImageFiles } from '../../shared/ui/pick-image-files';
 import type { CrystalPluginSettings } from '../../settings';
 
 export const EXTENSION_TO_MIME: Record<string, string> = {
@@ -210,13 +211,8 @@ export class GyazoService {
 
 	async promptFileUpload(editor?: Editor): Promise<string | null> {
 		return new Promise((resolve) => {
-			const input = document.createElement('input');
-			input.type = 'file';
-			input.accept = 'image/*';
-			input.multiple = false;
-
-			input.addEventListener('change', async (event) => {
-				const file = (event.target as HTMLInputElement).files?.[0];
+			pickImageFiles(false, async (files) => {
+				const file = files[0];
 				if (file) {
 					try {
 						const url = await this.uploadFile(file, editor);
@@ -228,8 +224,6 @@ export class GyazoService {
 					resolve(null);
 				}
 			});
-
-			input.click();
 		});
 	}
 }
