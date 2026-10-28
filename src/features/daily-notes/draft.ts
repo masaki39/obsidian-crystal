@@ -1,8 +1,8 @@
 import { App, MarkdownView, Notice, Plugin, TFile, requestUrl } from 'obsidian';
-import type { CrystalPluginSettings } from './settings';
-import { parseFrontmatter } from './shared/markdown/frontmatter';
-import type { DailyNotesManager } from './daily-notes';
-import type { BlueskyService } from './features/bluesky/service';
+import type { CrystalPluginSettings } from '../../settings';
+import { parseFrontmatter } from '../../shared/markdown/frontmatter';
+import type { DailyNotesManager } from './manager';
+import type { BlueskyService } from '../bluesky/service';
 
 /** Bluesky accepts at most this many images per post. */
 const MAX_BLUESKY_IMAGES = 4;

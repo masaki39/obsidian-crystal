@@ -1,4 +1,4 @@
-import { DailyNotesManager } from '../src/daily-notes';
+import { DailyNotesManager } from '../src/features/daily-notes/manager';
 import { CrystalPluginSettings, DEFAULT_SETTINGS } from '../src/settings';
 import { TFile } from 'obsidian';
 

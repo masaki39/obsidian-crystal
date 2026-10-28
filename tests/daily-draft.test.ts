@@ -1,4 +1,4 @@
-import { extractDraftBody, resolveDraftPath, splitDraftImages } from '../src/daily-draft';
+import { extractDraftBody, resolveDraftPath, splitDraftImages } from '../src/features/daily-notes/draft';
 
 describe('resolveDraftPath', () => {
 	test('appends .md and strips a leading slash', () => {

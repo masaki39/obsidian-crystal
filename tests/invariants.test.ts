@@ -5,7 +5,7 @@ import CrystalPlugin from '../main';
 import { DEFAULT_SETTINGS } from '../src/settings';
 import { VIEW_TYPE_GAMIFICATION, GAMIFICATION_FLASH_EVENT } from '../src/gamification';
 import { PROPERTY_COLOR_STYLE_ID } from '../src/features/properties/color';
-import { WEEKDAY_ATTR } from '../src/daily-note-weekday';
+import { WEEKDAY_ATTR } from '../src/features/daily-notes/weekday';
 
 describe('settings invariants', () => {
 	it('keeps the set of setting keys', () => {

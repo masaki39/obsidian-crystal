@@ -1,6 +1,6 @@
 import { App, MarkdownView, Plugin, TFile } from 'obsidian';
 import { getDateFromFile } from 'obsidian-daily-notes-interface';
-import type { CrystalPluginSettings } from './settings';
+import type { CrystalPluginSettings } from '../../settings';
 
 export const WEEKDAY_ATTR = 'data-crystal-weekday';
 
