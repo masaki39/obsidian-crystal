@@ -12,7 +12,6 @@ export class ImagePasteAndDropHandler {
 	private boundPasteHandler: (event: ClipboardEvent) => Promise<void>;
 	private boundDragOverHandler: (event: DragEvent) => void;
 	private boundDropHandler: (event: DragEvent) => Promise<void>;
-	private isEnabled: boolean = false;
 
 	constructor(app: App, settings: CrystalPluginSettings, plugin: Plugin) {
 		this.app = app;
@@ -27,30 +26,6 @@ export class ImagePasteAndDropHandler {
 	updateSettings(settings: CrystalPluginSettings) {
 		this.settings = settings;
 		this.imageProcessor.updateSettings(settings);
-	}
-
-	enable() {
-		if (this.isEnabled) {
-			return; // Already enabled
-		}
-		// Add paste event listener to the document
-		document.addEventListener('paste', this.boundPasteHandler, true);
-		// Add drag and drop event listeners
-		document.addEventListener('dragover', this.boundDragOverHandler, true);
-		document.addEventListener('drop', this.boundDropHandler, true);
-		this.isEnabled = true;
-	}
-
-	disable() {
-		if (!this.isEnabled) {
-			return; // Already disabled
-		}
-		// Remove paste event listener
-		document.removeEventListener('paste', this.boundPasteHandler, true);
-		// Remove drag and drop event listeners
-		document.removeEventListener('dragover', this.boundDragOverHandler, true);
-		document.removeEventListener('drop', this.boundDropHandler, true);
-		this.isEnabled = false;
 	}
 
 	private handleDragOver(event: DragEvent): void {
@@ -258,6 +233,12 @@ export class ImagePasteAndDropHandler {
 	}
 
 	async onload() {
+		// Always listen (processing depends on settings). Capture phase so we
+		// see paste/drop before the editor; removed automatically on unload.
+		this.plugin.registerDomEvent(document, 'paste', this.boundPasteHandler, true);
+		this.plugin.registerDomEvent(document, 'dragover', this.boundDragOverHandler, true);
+		this.plugin.registerDomEvent(document, 'drop', this.boundDropHandler, true);
+
 		this.plugin.addCommand({
 			id: 'crystal-paste-multiple-images-from-filesyste',
 			name: 'Image: Paste multiple images from file system',

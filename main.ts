@@ -114,8 +114,6 @@ export default class CrystalPlugin extends Plugin {
 		// Gamification view (sidebar): full Lv/XP/streak/badge picture
 		registerGamificationView(this, () => this.gamificationManager.getSnapshot());
 
-		// Always enable image paste and drop handler (processing depends on settings)
-		this.imagePasteAndDropHandler.enable();
 		this.imagePasteAndDropHandler.onload();
 
 		this.gyazoCommands.onload();
@@ -124,9 +122,6 @@ export default class CrystalPlugin extends Plugin {
 	}
 
 	onunload() {
-		if (this.imagePasteAndDropHandler) {
-			this.imagePasteAndDropHandler.disable();
-		}
 		// Flush any debounced gamification save so a completion right before
 		// unload/reload isn't silently dropped.
 		this.gamificationManager?.flushPendingSave();
