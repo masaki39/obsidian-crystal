@@ -6,7 +6,7 @@ import { grammarCheckCurrentLine } from './grammar';
 import { rewriteWithInstruction } from './rewrite';
 import { translateAboveCursorText, translateBelowCursorText, translateSelectedText } from './translate';
 
-export class GeminiService {
+export class AiCommands {
 	private ai: AIService;
 	private app: App;
 	private plugin: Plugin;

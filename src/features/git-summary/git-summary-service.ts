@@ -3,27 +3,27 @@ import { getDateFromFile, getDailyNote, getAllDailyNotes } from 'obsidian-daily-
 const moment = require('moment');
 import type { CrystalPluginSettings } from '../../settings';
 import type { TerminalService } from '../../shared/terminal-service';
-import type { GeminiService } from '../ai/ai-commands';
+import type { AiCommands } from '../ai/ai-commands';
 
 export class GitSummaryService {
     private app: App;
     private plugin: Plugin;
     private settings: CrystalPluginSettings;
     private terminalService: TerminalService;
-    private geminiService: GeminiService;
+    private aiCommands: AiCommands;
 
     constructor(
         app: App,
         plugin: Plugin,
         settings: CrystalPluginSettings,
         terminalService: TerminalService,
-        geminiService: GeminiService
+        aiCommands: AiCommands
     ) {
         this.app = app;
         this.plugin = plugin;
         this.settings = settings;
         this.terminalService = terminalService;
-        this.geminiService = geminiService;
+        this.aiCommands = aiCommands;
     }
 
     updateSettings(settings: CrystalPluginSettings) {
@@ -38,7 +38,7 @@ export class GitSummaryService {
     }
 
     async generateSummary(): Promise<void> {
-        if (!this.geminiService.isAvailable()) {
+        if (!this.aiCommands.isAvailable()) {
             new Notice('⚠️ AIのAPIキーが設定されていません。設定でプロバイダーとAPIキーを確認してください。');
             return;
         }
@@ -88,7 +88,7 @@ export class GitSummaryService {
             }
 
             new Notice('⏳ AIでサマリーを生成中...');
-            const summary = await this.geminiService.generateGitSummary(diff, dateStr);
+            const summary = await this.aiCommands.generateGitSummary(diff, dateStr);
 
             // 書き込み先: デイリーノートならそのファイル、そうでなければ今日のデイリーノート
             let targetFile: TFile | null = isDailyNote ? file : null;

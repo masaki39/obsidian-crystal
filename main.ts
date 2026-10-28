@@ -1,6 +1,6 @@
 import { Plugin } from 'obsidian';
 import { type CrystalPluginSettings, DEFAULT_SETTINGS, CrystalSettingTab } from './src/settings';
-import { GeminiService } from './src/features/ai/ai-commands';
+import { AiCommands } from './src/features/ai/ai-commands';
 import { BlueskyService } from './src/features/bluesky/service';
 import { DailyNotesManager } from './src/features/daily-notes/manager';
 import { DailyNoteWeekday } from './src/features/daily-notes/weekday';
@@ -30,7 +30,7 @@ import { loadSecrets, saveSecrets, withoutSecrets } from './src/settings/secrets
 
 export default class CrystalPlugin extends Plugin {
 	settings: CrystalPluginSettings;
-	private geminiService: GeminiService;
+	private aiCommands: AiCommands;
 	private blueskyService: BlueskyService;
 	private dailyNotesManager: DailyNotesManager;
 	private dailyNoteWeekday: DailyNoteWeekday;
@@ -60,7 +60,7 @@ export default class CrystalPlugin extends Plugin {
 		await this.loadSettings();
 
 		// Initialize services
-		this.geminiService = new GeminiService(this.app, this, this.settings);
+		this.aiCommands = new AiCommands(this.app, this, this.settings);
 		this.dailyNotesManager = new DailyNotesManager(this.app, this.settings, this);
 		this.dailyNoteWeekday = new DailyNoteWeekday(this.app, this, this.settings);
 		this.gyazoService = new GyazoService(this.settings);
@@ -78,7 +78,7 @@ export default class CrystalPlugin extends Plugin {
 		this.quartzService = new QuartzService(this, this.settings, this.terminalService);
 		this.macroCommands = new MacroCommands(this.marpCommands, this.editorCommands, this);
 		this.gitSummaryService = new GitSummaryService(
-			this.app, this, this.settings, this.terminalService, this.geminiService
+			this.app, this, this.settings, this.terminalService, this.aiCommands
 		);
 		this.opacityService = new OpacityService(this);
 		this.gamificationManager = new GamificationManager(
@@ -99,7 +99,7 @@ export default class CrystalPlugin extends Plugin {
 		this.marpCommands.onload();
 		this.marpCursorSync.onload();
 		this.marpSlideToolbar.onload();
-		this.geminiService.onload();
+		this.aiCommands.onload();
 		this.editorCommands.onload();
 		this.macroCommands.onload();
 		this.gitSummaryService.onload();
@@ -157,7 +157,7 @@ export default class CrystalPlugin extends Plugin {
 		// Save secrets to SecretStorage
 		saveSecrets(this.app, this.settings);
 
-		this.geminiService.updateSettings(this.settings);
+		this.aiCommands.updateSettings(this.settings);
 		await this.blueskyService.updateSettings(this.settings);
 		this.dailyNotesManager.updateSettings(this.settings);
 		this.dailyNoteWeekday.updateSettings(this.settings);
