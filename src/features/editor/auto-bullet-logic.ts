@@ -15,10 +15,12 @@ export type AutoBulletSettings = Pick<
 export interface Lines {
 	readonly count: number;
 	get(index: number): string;
+	/** Lines `from` (inclusive) to `to` (exclusive), in order. */
+	between(from: number, to: number): Iterable<string>;
 }
 
 export function linesOf(lines: readonly string[]): Lines {
-	return { count: lines.length, get: (index) => lines[index] };
+	return { count: lines.length, get: (index) => lines[index], between: (from, to) => lines.slice(from, to) };
 }
 
 /** Whether typing `char` may turn into a bullet with the current settings. */
@@ -51,9 +53,12 @@ export function isExcludedLine(line: string): boolean {
 /** Index of the line closing the frontmatter, or -1 when there is none. */
 function frontmatterEnd(lines: Lines): number {
 	if (lines.count === 0 || lines.get(0).trimEnd() !== '---') return -1;
-	for (let i = 1; i < lines.count; i++) {
-		const line = lines.get(i).trimEnd();
-		if (line === '---' || line === '...') return i;
+	// Stops at the closing line; only an unclosed frontmatter reads the whole document.
+	let index = 1;
+	for (const raw of lines.between(1, lines.count)) {
+		const line = raw.trimEnd();
+		if (line === '---' || line === '...') return index;
+		index++;
 	}
 	return -1;
 }
@@ -98,8 +103,7 @@ export function isInExcludedBlock(lines: Lines, lineNo: number): boolean {
 
 	let fence: Fence | null = null;
 	let inMath = false;
-	for (let i = fmEnd + 1; i < lineNo; i++) {
-		const line = lines.get(i);
+	for (const line of lines.between(fmEnd + 1, lineNo)) {
 		if (fence) {
 			if (closesFence(line, fence)) fence = null;
 		} else if (inMath) {

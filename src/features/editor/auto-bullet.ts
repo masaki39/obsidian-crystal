@@ -5,7 +5,13 @@ import type { CrystalPluginSettings } from '../../settings';
 import { type AutoBulletSettings, BULLET, autoBulletRange, bulletCursorTarget, type Lines } from './auto-bullet-logic';
 
 function docLines(doc: Text): Lines {
-	return { count: doc.lines, get: (index) => doc.line(index + 1).text };
+	return {
+		count: doc.lines,
+		get: (index) => doc.line(index + 1).text,
+		// Sequential iteration instead of a tree lookup per line. iterLines
+		// yields one empty line for an empty range, hence the guard.
+		between: (from, to) => (from >= to ? [] : { [Symbol.iterator]: () => doc.iterLines(from + 1, to + 1)[Symbol.iterator]() }),
+	};
 }
 
 /** The change that turns whitespace typed at `pos` into a bullet, or null. */
@@ -45,6 +51,10 @@ export function autoBulletInputFilter(getSettings: () => AutoBulletSettings): Ex
 		if (changeCount !== 1 || from !== to || from !== selection.main.head) return tr;
 		if (inserted !== ' ' && inserted !== '　') return tr;
 
+		// The replacement is resolved from tr.startState without re-running
+		// changeFilter, and drops tr's other effects/annotations. That is fine for
+		// plain typing at a line start, but a range protected by a changeFilter
+		// could in theory be rewritten here.
 		const spec = bulletSpec(tr.startState, from, inserted, getSettings());
 		return spec ? { ...spec, userEvent: 'input.type' } : tr;
 	});
