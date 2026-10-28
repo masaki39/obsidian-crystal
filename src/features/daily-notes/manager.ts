@@ -1,13 +1,12 @@
 import { App, Plugin, TFile, MarkdownView, Notice } from 'obsidian';
 import type { CrystalPluginSettings } from '../../settings';
-import { parseFrontmatter } from '../../shared/markdown/frontmatter';
 import { promptForText } from '../../shared/ui/prompt-modal';
 import { registerDailyNoteAutoLink } from './auto-link';
 import { registerDailyNoteAutoSort } from './auto-sort';
 import { registerDailyNoteCommands } from './commands';
 import { getDailyNoteFilePath, isDailyNotesPluginLoaded } from './paths';
 import { orderTaskList } from './task-order';
-import { recombineSections, splitByTimeline } from './timeline';
+import { recombineSections, splitByTimeline, transformBeforeTimeline } from './timeline';
 import { createDailyNote, getDateFromFile } from 'obsidian-daily-notes-interface';
 const moment = require('moment');
 
@@ -201,15 +200,13 @@ export class DailyNotesManager {
             }
             const heading = this.settings.dailyNoteTimelineHeading || '# Time Line';
             await this.app.vault.process(file, (content) => {
-                const { frontmatter, content: body } = parseFrontmatter(content);
-                const { before, timeline } = splitByTimeline(body, heading);
-                const beforeTrimmed = before.trimEnd();
-                const taskLine = `- [ ] ${task}`;
-                const updatedBefore = this.settings.dailyNoteNewestFirst
-                    ? (beforeTrimmed.length > 0 ? `${taskLine}\n${beforeTrimmed}` : taskLine)
-                    : (beforeTrimmed.length > 0 ? `${beforeTrimmed}\n${taskLine}` : taskLine);
-                const newBody = recombineSections(updatedBefore, timeline);
-                const newContent = `${frontmatter}${newBody}`;
+                const newContent = transformBeforeTimeline(content, heading, (before) => {
+                    const beforeTrimmed = before.trimEnd();
+                    const taskLine = `- [ ] ${task}`;
+                    return this.settings.dailyNoteNewestFirst
+                        ? (beforeTrimmed.length > 0 ? `${taskLine}\n${beforeTrimmed}` : taskLine)
+                        : (beforeTrimmed.length > 0 ? `${beforeTrimmed}\n${taskLine}` : taskLine);
+                });
                 return newContent.endsWith('\n') ? newContent : `${newContent}\n`;
             });
             new Notice('✅ デイリーノートにタスクを追加しました');

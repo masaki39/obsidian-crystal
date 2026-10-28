@@ -1,9 +1,8 @@
 import { App, Plugin, TFile } from 'obsidian';
 import type { CrystalPluginSettings } from '../../settings';
-import { parseFrontmatter } from '../../shared/markdown/frontmatter';
 import { resolveDraftPath } from './draft';
 import { getDailyNoteFilePath } from './paths';
-import { recombineSections, splitByTimeline } from './timeline';
+import { transformBeforeTimeline } from './timeline';
 const moment = require('moment');
 
 /**
@@ -35,15 +34,12 @@ export function registerDailyNoteAutoLink(app: App, plugin: Plugin, getSettings:
                 const line = `- ${timeStamp} ${fileLink}`;
                 app.vault.process(todayNote as TFile, (content) => {
                 const heading = getSettings().dailyNoteTimelineHeading || '# Time Line';
-                const { frontmatter, content: parsedContent } = parseFrontmatter(content);
-                const { before, timeline } = splitByTimeline(parsedContent, heading);
-                const beforeTrimmed = before.trimEnd();
-                const updatedBefore = getSettings().dailyNoteNewestFirst
-                    ? (beforeTrimmed.length > 0 ? `${line}\n${beforeTrimmed}` : line)
-                    : (beforeTrimmed.length > 0 ? `${beforeTrimmed}\n${line}` : line);
-                const body = recombineSections(updatedBefore, timeline);
-                const newContent = `${frontmatter}${body}`;
-                return newContent;
+                return transformBeforeTimeline(content, heading, (before) => {
+                    const beforeTrimmed = before.trimEnd();
+                    return getSettings().dailyNoteNewestFirst
+                        ? (beforeTrimmed.length > 0 ? `${line}\n${beforeTrimmed}` : line)
+                        : (beforeTrimmed.length > 0 ? `${beforeTrimmed}\n${line}` : line);
+                });
             });
             }));
 
@@ -61,14 +57,9 @@ export function registerDailyNoteAutoLink(app: App, plugin: Plugin, getSettings:
                 const escapedFileLink = fileLink.replace(/[[\](){}.*+?^$|\\]/g, '\\$&');
                 app.vault.process(todayNote as TFile, (content) => {
                     const heading = getSettings().dailyNoteTimelineHeading || '# Time Line';
-                    const { frontmatter, content: parsedContent } = parseFrontmatter(content);
-                    const { before, timeline } = splitByTimeline(parsedContent, heading);
                     // 行全体をマッチして削除（改行も含む）
                     const regex = new RegExp(`^- \\d{2}:\\d{2} ${escapedFileLink}$`, 'gm');
-                    const cleanedBefore = before.replace(regex, '').replace(/\n\n+/g, '\n').trimEnd();
-                    const body = recombineSections(cleanedBefore, timeline);
-                    const newContent = `${frontmatter}${body}`;
-                    return newContent;
+                    return transformBeforeTimeline(content, heading, (before) => before.replace(regex, '').replace(/\n\n+/g, '\n').trimEnd());
                 });
             }));
         });
