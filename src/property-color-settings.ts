@@ -1,8 +1,6 @@
-import { AbstractInputSuggest, App, ColorComponent, Plugin, Setting, setIcon } from 'obsidian';
-import type { CrystalPluginSettings } from './settings';
+import { AbstractInputSuggest, App, ColorComponent, Setting, setIcon } from 'obsidian';
+import type { CrystalPluginHost } from './types';
 import { COLOR_PALETTES, type ColorPalette, getColorPalette, nextPaletteColor } from './property-color';
-
-type CrystalPlugin = Plugin & { settings: CrystalPluginSettings; saveSettings(): Promise<void> };
 
 /** Names of every property known to the vault, for the name field's suggestions. */
 function knownPropertyNames(app: App): string[] {
@@ -103,7 +101,7 @@ function addColorControls(
 }
 
 /** Settings section for per-property name colors (see `PropertyColorService`). */
-export function renderPropertyColorSection(containerEl: HTMLElement, app: App, plugin: CrystalPlugin) {
+export function renderPropertyColorSection(containerEl: HTMLElement, app: App, plugin: CrystalPluginHost) {
 	const heading = new Setting(containerEl)
 		.setName('Property colors')
 		.setDesc('Give property names their own text color in the Properties editor, so important ones are easier to spot.')

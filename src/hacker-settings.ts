@@ -1,13 +1,7 @@
-import { Plugin, Setting } from 'obsidian';
-import type { CrystalPluginSettings, HackerEffectToggles } from './settings';
-import type { HackerModeService } from './hacker-mode';
+import { Setting } from 'obsidian';
+import type { HackerEffectToggles } from './settings';
+import type { CrystalPluginHost } from './types';
 import { showRewardBanner } from './hacker-glitch';
-
-type CrystalPlugin = Plugin & {
-	settings: CrystalPluginSettings;
-	saveSettings(): Promise<void>;
-	hackerModeService?: HackerModeService;
-};
 
 const EFFECTS: Array<{ key: keyof HackerEffectToggles; name: string; desc: string }> = [
 	{ key: 'crt', name: 'CRT overlay', desc: 'Scanlines, vignette and a faint flicker over the whole window.' },
@@ -20,7 +14,7 @@ const EFFECTS: Array<{ key: keyof HackerEffectToggles; name: string; desc: strin
 	{ key: 'rewardBanner', name: 'Reward banner', desc: 'Gamification rewards also show an "ACCESS GRANTED" banner or terminal line.' },
 ];
 
-export function renderHackerModeSection(containerEl: HTMLElement, plugin: CrystalPlugin) {
+export function renderHackerModeSection(containerEl: HTMLElement, plugin: CrystalPluginHost) {
 	const { settings } = plugin;
 
 	new Setting(containerEl).setName('Hacker mode').setHeading()

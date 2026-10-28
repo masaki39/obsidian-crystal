@@ -1,4 +1,4 @@
-import { App, type IconName, Notice, Plugin, PluginSettingTab, SearchComponent, Setting, prepareSimpleSearch, requestUrl, setIcon } from 'obsidian';
+import { App, type IconName, Notice, PluginSettingTab, SearchComponent, Setting, prepareSimpleSearch, requestUrl, setIcon } from 'obsidian';
 import { AtpAgent } from '@atproto/api';
 import { calculateLevel } from './gamification';
 import { defaultVaultStatsPath, hasVaultStatsFile, lifetimeCharactersWritten, readVaultStats } from './word-stats';
@@ -7,6 +7,7 @@ import type { StatusBarOrderService } from './status-bar-order';
 import type { OpacityService } from './opacity-service';
 import { renderPropertyColorSection } from './property-color-settings';
 import { renderHackerModeSection } from './hacker-settings';
+import type { CrystalPluginHost } from './types';
 
 export interface FileOrganizationRule {
 	displayName: string;
@@ -246,7 +247,7 @@ interface SettingsSection {
 }
 
 export class CrystalSettingTab extends PluginSettingTab {
-	plugin: Plugin & { settings: CrystalPluginSettings; saveSettings(): Promise<void> };
+	plugin: CrystalPluginHost;
 
 	/** Which of the top-nav sections is showing; persists for the lifetime of
 	 * this tab instance so re-opening Settings returns to where you left off. */
@@ -255,7 +256,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 	 * "one section" to "every section, filtered". */
 	private searchQuery = '';
 
-	constructor(app: App, plugin: Plugin & { settings: CrystalPluginSettings; saveSettings(): Promise<void> }) {
+	constructor(app: App, plugin: CrystalPluginHost) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}

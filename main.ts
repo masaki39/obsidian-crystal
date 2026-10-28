@@ -1,4 +1,4 @@
-import { Editor, MarkdownView, Plugin } from 'obsidian';
+import { Plugin } from 'obsidian';
 import { type CrystalPluginSettings, DEFAULT_SETTINGS, CrystalSettingTab } from './src/settings';
 import { GeminiService } from './src/gemini-service';
 import { BlueskyService } from './src/bluesky-service';
@@ -18,35 +18,15 @@ import { QuartzService } from './src/quartz-service';
 import { MacroCommands } from './src/macro';
 import { GitSummaryService } from './src/git-summary-service';
 import { OpacityService } from './src/opacity-service';
-import { GamificationManager, VIEW_TYPE_GAMIFICATION } from './src/gamification';
-import { GamificationView } from './src/gamification-view';
+import { GamificationManager } from './src/gamification';
+import { activateGamificationView, registerGamificationView } from './src/gamification-register';
 import { SidebarFocusCommands } from './src/sidebar-focus';
 import { PropertyLinkService } from './src/property-link';
 import { PropertyColorService } from './src/property-color';
 import { StatusBarOrderService } from './src/status-bar-order';
 import { HackerModeService } from './src/hacker-mode';
-
-// Crystal Plugin for Obsidian
-
-const SECRET_FIELDS: (keyof CrystalPluginSettings)[] = [
-	'GeminiAPIKey',
-	'OpenAIAPIKey',
-	'blueskyIdentifier',
-	'blueskyPassword',
-	'gyazoAccessToken',
-];
-
-const SECRET_KEY_MAP: Record<keyof CrystalPluginSettings, string> = {
-	GeminiAPIKey: 'crystal-gemini-api-key',
-	OpenAIAPIKey: 'crystal-openai-api-key',
-	blueskyIdentifier: 'crystal-bluesky-identifier',
-	blueskyPassword: 'crystal-bluesky-password',
-	gyazoAccessToken: 'crystal-gyazo-access-token',
-} as any;
-
-function secretKey(field: keyof CrystalPluginSettings): string {
-	return SECRET_KEY_MAP[field];
-}
+import { GyazoCommands } from './src/gyazo-commands';
+import { loadSecrets, saveSecrets, withoutSecrets } from './src/settings/secrets';
 
 export default class CrystalPlugin extends Plugin {
 	settings: CrystalPluginSettings;
@@ -58,6 +38,7 @@ export default class CrystalPlugin extends Plugin {
 	private gyazoService: GyazoService;
 	private gyazoImageMigrator: GyazoImageMigrator;
 	private gyazoLocalImageMigrator: GyazoLocalImageMigrator;
+	private gyazoCommands: GyazoCommands;
 	private imagePasteAndDropHandler: ImagePasteAndDropHandler;
 	private editorCommands: EditorCommands;
 	private marpCommands: MarpCommands;
@@ -85,6 +66,7 @@ export default class CrystalPlugin extends Plugin {
 		this.gyazoService = new GyazoService(this.settings);
 		this.gyazoImageMigrator = new GyazoImageMigrator(this.gyazoService);
 		this.gyazoLocalImageMigrator = new GyazoLocalImageMigrator(this.app, this.gyazoService);
+		this.gyazoCommands = new GyazoCommands(this, this.gyazoService, this.gyazoImageMigrator, this.gyazoLocalImageMigrator);
 		this.blueskyService = new BlueskyService(this.app, this, this.settings, this.dailyNotesManager, this.gyazoService);
 		this.dailyDraft = new DailyDraft(this.app, this, this.settings, this.dailyNotesManager, this.blueskyService);
 		this.imagePasteAndDropHandler = new ImagePasteAndDropHandler(this.app, this.settings, this);
@@ -100,7 +82,7 @@ export default class CrystalPlugin extends Plugin {
 		);
 		this.opacityService = new OpacityService(this);
 		this.gamificationManager = new GamificationManager(
-			this.app, this, this.settings, Math.random, () => this.activateGamificationView()
+			this.app, this, this.settings, Math.random, () => activateGamificationView(this.app)
 		);
 		this.sidebarFocusCommands = new SidebarFocusCommands(this.app, this);
 		this.propertyLinkService = new PropertyLinkService(this.app, this, this.settings);
@@ -130,78 +112,13 @@ export default class CrystalPlugin extends Plugin {
 		this.hackerModeService.onload();
 
 		// Gamification view (sidebar): full Lv/XP/streak/badge picture
-		this.registerView(
-			VIEW_TYPE_GAMIFICATION,
-			(leaf) => new GamificationView(leaf, () => this.gamificationManager.getSnapshot())
-		);
-		this.addRibbonIcon('gamepad-2', 'Crystal: Gamification stats', () => this.activateGamificationView());
-		this.addCommand({
-			id: 'crystal-open-gamification-view',
-			name: 'Gamification: Open stats view',
-			icon: 'gamepad-2',
-			callback: () => this.activateGamificationView(),
-		});
+		registerGamificationView(this, () => this.gamificationManager.getSnapshot());
 
 		// Always enable image paste and drop handler (processing depends on settings)
 		this.imagePasteAndDropHandler.enable();
 		this.imagePasteAndDropHandler.onload();
 
-
-		// Gyazo Upload Command
-		this.addCommand({
-			id: 'crystal-upload-clipboard-image',
-			name: 'Gyazo: Upload clipboard image',
-			icon: 'upload-cloud',
-			editorCallback: async (editor: Editor) => {
-				try {
-					await this.gyazoService.uploadClipboardImage(editor);
-				} catch (error) {
-					console.error('Failed to upload clipboard image:', error);
-				}
-			}
-		});
-
-		// Gyazo File Upload Command
-		this.addCommand({
-			id: 'crystal-upload-file-image',
-			name: 'Gyazo: Upload image file',
-			icon: 'upload-cloud',
-			editorCallback: async (editor: Editor) => {
-				try {
-					await this.gyazoService.promptFileUpload(editor);
-				} catch (error) {
-					console.error('Failed to upload image file:', error);
-				}
-			}
-		});
-
-		// Replace external image URLs in the active note with Gyazo-hosted copies
-		this.addCommand({
-			id: 'crystal-replace-image-urls-with-gyazo',
-			name: 'Gyazo: Replace image URLs in active note',
-			icon: 'image-plus',
-			editorCallback: async (editor: Editor, view: MarkdownView) => {
-				try {
-					await this.gyazoImageMigrator.replaceExternalImagesInActiveNote(editor, view);
-				} catch (error) {
-					console.error('Failed to replace image URLs with Gyazo:', error);
-				}
-			}
-		});
-
-		// Replace local (vault) image embeds in the active note with Gyazo-hosted copies
-		this.addCommand({
-			id: 'crystal-replace-local-images-with-gyazo',
-			name: 'Gyazo: Replace local images in active note',
-			icon: 'image-plus',
-			editorCallback: async (editor: Editor, view: MarkdownView) => {
-				try {
-					await this.gyazoLocalImageMigrator.replaceLocalImagesInActiveNote(editor, view);
-				} catch (error) {
-					console.error('Failed to replace local images with Gyazo:', error);
-				}
-			}
-		});
+		this.gyazoCommands.onload();
 
 		this.addSettingTab(new CrystalSettingTab(this.app, this));
 	}
@@ -222,53 +139,23 @@ export default class CrystalPlugin extends Plugin {
 		this.marpSlideToolbar?.onunload();
 	}
 
-	async activateGamificationView() {
-		const { workspace } = this.app;
-		let leaf = workspace.getLeavesOfType(VIEW_TYPE_GAMIFICATION)[0];
-		if (!leaf) {
-			leaf = workspace.getRightLeaf(false) ?? workspace.getLeaf(true);
-			await leaf.setViewState({ type: VIEW_TYPE_GAMIFICATION, active: true });
-		}
-		workspace.revealLeaf(leaf);
-	}
-
 	async loadSettings() {
 		const stored = await this.loadData();
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, stored);
 
 		// Load secrets from SecretStorage; migrate from old data.json if needed
-		for (const field of SECRET_FIELDS) {
-			const key = secretKey(field);
-			const fromStore = await this.app.secretStorage.getSecret(key);
-			if (fromStore !== null) {
-				(this.settings as any)[field] = fromStore;
-			} else if ((this.settings as any)[field]) {
-				// Migrate: move value from data.json into SecretStorage
-				await this.app.secretStorage.setSecret(key, (this.settings as any)[field]);
-			}
-		}
+		await loadSecrets(this.app, this.settings);
 
 		// Remove secrets from data.json
-		const clean: any = Object.assign({}, stored);
-		for (const field of SECRET_FIELDS) {
-			delete clean[field];
-		}
-		await this.saveData(clean);
+		await this.saveData(withoutSecrets(stored));
 	}
 
 	async saveSettings() {
 		// Save non-secret settings to data.json
-		const clean: any = Object.assign({}, this.settings);
-		for (const field of SECRET_FIELDS) {
-			delete clean[field];
-		}
-		await this.saveData(clean);
+		await this.saveData(withoutSecrets(this.settings));
 
 		// Save secrets to SecretStorage
-		for (const field of SECRET_FIELDS) {
-			const value = (this.settings as any)[field] as string;
-			this.app.secretStorage.setSecret(secretKey(field), value ?? '');
-		}
+		saveSecrets(this.app, this.settings);
 
 		this.geminiService.updateSettings(this.settings);
 		await this.blueskyService.updateSettings(this.settings);
