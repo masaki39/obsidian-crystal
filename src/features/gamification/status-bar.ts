@@ -135,6 +135,13 @@ export class GamificationStatusBar {
 			this.flashTimeoutId = null;
 			this.renderStatusBar();
 		}, duration);
-		this.plugin.registerInterval(this.flashTimeoutId);
+	}
+
+	/** Cancel a pending flash reset (plugin unload). */
+	onunload() {
+		if (this.flashTimeoutId !== null) {
+			window.clearTimeout(this.flashTimeoutId);
+			this.flashTimeoutId = null;
+		}
 	}
 }

@@ -122,9 +122,9 @@ export default class CrystalPlugin extends Plugin {
 	}
 
 	onunload() {
-		// Flush any debounced gamification save so a completion right before
-		// unload/reload isn't silently dropped.
-		this.gamificationManager?.flushPendingSave();
+		// Flushes any debounced gamification save so a completion right before
+		// unload/reload isn't silently dropped, then clears its timers.
+		this.gamificationManager?.onunload();
 		this.opacityService?.onunload();
 		this.statusBarOrderService?.onunload();
 		this.hackerModeService?.onunload();

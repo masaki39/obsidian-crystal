@@ -396,7 +396,6 @@ export class GamificationManager {
 				console.error('Crystal gamification: failed to refresh word-count stats', error);
 			});
 		}, 400);
-		this.plugin.registerInterval(this.charStatsDebounceId);
 	}
 
 	/**
@@ -682,7 +681,6 @@ export class GamificationManager {
 				console.error('Crystal gamification: failed to save settings', error);
 			});
 		}, 400);
-		this.plugin.registerInterval(this.saveDebounceId);
 	}
 
 	/**
@@ -697,6 +695,19 @@ export class GamificationManager {
 		this.plugin.saveSettings().catch((error) => {
 			console.error('Crystal gamification: failed to save settings', error);
 		});
+	}
+
+	/**
+	 * Plugin unload: write out a pending debounced save first (so a completion
+	 * right before unload isn't lost), then cancel the remaining timers.
+	 */
+	onunload() {
+		this.flushPendingSave();
+		if (this.charStatsDebounceId !== null) {
+			window.clearTimeout(this.charStatsDebounceId);
+			this.charStatsDebounceId = null;
+		}
+		this.statusBar.onunload();
 	}
 }
 
