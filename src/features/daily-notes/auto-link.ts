@@ -33,14 +33,14 @@ export function registerDailyNoteAutoLink(app: App, plugin: Plugin, getSettings:
 				const fileLink = `[[${file.name.replace(/\.md$/, '')}]]`;
 				const line = `- ${timeStamp} ${fileLink}`;
 				app.vault.process(todayNote as TFile, (content) => {
-				const heading = getSettings().dailyNoteTimelineHeading || '# Time Line';
-				return transformBeforeTimeline(content, heading, (before) => {
-					const beforeTrimmed = before.trimEnd();
-					return getSettings().dailyNoteNewestFirst
-						? (beforeTrimmed.length > 0 ? `${line}\n${beforeTrimmed}` : line)
-						: (beforeTrimmed.length > 0 ? `${beforeTrimmed}\n${line}` : line);
+					const heading = getSettings().dailyNoteTimelineHeading || '# Time Line';
+					return transformBeforeTimeline(content, heading, (before) => {
+						const beforeTrimmed = before.trimEnd();
+						return getSettings().dailyNoteNewestFirst
+							? (beforeTrimmed.length > 0 ? `${line}\n${beforeTrimmed}` : line)
+							: (beforeTrimmed.length > 0 ? `${beforeTrimmed}\n${line}` : line);
+					});
 				});
-			});
 			}));
 
 			plugin.registerEvent(app.vault.on('delete', file => {
