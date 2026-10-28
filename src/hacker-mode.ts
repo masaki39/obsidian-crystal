@@ -1,6 +1,7 @@
 import { EditorView, ViewUpdate } from '@codemirror/view';
 import { MarkdownView, Plugin, TFile, WorkspaceLeaf } from 'obsidian';
-import { type CrystalPluginSettings, DEFAULT_HACKER_EFFECTS, type HackerEffectToggles } from './settings';
+import type { CrystalPluginSettings, HackerEffectToggles } from './settings';
+import { DEFAULT_HACKER_EFFECTS } from './settings/defaults';
 import { OverlayCanvas, prefersReducedMotion } from './hacker-fx-canvas';
 import { MatrixRain } from './hacker-matrix';
 import { TypingFx } from './hacker-typing';

@@ -1,5 +1,5 @@
 import type { App } from 'obsidian';
-import type { CrystalPluginSettings } from '../settings';
+import type { CrystalPluginSettings } from './types';
 
 // Settings stored in Obsidian's SecretStorage instead of data.json.
 export const SECRET_FIELDS: (keyof CrystalPluginSettings)[] = [
