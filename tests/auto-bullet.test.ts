@@ -5,7 +5,7 @@ import {
 	bulletCursorTarget,
 	linesOf,
 } from '../src/features/editor/auto-bullet-logic';
-import { autoBulletInputFilter, autoBulletTabCommand } from '../src/features/editor/auto-bullet';
+import { autoBulletInputFilter, autoBulletTabCommand, composedSpaceBulletSpec } from '../src/features/editor/auto-bullet';
 
 const ALL_ON: AutoBulletSettings = {
 	autoBulletEnabled: true,
@@ -210,6 +210,42 @@ describe('auto bullet: CodeMirror input filter', () => {
 
 	it('leaves excluded lines alone', () => {
 		expect(insert(stateWith('# a', 0), ' ', 'input.type').state.doc.toString()).toBe(' # a');
+	});
+});
+
+describe('auto bullet: IME composition fallback', () => {
+	function compose(doc: string, cursor: number, text = FULL) {
+		const state = EditorState.create({ doc, selection: EditorSelection.cursor(cursor) });
+		return state.update({ changes: { from: cursor, insert: text }, selection: { anchor: cursor + text.length }, userEvent: 'input.type.compose' });
+	}
+
+	it('turns a committed full-width space into a bullet once composing has ended', () => {
+		const tr = compose('first\nfoo', 6);
+		const spec = composedSpaceBulletSpec(tr, false, ALL_ON);
+		expect(spec).not.toBeNull();
+		const after = tr.state.update(spec!);
+		expect(after.state.doc.toString()).toBe('first\n- foo');
+		expect(after.state.selection.main.head).toBe(8);
+		expect(after.isUserEvent('input.type')).toBe(true);
+	});
+
+	it('never touches the document while the view is composing', () => {
+		expect(composedSpaceBulletSpec(compose('', 0), true, ALL_ON)).toBeNull();
+	});
+
+	it('ignores other composed text and half-width spaces', () => {
+		expect(composedSpaceBulletSpec(compose('', 0, 'あ'), false, ALL_ON)).toBeNull();
+		expect(composedSpaceBulletSpec(compose('', 0, '\u3000\u3000'), false, ALL_ON)).toBeNull();
+		expect(composedSpaceBulletSpec(compose('', 0, ' '), false, ALL_ON)).toBeNull();
+	});
+
+	it('only handles compose events, respects settings and exclusions', () => {
+		const state = EditorState.create({ doc: '' });
+		const typed = state.update({ changes: { from: 0, insert: FULL }, userEvent: 'input.type' });
+		expect(composedSpaceBulletSpec(typed, false, ALL_ON)).toBeNull();
+		expect(composedSpaceBulletSpec(compose('', 0), false, { ...ALL_ON, autoBulletFullWidthSpace: false })).toBeNull();
+		expect(composedSpaceBulletSpec(compose('# a', 0), false, ALL_ON)).toBeNull();
+		expect(composedSpaceBulletSpec(compose('foo', 3), false, ALL_ON)).toBeNull();
 	});
 });
 
