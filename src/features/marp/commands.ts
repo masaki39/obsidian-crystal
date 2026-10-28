@@ -8,7 +8,6 @@ import { goToAdjacentSlide, moveCurrentSlide } from './navigation';
 import { MarpServer } from './server';
 
 export class MarpCommands {
-	private terminalService: TerminalService;
 	private settings: CrystalPluginSettings;
 	private plugin: Plugin;
 	private exporter: MarpExporter;
@@ -16,7 +15,6 @@ export class MarpCommands {
 	private images: MarpImages;
 
 	constructor(terminalService: TerminalService, settings: CrystalPluginSettings, plugin: Plugin) {
-		this.terminalService = terminalService;
 		this.settings = settings;
 		this.plugin = plugin;
 		this.exporter = new MarpExporter(terminalService, plugin, () => this.settings);
