@@ -9,7 +9,7 @@ import { GyazoService } from './src/features/gyazo/service';
 import { GyazoImageMigrator } from './src/features/gyazo/image-migrator';
 import { GyazoLocalImageMigrator } from './src/features/gyazo/local-image-migrator';
 import { ImagePasteAndDropHandler } from './src/features/images/paste-drop-handler';
-import { EditorCommands } from './src/editor-commands';
+import { EditorCommands } from './src/features/editor/commands';
 import { MarpCommands } from './src/features/marp/commands';
 import { MarpCursorSync } from './src/features/marp/sync';
 import { MarpSlideToolbar } from './src/features/marp/toolbar';
