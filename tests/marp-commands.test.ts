@@ -1,4 +1,4 @@
-import { MarpCommands } from '../src/marp';
+import { MarpCommands } from '../src/features/marp/commands';
 import { CrystalPluginSettings, DEFAULT_SETTINGS } from '../src/settings';
 import type { Editor, MarkdownView, Plugin } from 'obsidian';
 

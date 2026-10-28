@@ -1,5 +1,5 @@
-import { moveSlide } from '../src/marp-slide-ops';
-import { slideNumberForLine } from '../src/marp-slide-index';
+import { moveSlide } from '../src/features/marp/slide-ops';
+import { slideNumberForLine } from '../src/features/marp/slide-index';
 
 /** moveSlide の結果を実際に適用する（エディタの replaceRange 相当） */
 const applyMove = (content: string, move: ReturnType<typeof moveSlide>): string => {

@@ -4,11 +4,11 @@ const http = require('http');
 const fs = require('fs').promises;
 const path = require('path');
 import type { ChildProcess } from 'child_process';
-import type { TerminalService } from './shared/terminal-service';
-import { MARP_SERVER_ORIGIN, findMarpViewerLeaf, findMarpViewerLeaves, pageUrlForFile } from './marp-server-url';
-import { lineForSlideNumber, slideNumberForLine } from './marp-slide-index';
-import { moveSlide } from './marp-slide-ops';
-import type { CrystalPluginSettings } from './settings';
+import type { TerminalService } from '../../shared/terminal-service';
+import { MARP_SERVER_ORIGIN, findMarpViewerLeaf, findMarpViewerLeaves, pageUrlForFile } from './server-url';
+import { lineForSlideNumber, slideNumberForLine } from './slide-index';
+import { moveSlide } from './slide-ops';
+import type { CrystalPluginSettings } from '../../settings';
 
 export class MarpCommands {
 	private terminalService: TerminalService;

@@ -1,4 +1,4 @@
-import { lineForSlideNumber, slideNumberForLine } from '../src/marp-slide-index';
+import { lineForSlideNumber, slideNumberForLine } from '../src/features/marp/slide-index';
 
 const deck = [
 	'---',              // 0 front matter 開始

@@ -6,7 +6,7 @@ import {
 	slideNumberFromUrl,
 	slideRelativePath,
 	vaultPathForUrl
-} from '../src/marp-server-url';
+} from '../src/features/marp/server-url';
 
 const createFile = (path: string): TFile => {
 	const extension = path.includes('.') ? path.split('.').pop()! : '';

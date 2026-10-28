@@ -1,7 +1,7 @@
 import { MarkdownView, Plugin, WorkspaceLeaf } from 'obsidian';
 import { EditorView, ViewUpdate } from '@codemirror/view';
-import type { CrystalPluginSettings } from './settings';
-import { lineForSlideNumber, slideNumberForLine } from './marp-slide-index';
+import type { CrystalPluginSettings } from '../../settings';
+import { lineForSlideNumber, slideNumberForLine } from './slide-index';
 import {
 	WEBVIEWER_VIEW_TYPE,
 	findMarpViewerLeaf,
@@ -10,7 +10,7 @@ import {
 	vaultPathForUrl,
 	webviewOf,
 	webviewerUrl
-} from './marp-server-url';
+} from './server-url';
 
 const MARKDOWN_VIEW_TYPE = 'markdown';
 const SYNC_DEBOUNCE_MS = 150;
