@@ -310,6 +310,21 @@ describe('bulletCursorTarget', () => {
 		expect(bulletCursorTarget('  - [ ] foo')).toBe(8);
 	});
 
+	it('25b. after the other list markers', () => {
+		expect(bulletCursorTarget('* foo')).toBe(2);
+		expect(bulletCursorTarget('+ foo')).toBe(2);
+		expect(bulletCursorTarget('1) foo')).toBe(3);
+		expect(bulletCursorTarget('  * foo')).toBe(4);
+		expect(bulletCursorTarget('\t1) foo')).toBe(4);
+	});
+
+	it('27b. after the checkbox for any list marker', () => {
+		expect(bulletCursorTarget('* [ ] foo')).toBe(6);
+		expect(bulletCursorTarget('  + [x] foo')).toBe(8);
+		expect(bulletCursorTarget('1. [ ] foo')).toBe(7);
+		expect(bulletCursorTarget('1) [x] foo')).toBe(7);
+	});
+
 	it('28. line start for other lines', () => {
 		expect(bulletCursorTarget('foo')).toBe(0);
 		expect(bulletCursorTarget('  foo')).toBe(0);

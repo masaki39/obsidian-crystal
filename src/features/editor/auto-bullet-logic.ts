@@ -141,13 +141,11 @@ export function autoBulletRange(
 }
 
 /**
- * Column for "Move cursor after list marker": after `- ` (or after a
- * checkbox `- [ ] `), after `1. `, otherwise the start of the line.
+ * Column for "Move cursor after list marker": after the marker of the same
+ * list kinds auto bullet skips (`- ` `* ` `+ ` `1. ` `1) `, indented or not),
+ * after a checkbox (`- [ ] `) when there is one, otherwise the line start.
  */
 export function bulletCursorTarget(line: string): number {
-	const bullet = /^([ \t　]*)- (\[[^\]]\] )?/.exec(line);
-	if (bullet) return bullet[0].length;
-	const numbered = /^(\s*)(\d+\.\s)/.exec(line);
-	if (numbered) return numbered[0].length;
-	return 0;
+	const marker = /^[ \t　]*(?:[-*+]|\d+[.)])\s(?:\[[^\]]\] )?/.exec(line);
+	return marker ? marker[0].length : 0;
 }
