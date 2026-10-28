@@ -26,8 +26,8 @@ const CHAR_MILESTONE_BONUS_CHANCE = 0.4;
  * per day. Returns [] when `goal` is 0 (writing-goal feature disabled).
  */
 export function checkNewlyReachedCharMilestones(current: number, goal: number, reachedFractions: number[]): number[] {
-    if (goal <= 0) return [];
-    return CHAR_GOAL_MILESTONES.filter((fraction) => current >= goal * fraction && !reachedFractions.includes(fraction));
+	if (goal <= 0) return [];
+	return CHAR_GOAL_MILESTONES.filter((fraction) => current >= goal * fraction && !reachedFractions.includes(fraction));
 }
 
 /**
@@ -37,22 +37,22 @@ export function checkNewlyReachedCharMilestones(current: number, goal: number, r
  * injectable for tests.
  */
 export function rollCharMilestoneBonus(random: () => number = Math.random): number {
-    return random() < CHAR_MILESTONE_BONUS_CHANCE ? CHAR_MILESTONE_BONUS_XP : 0;
+	return random() < CHAR_MILESTONE_BONUS_CHANCE ? CHAR_MILESTONE_BONUS_XP : 0;
 }
 
 export interface WordStatsTickInput {
-    charsToday: number;
-    goal: number;
-    /** Milestone fractions already recorded as reached today. */
-    milestonesReached: number[];
-    /** Whether the daily writing goal was already granted its reward today. */
-    goalAlreadyAchievedToday: boolean;
+	charsToday: number;
+	goal: number;
+	/** Milestone fractions already recorded as reached today. */
+	milestonesReached: number[];
+	/** Whether the daily writing goal was already granted its reward today. */
+	goalAlreadyAchievedToday: boolean;
 }
 
 export interface WordStatsTickResult {
-    newMilestones: number[];
-    /** Whether the daily goal is newly met this tick and should grant its reward. */
-    goalReached: boolean;
+	newMilestones: number[];
+	/** Whether the daily goal is newly met this tick and should grant its reward. */
+	goalReached: boolean;
 }
 
 /**
@@ -68,9 +68,9 @@ export interface WordStatsTickResult {
  * silently deferring it to a future edit that might never come that day.
  */
 export function resolveWordStatsTick(input: WordStatsTickInput): WordStatsTickResult {
-    // checkNewlyReachedCharMilestones and hasReachedGoal both already treat
-    // goal <= 0 as "disabled" internally — no need to re-guard it here too.
-    const newMilestones = checkNewlyReachedCharMilestones(input.charsToday, input.goal, input.milestonesReached);
-    const goalReached = !input.goalAlreadyAchievedToday && hasReachedGoal(input.charsToday, input.goal);
-    return { newMilestones, goalReached };
+	// checkNewlyReachedCharMilestones and hasReachedGoal both already treat
+	// goal <= 0 as "disabled" internally — no need to re-guard it here too.
+	const newMilestones = checkNewlyReachedCharMilestones(input.charsToday, input.goal, input.milestonesReached);
+	const goalReached = !input.goalAlreadyAchievedToday && hasReachedGoal(input.charsToday, input.goal);
+	return { newMilestones, goalReached };
 }

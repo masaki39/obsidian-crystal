@@ -3,73 +3,73 @@ import type { CrystalPluginSettings } from "../../settings";
 import { Plugin, Notice } from "obsidian";
 
 export class QuartzService {
-    private terminalService: TerminalService;
-    private settings: CrystalPluginSettings;
-    private plugin: Plugin;
+	private terminalService: TerminalService;
+	private settings: CrystalPluginSettings;
+	private plugin: Plugin;
 
-    constructor(plugin: Plugin, settings: CrystalPluginSettings, terminalService: TerminalService) {
-        this.plugin = plugin;
-        this.settings = settings;
-        this.terminalService = terminalService;
-    }
+	constructor(plugin: Plugin, settings: CrystalPluginSettings, terminalService: TerminalService) {
+		this.plugin = plugin;
+		this.settings = settings;
+		this.terminalService = terminalService;
+	}
 
-    updateSettings(settings: CrystalPluginSettings) {
-        this.settings = settings;
-    }
+	updateSettings(settings: CrystalPluginSettings) {
+		this.settings = settings;
+	}
 
-    private async generateQuartzSyncCommand() {
-        const quartzPath = this.settings.quartzPath;
-        const command = `cd "${quartzPath}" && npx quartz sync`;
-        console.log(command);
-        return command;
-    }
+	private async generateQuartzSyncCommand() {
+		const quartzPath = this.settings.quartzPath;
+		const command = `cd "${quartzPath}" && npx quartz sync`;
+		console.log(command);
+		return command;
+	}
 
-    async quartzSync() {
-        const command = await this.generateQuartzSyncCommand();
-        await this.terminalService.executeCommand(command);
-        new Notice('✅ Quartz Sync executed');
-    }
+	async quartzSync() {
+		const command = await this.generateQuartzSyncCommand();
+		await this.terminalService.executeCommand(command);
+		new Notice('✅ Quartz Sync executed');
+	}
 
-    async openQuartzSite() {
-        const githubUserName = this.settings.githubUserName;
-        const quartzSiteUrl = `https://${githubUserName}.github.io`;
-        open(quartzSiteUrl);
-    }
+	async openQuartzSite() {
+		const githubUserName = this.settings.githubUserName;
+		const quartzSiteUrl = `https://${githubUserName}.github.io`;
+		open(quartzSiteUrl);
+	}
 
-    async quartzSyncAndOpenSite() {
-        await this.quartzSync();
-        this.openQuartzSite();
-        const githubActionsUrl = `https://github.com/${this.settings.githubUserName}/${this.settings.githubUserName}.github.io/actions`;
-        open (githubActionsUrl);
-    }
+	async quartzSyncAndOpenSite() {
+		await this.quartzSync();
+		this.openQuartzSite();
+		const githubActionsUrl = `https://github.com/${this.settings.githubUserName}/${this.settings.githubUserName}.github.io/actions`;
+		open (githubActionsUrl);
+	}
 
-    async onload() {
-        this.plugin.addCommand({
-            id: 'crystal-quartz-sync',
-            name: 'Quartz: Sync',
-            icon: 'refresh-cw',
-            callback: () => {
-                this.quartzSync();
-            }
-        });
+	async onload() {
+		this.plugin.addCommand({
+			id: 'crystal-quartz-sync',
+			name: 'Quartz: Sync',
+			icon: 'refresh-cw',
+			callback: () => {
+				this.quartzSync();
+			}
+		});
 
-        this.plugin.addCommand({
-            id: 'crystal-quartz-open-site',
-            name: `Quartz: Open site (${this.settings.quartzSiteName})`,
-            icon: 'globe',
-            callback: () => {
-                this.openQuartzSite();
-            }
-        });
+		this.plugin.addCommand({
+			id: 'crystal-quartz-open-site',
+			name: `Quartz: Open site (${this.settings.quartzSiteName})`,
+			icon: 'globe',
+			callback: () => {
+				this.openQuartzSite();
+			}
+		});
 
-        this.plugin.addCommand({
-            id: 'crystal-quartz-sync-and-open-site',
-            name: `Quartz: Sync and open site (${this.settings.quartzSiteName})`,
-            icon: 'external-link',
-            callback: () => {
-                this.quartzSyncAndOpenSite();
-            }
-        });
-    }
+		this.plugin.addCommand({
+			id: 'crystal-quartz-sync-and-open-site',
+			name: `Quartz: Sync and open site (${this.settings.quartzSiteName})`,
+			icon: 'external-link',
+			callback: () => {
+				this.quartzSyncAndOpenSite();
+			}
+		});
+	}
 
 }

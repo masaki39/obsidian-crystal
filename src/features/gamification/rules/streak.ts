@@ -1,8 +1,8 @@
 export function daysBetween(from: string, to: string): number {
-    const msPerDay = 24 * 60 * 60 * 1000;
-    const a = new Date(`${from}T00:00:00Z`).getTime();
-    const b = new Date(`${to}T00:00:00Z`).getTime();
-    return Math.round((b - a) / msPerDay);
+	const msPerDay = 24 * 60 * 60 * 1000;
+	const a = new Date(`${from}T00:00:00Z`).getTime();
+	const b = new Date(`${to}T00:00:00Z`).getTime();
+	return Math.round((b - a) / msPerDay);
 }
 
 /**
@@ -12,16 +12,16 @@ export function daysBetween(from: string, to: string): number {
  * - Otherwise (gap, or first ever completion): streak resets to 1.
  */
 export function nextStreak(previousDate: string | null, currentStreak: number, activeDate: string): number {
-    if (previousDate === activeDate) return currentStreak;
-    if (previousDate && daysBetween(previousDate, activeDate) === 1) {
-        return currentStreak + 1;
-    }
-    return 1;
+	if (previousDate === activeDate) return currentStreak;
+	if (previousDate && daysBetween(previousDate, activeDate) === 1) {
+		return currentStreak + 1;
+	}
+	return 1;
 }
 
 export interface StreakResult {
-    streak: number;
-    freezeTokensUsed: number;
+	streak: number;
+	freezeTokensUsed: number;
 }
 
 /**
@@ -30,14 +30,14 @@ export interface StreakResult {
  * Used so a configured weekly rest day never counts as a "missed" day.
  */
 export function countNonRestMissedDays(previousDate: string, activeDate: string, restDays: number[]): number {
-    const msPerDay = 24 * 60 * 60 * 1000;
-    const start = new Date(`${previousDate}T00:00:00Z`).getTime();
-    const end = new Date(`${activeDate}T00:00:00Z`).getTime();
-    let missed = 0;
-    for (let t = start + msPerDay; t < end; t += msPerDay) {
-        if (!restDays.includes(new Date(t).getUTCDay())) missed++;
-    }
-    return missed;
+	const msPerDay = 24 * 60 * 60 * 1000;
+	const start = new Date(`${previousDate}T00:00:00Z`).getTime();
+	const end = new Date(`${activeDate}T00:00:00Z`).getTime();
+	let missed = 0;
+	for (let t = start + msPerDay; t < end; t += msPerDay) {
+		if (!restDays.includes(new Date(t).getUTCDay())) missed++;
+	}
+	return missed;
 }
 
 /**
@@ -48,25 +48,25 @@ export function countNonRestMissedDays(previousDate: string, activeDate: string,
  * missed and never cost a freeze token — a deliberate day off each week.
  */
 export function nextStreakWithFreeze(
-    previousDate: string | null,
-    currentStreak: number,
-    activeDate: string,
-    freezeTokensAvailable: number,
-    restDays: number[] = []
+	previousDate: string | null,
+	currentStreak: number,
+	activeDate: string,
+	freezeTokensAvailable: number,
+	restDays: number[] = []
 ): StreakResult {
-    if (previousDate === activeDate) return { streak: currentStreak, freezeTokensUsed: 0 };
-    if (!previousDate) return { streak: 1, freezeTokensUsed: 0 };
+	if (previousDate === activeDate) return { streak: currentStreak, freezeTokensUsed: 0 };
+	if (!previousDate) return { streak: 1, freezeTokensUsed: 0 };
 
-    const gap = daysBetween(previousDate, activeDate);
-    if (gap === 1) return { streak: currentStreak + 1, freezeTokensUsed: 0 };
-    if (gap > 1) {
-        const missedDays = restDays.length > 0 ? countNonRestMissedDays(previousDate, activeDate, restDays) : gap - 1;
-        if (missedDays === 0) return { streak: currentStreak + 1, freezeTokensUsed: 0 };
-        if (freezeTokensAvailable >= missedDays) {
-            return { streak: currentStreak + 1, freezeTokensUsed: missedDays };
-        }
-    }
-    return { streak: 1, freezeTokensUsed: 0 };
+	const gap = daysBetween(previousDate, activeDate);
+	if (gap === 1) return { streak: currentStreak + 1, freezeTokensUsed: 0 };
+	if (gap > 1) {
+		const missedDays = restDays.length > 0 ? countNonRestMissedDays(previousDate, activeDate, restDays) : gap - 1;
+		if (missedDays === 0) return { streak: currentStreak + 1, freezeTokensUsed: 0 };
+		if (freezeTokensAvailable >= missedDays) {
+			return { streak: currentStreak + 1, freezeTokensUsed: missedDays };
+		}
+	}
+	return { streak: 1, freezeTokensUsed: 0 };
 }
 
 const FREEZE_TOKENS_PER_MONTH = 2;
@@ -85,16 +85,16 @@ const FREEZE_TOKENS_PER_MONTH = 2;
  * month beyond what's already held.
  */
 export function refillFreezeTokens(
-    currentTokens: number,
-    lastRefillMonth: string,
-    referenceDate: string,
-    tokensPerMonth: number = FREEZE_TOKENS_PER_MONTH
+	currentTokens: number,
+	lastRefillMonth: string,
+	referenceDate: string,
+	tokensPerMonth: number = FREEZE_TOKENS_PER_MONTH
 ): { tokens: number; refillMonth: string } {
-    const month = referenceDate.slice(0, 7); // YYYY-MM
-    if (month !== lastRefillMonth) {
-        return { tokens: Math.max(currentTokens, tokensPerMonth), refillMonth: month };
-    }
-    return { tokens: currentTokens, refillMonth: lastRefillMonth };
+	const month = referenceDate.slice(0, 7); // YYYY-MM
+	if (month !== lastRefillMonth) {
+		return { tokens: Math.max(currentTokens, tokensPerMonth), refillMonth: month };
+	}
+	return { tokens: currentTokens, refillMonth: lastRefillMonth };
 }
 
 /** Streak lengths that grant a one-off bonus freeze token, translating Duolingo's
@@ -103,39 +103,39 @@ const FREEZE_MILESTONES = [30, 100, 365];
 
 /** Milestones in `FREEZE_MILESTONES` that `streak` has newly reached and aren't in `granted` yet. */
 export function checkNewlyReachedFreezeMilestones(streak: number, granted: number[]): number[] {
-    return FREEZE_MILESTONES.filter((milestone) => streak >= milestone && !granted.includes(milestone));
+	return FREEZE_MILESTONES.filter((milestone) => streak >= milestone && !granted.includes(milestone));
 }
 
 export interface StreakAdvanceInput {
-    /** The day the completed task belongs to (the daily note's date). */
-    activeDate: string;
-    /** The real current date — always used for the freeze-token refill, since
-     * "this calendar month" is a real-time concept that shouldn't shift just
-     * because an old note was edited. */
-    today: string;
-    previousActiveDate: string | null;
-    currentStreak: number;
-    freezeTokensAvailable: number;
-    freezeTokensRefillMonth: string;
-    bestStreak: number;
-    freezeMilestonesGranted: number[];
-    /** -1 for "no rest day configured", otherwise 0(Sun)-6(Sat). */
-    restDayOfWeek: number;
+	/** The day the completed task belongs to (the daily note's date). */
+	activeDate: string;
+	/** The real current date — always used for the freeze-token refill, since
+	 * "this calendar month" is a real-time concept that shouldn't shift just
+	 * because an old note was edited. */
+	today: string;
+	previousActiveDate: string | null;
+	currentStreak: number;
+	freezeTokensAvailable: number;
+	freezeTokensRefillMonth: string;
+	bestStreak: number;
+	freezeMilestonesGranted: number[];
+	/** -1 for "no rest day configured", otherwise 0(Sun)-6(Sat). */
+	restDayOfWeek: number;
 }
 
 export interface StreakAdvanceOutput {
-    /** True when `activeDate` precedes `previousActiveDate` — a backfill of
-     * an old, already-past daily note rather than today's real activity. */
-    isBackdatedEdit: boolean;
-    freezeTokensAvailable: number;
-    freezeTokensRefillMonth: string;
-    streak: number;
-    lastActiveDate: string;
-    freezeTokensUsed: number;
-    isComeback: boolean;
-    newBestStreak: boolean;
-    bestStreak: number;
-    newMilestones: number[];
+	/** True when `activeDate` precedes `previousActiveDate` — a backfill of
+	 * an old, already-past daily note rather than today's real activity. */
+	isBackdatedEdit: boolean;
+	freezeTokensAvailable: number;
+	freezeTokensRefillMonth: string;
+	streak: number;
+	lastActiveDate: string;
+	freezeTokensUsed: number;
+	isComeback: boolean;
+	newBestStreak: boolean;
+	bestStreak: number;
+	newMilestones: number[];
 }
 
 /**
@@ -148,50 +148,50 @@ export interface StreakAdvanceOutput {
  * grants any newly-reached freeze-token milestones.
  */
 export function resolveStreakAdvance(input: StreakAdvanceInput): StreakAdvanceOutput {
-    const { tokens, refillMonth } = refillFreezeTokens(input.freezeTokensAvailable, input.freezeTokensRefillMonth, input.today);
+	const { tokens, refillMonth } = refillFreezeTokens(input.freezeTokensAvailable, input.freezeTokensRefillMonth, input.today);
 
-    const isBackdatedEdit = input.previousActiveDate !== null && input.activeDate < input.previousActiveDate;
-    if (isBackdatedEdit) {
-        return {
-            isBackdatedEdit: true,
-            freezeTokensAvailable: tokens,
-            freezeTokensRefillMonth: refillMonth,
-            streak: input.currentStreak,
-            lastActiveDate: input.previousActiveDate as string,
-            freezeTokensUsed: 0,
-            isComeback: false,
-            newBestStreak: false,
-            bestStreak: input.bestStreak,
-            newMilestones: [],
-        };
-    }
+	const isBackdatedEdit = input.previousActiveDate !== null && input.activeDate < input.previousActiveDate;
+	if (isBackdatedEdit) {
+		return {
+			isBackdatedEdit: true,
+			freezeTokensAvailable: tokens,
+			freezeTokensRefillMonth: refillMonth,
+			streak: input.currentStreak,
+			lastActiveDate: input.previousActiveDate as string,
+			freezeTokensUsed: 0,
+			isComeback: false,
+			newBestStreak: false,
+			bestStreak: input.bestStreak,
+			newMilestones: [],
+		};
+	}
 
-    const restDays = input.restDayOfWeek < 0 ? [] : [input.restDayOfWeek];
-    const { streak, freezeTokensUsed } = nextStreakWithFreeze(
-        input.previousActiveDate,
-        input.currentStreak,
-        input.activeDate,
-        tokens,
-        restDays
-    );
+	const restDays = input.restDayOfWeek < 0 ? [] : [input.restDayOfWeek];
+	const { streak, freezeTokensUsed } = nextStreakWithFreeze(
+		input.previousActiveDate,
+		input.currentStreak,
+		input.activeDate,
+		tokens,
+		restDays
+	);
 
-    // A "comeback": the streak genuinely reset (not bridged by a freeze token
-    // or rest day) after having been meaningfully underway. Worth a softer
-    // message than silence.
-    const isComeback = streak === 1 && freezeTokensUsed === 0 && input.currentStreak > 1;
-    const newBestStreak = streak > input.bestStreak;
-    const newMilestones = checkNewlyReachedFreezeMilestones(streak, input.freezeMilestonesGranted);
+	// A "comeback": the streak genuinely reset (not bridged by a freeze token
+	// or rest day) after having been meaningfully underway. Worth a softer
+	// message than silence.
+	const isComeback = streak === 1 && freezeTokensUsed === 0 && input.currentStreak > 1;
+	const newBestStreak = streak > input.bestStreak;
+	const newMilestones = checkNewlyReachedFreezeMilestones(streak, input.freezeMilestonesGranted);
 
-    return {
-        isBackdatedEdit: false,
-        freezeTokensAvailable: tokens - freezeTokensUsed + newMilestones.length,
-        freezeTokensRefillMonth: refillMonth,
-        streak,
-        lastActiveDate: input.activeDate,
-        freezeTokensUsed,
-        isComeback,
-        newBestStreak,
-        bestStreak: newBestStreak ? streak : input.bestStreak,
-        newMilestones,
-    };
+	return {
+		isBackdatedEdit: false,
+		freezeTokensAvailable: tokens - freezeTokensUsed + newMilestones.length,
+		freezeTokensRefillMonth: refillMonth,
+		streak,
+		lastActiveDate: input.activeDate,
+		freezeTokensUsed,
+		isComeback,
+		newBestStreak,
+		bestStreak: newBestStreak ? streak : input.bestStreak,
+		newMilestones,
+	};
 }

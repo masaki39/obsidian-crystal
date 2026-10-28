@@ -11,7 +11,7 @@ import { getImageDimensions, MAX_IMAGES, PostModal, type PostResult } from './po
 export class BlueskyService {
 	private agent: AtpAgent | null = null;
 	private app: App;
-    private plugin: Plugin;
+	private plugin: Plugin;
 	private settings: CrystalPluginSettings;
 	private dailyNotesManager: DailyNotesManager;
 	private gyazoService: GyazoService | null;
@@ -20,7 +20,7 @@ export class BlueskyService {
 
 	constructor(app: App, plugin: Plugin, settings: CrystalPluginSettings, dailyNotesManager: DailyNotesManager, gyazoService: GyazoService | null = null) {
 		this.app = app;
-        this.plugin = plugin;
+		this.plugin = plugin;
 		this.settings = settings;
 		this.dailyNotesManager = dailyNotesManager;
 		this.gyazoService = gyazoService;
@@ -217,8 +217,8 @@ export class BlueskyService {
 		}
 	}
 
-    async onload() {
-        registerBlueskyCommands(this.plugin, this);
-    }
+	async onload() {
+		registerBlueskyCommands(this.plugin, this);
+	}
 
 }
