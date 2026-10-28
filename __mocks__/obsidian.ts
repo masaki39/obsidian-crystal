@@ -35,6 +35,8 @@ export class Plugin {
 }
 
 export class PluginSettingTab {}
+export class Modal {}
+export class SuggestModal {}
 export class Setting {}
 export class AbstractInputSuggest {}
 export class App {}
