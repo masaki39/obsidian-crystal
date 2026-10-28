@@ -2,54 +2,14 @@ import { App, Plugin, TFile, MarkdownView, Notice } from 'obsidian';
 import type { CrystalPluginSettings } from '../../settings';
 import { parseFrontmatter } from '../../shared/markdown/frontmatter';
 import { promptForText } from '../../shared/ui/prompt-modal';
-import { resolveDraftPath } from './draft';
-import {
-    appHasDailyNotesPluginLoaded,
-    createDailyNote,
-    DEFAULT_DAILY_NOTE_FORMAT,
-    getDailyNoteSettings,
-    getDateFromFile
-} from 'obsidian-daily-notes-interface';
+import { registerDailyNoteAutoLink } from './auto-link';
+import { registerDailyNoteAutoSort } from './auto-sort';
+import { registerDailyNoteCommands } from './commands';
+import { getDailyNoteFilePath, isDailyNotesPluginLoaded } from './paths';
+import { orderTaskList } from './task-order';
+import { recombineSections, splitByTimeline } from './timeline';
+import { createDailyNote, getDateFromFile } from 'obsidian-daily-notes-interface';
 const moment = require('moment');
-
-export function splitByTimeline(content: string, heading: string): { before: string; timeline: string } {
-    const lines = content.split('\n');
-    const idx = lines.findIndex(line => line.trim() === heading.trim());
-    if (idx === -1) {
-        return { before: content, timeline: '' };
-    }
-    const before = lines.slice(0, idx).join('\n');
-    const timeline = lines.slice(idx).join('\n');
-    return { before, timeline };
-}
-
-function trimTrailingBlankLines(s: string): string {
-    const lines = s.split('\n');
-    let end = lines.length;
-    while (end > 0 && lines[end - 1].trim() === '') {
-        end--;
-    }
-    return lines.slice(0, end).join('\n');
-}
-
-export function recombineSections(before: string, timeline: string): string {
-    const beforeTrimmed = trimTrailingBlankLines(before);
-    const timelineTrimmed = trimTrailingBlankLines(timeline);
-
-    if (beforeTrimmed.length === 0 && timelineTrimmed.length === 0) {
-        return '';
-    }
-
-    if (timelineTrimmed.length === 0) {
-        return beforeTrimmed.endsWith('\n') ? beforeTrimmed : `${beforeTrimmed}\n`;
-    }
-
-    if (beforeTrimmed.length === 0) {
-        return timelineTrimmed.endsWith('\n') ? timelineTrimmed : `${timelineTrimmed}\n`;
-    }
-
-    return `${beforeTrimmed}\n\n${timelineTrimmed}\n`;
-}
 
 export class DailyNotesManager {
     private app: App;
@@ -137,76 +97,7 @@ export class DailyNotesManager {
     }
 
     private orderTaskList(taskList: string): string {
-        const lines = taskList.split('\n');
-        const orderedLines: string[] = [];
-        let buffer: string[] = [];
-        const endedWithNewline = taskList.endsWith('\n');
-        const newestFirst = this.settings.dailyNoteNewestFirst;
-
-        const flushBuffer = () => {
-            if (buffer.length === 0) {
-                return;
-            }
-            const isListBlock = buffer.every(line => line.trim().startsWith('- '));
-
-            if (isListBlock) {
-                const done: string[] = [];
-                const todo: string[] = [];
-                const otherBullets: string[] = [];
-
-                // Group each top-level item with its nested lines so children move with their parent.
-                const indentOf = (line: string) => line.length - line.trimStart().length;
-                const baseIndent = Math.min(...buffer.map(indentOf));
-                const groups: string[][] = [];
-                for (const line of buffer) {
-                    if (indentOf(line) <= baseIndent || groups.length === 0) {
-                        groups.push([line]);
-                    } else {
-                        groups[groups.length - 1].push(line);
-                    }
-                }
-
-                const isDone = (line: string) => /^- \[[xX]\]/.test(line.trim());
-                const isTodo = (line: string) => /^- \[\s?\]/.test(line.trim());
-
-                for (const group of groups) {
-                    const [head, ...children] = group;
-                    if (isDone(head)) {
-                        // A checked parent stays with the todos until every nested task is checked.
-                        (children.some(isTodo) ? todo : done).push(...group);
-                    } else if (isTodo(head)) {
-                        todo.push(...group);
-                    } else {
-                        otherBullets.push(...group);
-                    }
-                }
-
-                if (newestFirst) {
-                    orderedLines.push(...todo, ...done, ...otherBullets);
-                } else {
-                    orderedLines.push(...done, ...todo, ...otherBullets);
-                }
-            } else {
-                orderedLines.push(...buffer);
-            }
-            buffer = [];
-        };
-
-        for (const line of lines) {
-            if (line.trim() === '') {
-                flushBuffer();
-                orderedLines.push(line);
-            } else {
-                buffer.push(line);
-            }
-        }
-        flushBuffer();
-
-        const joined = orderedLines.join('\n');
-        if (endedWithNewline && !joined.endsWith('\n')) {
-            return joined + '\n';
-        }
-        return joined;
+        return orderTaskList(taskList, this.settings.dailyNoteNewestFirst);
     }
 
     private formatTimelineBlock(text: string, time: string, color?: string): string[] {
@@ -220,11 +111,11 @@ export class DailyNotesManager {
     }
 
     private async ensureDailyNoteFile(date: Date): Promise<TFile | null> {
-        if (!this.isDailyNotesPluginLoaded()) {
+        if (!isDailyNotesPluginLoaded()) {
             new Notice('⚠️ Daily Notes plugin is disabled.');
             return null;
         }
-        const filePath = this.getDailyNoteFilePath(date);
+        const filePath = getDailyNoteFilePath(date);
         if (filePath) {
             const existing = this.app.vault.getAbstractFileByPath(filePath);
             if (existing instanceof TFile) {
@@ -328,12 +219,12 @@ export class DailyNotesManager {
         }
     }
 
-    private async rollOverYesterdayUndoTaskList(editor: any): Promise<void> {
+    async rollOverYesterdayUndoTaskList(editor: any): Promise<void> {
         const baseDate = this.getBaseDateFromActiveFile();
         const yesterday = new Date(baseDate);
         yesterday.setDate(yesterday.getDate() - 1);
         
-        const yesterdayFilePath = this.getDailyNoteFilePath(yesterday);
+        const yesterdayFilePath = getDailyNoteFilePath(yesterday);
         if (!yesterdayFilePath) {
             return;
         }
@@ -374,183 +265,8 @@ export class DailyNotesManager {
     }
 
     async onLoad() {
-        this.plugin.addCommand({
-            id: 'crystal-open-today',
-            name: 'Daily: Open today\'s note',
-            icon: 'calendar-days',
-            callback: () => this.openToday()
-        });
-
-        this.plugin.addCommand({
-            id: 'crystal-open-yesterday',
-            name: 'Daily: Open yesterday\'s note',
-            icon: 'calendar-minus',
-            callback: () => this.openYesterday()
-        });
-
-        this.plugin.addCommand({
-            id: 'crystal-open-tomorrow',
-            name: 'Daily: Open tomorrow\'s note',
-            icon: 'calendar-plus',
-            callback: () => this.openTomorrow()
-        });
-
-        this.plugin.addCommand({
-            id: 'crystal-add-task-to-daily-note',
-            name: 'Daily: Add task to daily note',
-            icon: 'list-plus',
-            callback: () => this.addTaskToDailyNote()
-        });
-
-        this.plugin.addCommand({
-            id: 'crystal-roll-over-tasks',
-            name: 'Daily: Roll over yesterday\'s undone tasks',
-            icon: 'list-todo',
-            editorCallback: (editor) => this.rollOverYesterdayUndoTaskList(editor)
-        });
-
-        this.plugin.registerEvent(this.app.vault.on('modify', file => {
-            if (!(file instanceof TFile)) {
-                return;
-            }
-            if (!this.isDailyNoteFile(file)) {
-                return;
-            }
-            this.app.vault.process(file, (content) => {
-                if (!this.settings.dailyNoteAutoSort) {
-                    return content;
-                }
-                const heading = this.settings.dailyNoteTimelineHeading || '# Time Line';
-                const { frontmatter, content: parsedContent } = parseFrontmatter(content);
-                const { before, timeline } = splitByTimeline(parsedContent, heading);
-                const orderedBefore = this.orderTaskList(before);
-                const body = recombineSections(orderedBefore, timeline);
-                const newContent = `${frontmatter}${body}`;
-                return newContent;
-            });
-        }));
-
-        if (this.settings.dailyNoteAutoLink) {
-            this.app.workspace.onLayoutReady(() => { //ロード完了後に実行
-                this.plugin.registerEvent(this.app.vault.on('create', file => {
-                    if (!(file instanceof TFile) || file.extension !== 'md') {
-                        return;
-                    }
-                    const todayNotePath = this.getDailyNoteFilePath(new Date());
-                    // Skip when the created file is today's note itself (avoids a self-link).
-                    if (todayNotePath && file.path === todayNotePath) {
-                        return;
-                    }
-                    // The draft note is scratch space, not a note worth linking.
-                    if (file.path === resolveDraftPath(this.settings.dailyNoteDraftPath)) {
-                        return;
-                    }
-                    const todayNote = todayNotePath ? this.app.vault.getAbstractFileByPath(todayNotePath) : null;
-                    if (!todayNote) {
-                        return;
-                    }
-                    const timeStamp = moment(new Date()).format('HH:mm');
-                    const fileLink = `[[${file.name.replace(/\.md$/, '')}]]`;
-                    const line = `- ${timeStamp} ${fileLink}`;
-                    this.app.vault.process(todayNote as TFile, (content) => {
-                    const heading = this.settings.dailyNoteTimelineHeading || '# Time Line';
-                    const { frontmatter, content: parsedContent } = parseFrontmatter(content);
-                    const { before, timeline } = splitByTimeline(parsedContent, heading);
-                    const beforeTrimmed = before.trimEnd();
-                    const updatedBefore = this.settings.dailyNoteNewestFirst
-                        ? (beforeTrimmed.length > 0 ? `${line}\n${beforeTrimmed}` : line)
-                        : (beforeTrimmed.length > 0 ? `${beforeTrimmed}\n${line}` : line);
-                    const body = recombineSections(updatedBefore, timeline);
-                    const newContent = `${frontmatter}${body}`;
-                    return newContent;
-                });
-                }));
-
-                this.plugin.registerEvent(this.app.vault.on('delete', file => {
-                    if (!(file instanceof TFile) || file.extension !== 'md') {
-                        return;
-                    }
-                    const todayNotePath = this.getDailyNoteFilePath(new Date());
-                    const todayNote = todayNotePath ? this.app.vault.getAbstractFileByPath(todayNotePath) : null;
-                    if (!todayNote) {
-                        return;
-                    }
-                    const fileLink = `[[${file.name.replace(/\.md$/, '')}]]`;
-                    // 正規表現の特殊文字をエスケープ
-                    const escapedFileLink = fileLink.replace(/[[\](){}.*+?^$|\\]/g, '\\$&');
-                    this.app.vault.process(todayNote as TFile, (content) => {
-                        const heading = this.settings.dailyNoteTimelineHeading || '# Time Line';
-                        const { frontmatter, content: parsedContent } = parseFrontmatter(content);
-                        const { before, timeline } = splitByTimeline(parsedContent, heading);
-                        // 行全体をマッチして削除（改行も含む）
-                        const regex = new RegExp(`^- \\d{2}:\\d{2} ${escapedFileLink}$`, 'gm');
-                        const cleanedBefore = before.replace(regex, '').replace(/\n\n+/g, '\n').trimEnd();
-                        const body = recombineSections(cleanedBefore, timeline);
-                        const newContent = `${frontmatter}${body}`;
-                        return newContent;
-                    });
-                }));
-            });
-        }
-    }
-
-    private getDailyNoteFilePath(date: Date): string | null {
-        const config = this.getDailyNotesConfig();
-        if (!config) {
-            return null;
-        }
-        const fileName = typeof window === 'undefined'
-            ? this.formatDateForDailyNote(date, config.format)
-            : moment(date).format(config.format);
-        return config.folder ? `${config.folder}/${fileName}.md` : `${fileName}.md`;
-    }
-
-    private getDailyNotesConfig(): { folder: string; format: string } | null {
-        if (!this.isDailyNotesPluginLoaded()) {
-            return null;
-        }
-        if (typeof window === 'undefined') {
-            return { folder: 'DailyNotes', format: DEFAULT_DAILY_NOTE_FORMAT };
-        }
-        try {
-            const settings = getDailyNoteSettings();
-            const folder = settings?.folder?.trim() ?? '';
-            const format = settings?.format?.trim() || DEFAULT_DAILY_NOTE_FORMAT;
-            return { folder, format };
-        } catch (error) {
-            return { folder: 'DailyNotes', format: DEFAULT_DAILY_NOTE_FORMAT };
-        }
-    }
-
-    private isDailyNotesPluginLoaded(): boolean {
-        if (typeof window === 'undefined') {
-            return true;
-        }
-        try {
-            return appHasDailyNotesPluginLoaded();
-        } catch (error) {
-            return false;
-        }
-    }
-
-    private formatDateForDailyNote(date: Date, format: string): string {
-        const year = date.getFullYear();
-        const month = date.getMonth() + 1;
-        const day = date.getDate();
-        const paddedMonth = month.toString().padStart(2, '0');
-        const paddedDay = day.toString().padStart(2, '0');
-        const replacements: Record<string, string> = {
-            YYYY: year.toString(),
-            YY: (year % 100).toString().padStart(2, '0'),
-            MM: paddedMonth,
-            M: month.toString(),
-            DD: paddedDay,
-            D: day.toString()
-        };
-        return format.replace(/YYYY|YY|MM|M|DD|D/g, token => replacements[token] ?? token);
-    }
-
-    private isDailyNoteFile(file: TFile): boolean {
-        return getDateFromFile(file, 'day') !== null;
+        registerDailyNoteCommands(this.plugin, this);
+        registerDailyNoteAutoSort(this.app, this.plugin, () => this.settings);
+        registerDailyNoteAutoLink(this.app, this.plugin, () => this.settings);
     }
 }
