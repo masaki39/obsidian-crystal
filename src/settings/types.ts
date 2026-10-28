@@ -140,4 +140,10 @@ export interface CrystalPluginSettings {
 	hackerEffects: HackerEffectToggles;
 	/** Opacity of the background digital rain (0–1). */
 	hackerMatrixOpacity: number;
+	/** Turn whitespace typed at the start of a line into a "- " bullet (Cosense style). */
+	autoBulletEnabled: boolean;
+	/** Which keys trigger auto bullet. */
+	autoBulletHalfWidthSpace: boolean;
+	autoBulletFullWidthSpace: boolean;
+	autoBulletTab: boolean;
 }

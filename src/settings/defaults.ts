@@ -80,4 +80,8 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	hackerColor: '#00ff9c',
 	hackerEffects: { ...DEFAULT_HACKER_EFFECTS },
 	hackerMatrixOpacity: 0.15,
+	autoBulletEnabled: true,
+	autoBulletHalfWidthSpace: true,
+	autoBulletFullWidthSpace: true,
+	autoBulletTab: true,
 }

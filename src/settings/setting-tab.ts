@@ -3,6 +3,7 @@ import { renderPropertyColorSection } from '../features/properties/color-setting
 import { renderHackerModeSection } from '../features/hacker/settings-section';
 import type { CrystalPluginHost } from '../types';
 import { renderGeneralSection } from './sections/general';
+import { renderEditorSection } from './sections/editor';
 import { renderAiSection } from './sections/ai';
 import { renderBlueskySection } from './sections/bluesky';
 import { renderDailyNotesSection } from './sections/daily-notes';
@@ -46,6 +47,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 	private getSections(): SettingsSection[] {
 		return [
 			{ id: 'general', label: 'General', icon: 'settings-2', render: (el) => renderGeneralSection(el, this.app, this.plugin) },
+			{ id: 'editor', label: 'Editor', icon: 'list', render: (el) => renderEditorSection(el, this.app, this.plugin) },
 			{ id: 'ai', label: 'AI', icon: 'bot', render: (el) => renderAiSection(el, this.app, this.plugin) },
 			{ id: 'bluesky', label: 'Bluesky', icon: 'cloud', render: (el) => renderBlueskySection(el, this.app, this.plugin) },
 			{ id: 'daily-notes', label: 'Daily notes', icon: 'calendar-days', render: (el) => renderDailyNotesSection(el, this.app, this.plugin) },

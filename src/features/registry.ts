@@ -6,6 +6,7 @@ import { BlueskyService } from './bluesky/service';
 import { DailyNotesManager } from './daily-notes/manager';
 import { DailyNoteWeekday } from './daily-notes/weekday';
 import { DailyDraft } from './daily-notes/draft';
+import { AutoBulletService } from './editor/auto-bullet';
 import { EditorCommands } from './editor/commands';
 import { GamificationManager } from './gamification/manager';
 import { activateGamificationView, registerGamificationView } from './gamification/register';
@@ -40,6 +41,7 @@ export interface CrystalServices {
 	gyazoCommands: GyazoCommands;
 	imagePasteAndDropHandler: ImagePasteAndDropHandler;
 	editorCommands: EditorCommands;
+	autoBulletService: AutoBulletService;
 	terminalService: TerminalService;
 	marpCommands: MarpCommands;
 	marpCursorSync: MarpCursorSync;
@@ -70,6 +72,7 @@ export function createServices(plugin: CrystalPluginHost, settings: CrystalPlugi
 	const dailyDraft = new DailyDraft(app, plugin, settings, dailyNotesManager, blueskyService);
 	const imagePasteAndDropHandler = new ImagePasteAndDropHandler(app, settings, plugin);
 	const editorCommands = new EditorCommands(app, settings, plugin);
+	const autoBulletService = new AutoBulletService(plugin, settings);
 	const terminalService = new TerminalService(app);
 	const marpCommands = new MarpCommands(terminalService, settings, plugin);
 	const marpCursorSync = new MarpCursorSync(plugin, settings);
@@ -90,7 +93,7 @@ export function createServices(plugin: CrystalPluginHost, settings: CrystalPlugi
 	return {
 		aiCommands, blueskyService, dailyNotesManager, dailyNoteWeekday, dailyDraft,
 		gyazoService, gyazoImageMigrator, gyazoLocalImageMigrator, gyazoCommands,
-		imagePasteAndDropHandler, editorCommands, terminalService,
+		imagePasteAndDropHandler, editorCommands, autoBulletService, terminalService,
 		marpCommands, marpCursorSync, marpSlideToolbar, quartzService, macroCommands,
 		gitSummaryService, opacityService, gamificationManager, sidebarFocusCommands,
 		propertyLinkService, propertyColorService, statusBarOrderService, hackerModeService,
@@ -113,6 +116,7 @@ export function loadServices(plugin: CrystalPluginHost, s: CrystalServices): voi
 	s.marpSlideToolbar.onload();
 	s.aiCommands.onload();
 	s.editorCommands.onload();
+	s.autoBulletService.onload();
 	s.macroCommands.onload();
 	s.gitSummaryService.onload();
 	s.opacityService.onload();
@@ -152,6 +156,7 @@ export async function updateServiceSettings(s: CrystalServices, settings: Crysta
 	s.dailyDraft.updateSettings(settings);
 	s.imagePasteAndDropHandler.updateSettings(settings);
 	s.editorCommands.updateSettings(settings);
+	s.autoBulletService.updateSettings(settings);
 	s.gyazoService.updateSettings(settings);
 	s.marpCommands.updateSettings(settings);
 	s.marpCursorSync.updateSettings(settings);
