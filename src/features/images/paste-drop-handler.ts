@@ -1,6 +1,8 @@
 import { App, Editor, MarkdownView, Plugin } from 'obsidian';
 import type { CrystalPluginSettings } from '../../settings';
 import { ImageProcessor } from '../../shared/image-processor';
+import { resolveAttachmentFolder } from './attachment-folder';
+import { promptMultipleImagePaste } from './multi-image-paste';
 
 export class ImagePasteAndDropHandler {
 	private app: App;
@@ -25,20 +27,6 @@ export class ImagePasteAndDropHandler {
 	updateSettings(settings: CrystalPluginSettings) {
 		this.settings = settings;
 		this.imageProcessor.updateSettings(settings);
-	}
-
-	/**
-	 * Resolve the vault-relative folder where attachments should be saved, honoring
-	 * Obsidian's "attachment folder path" setting (absolute "/", same-folder ".",
-	 * or note-relative "./sub" forms). Returns '' for the vault root.
-	 */
-	private async resolveAttachmentFolder(): Promise<string> {
-		const sourcePath = this.app.workspace.getActiveFile()?.path ?? '';
-		// Probe Obsidian's resolver with a throwaway filename; the parent of the
-		// returned path is the actual attachment folder. The probe file is never created.
-		const probePath = await this.app.fileManager.getAvailablePathForAttachment('__crystal_probe__.tmp', sourcePath);
-		const slash = probePath.lastIndexOf('/');
-		return slash === -1 ? '' : probePath.substring(0, slash);
 	}
 
 	enable() {
@@ -226,7 +214,7 @@ export class ImagePasteAndDropHandler {
 			const filename = this.imageProcessor.generateTimestampFilename('pasted-image', processed.blob, processed.originalType);
 
 			// Resolve the configured attachment folder ("/", ".", "./sub" forms)
-			const attachmentFolder = await this.resolveAttachmentFolder();
+			const attachmentFolder = await resolveAttachmentFolder(this.app);
 			const attachmentPath = attachmentFolder ? `${attachmentFolder}/${filename}` : filename;
 
 			// Ensure attachment folder exists
@@ -265,115 +253,9 @@ export class ImagePasteAndDropHandler {
 	/**
 	 * Prompt user to select multiple images from file system and paste them
 	 */
-	async promptMultipleImagePaste(editor: Editor): Promise<void> {
-		return new Promise((resolve) => {
-			// Create file input element
-			const input = document.createElement('input');
-			input.type = 'file';
-			input.accept = 'image/*';
-			input.multiple = true; // Enable multiple file selection
-
-			// Handle file selection
-			input.addEventListener('change', async (event) => {
-				const target = event.target as HTMLInputElement;
-				const files = target.files;
-
-				if (files && files.length > 0) {
-					try {
-						// Resolve the configured attachment folder ("/", ".", "./sub" forms)
-						const attachmentFolder = await this.resolveAttachmentFolder();
-
-						// Ensure attachment folder exists
-						if (attachmentFolder && !(await this.app.vault.adapter.exists(attachmentFolder))) {
-							await this.app.vault.createFolder(attachmentFolder);
-						}
-
-						// Convert FileList to Array
-						const fileArray = Array.from(files);
-
-						// Process all images in parallel
-						const results = await Promise.all(
-							fileArray.map(async (imageFile, index) => {
-								let processed: { blob: Blob, originalType: string, isConverted: boolean };
-
-								if (this.settings.autoWebpPaste) {
-									// Process image using shared processor (without notice since we'll show our own)
-									processed = await this.imageProcessor.processImage(imageFile, false);
-								} else {
-									// Don't process image, just use original
-									processed = {
-										blob: imageFile,
-										originalType: imageFile.type,
-										isConverted: false
-									};
-								}
-
-								// Generate filename for the vault with index to avoid collisions
-								const baseFilename = this.imageProcessor.generateTimestampFilename('pasted-image', processed.blob, processed.originalType);
-								const filename = fileArray.length > 1
-									? baseFilename.replace(/(\.[^.]+)$/, `_${index + 1}$1`)
-									: baseFilename;
-								const attachmentPath = attachmentFolder ? `${attachmentFolder}/${filename}` : filename;
-
-								// Convert blob to array buffer
-								const arrayBuffer = await processed.blob.arrayBuffer();
-
-								// Save file to vault
-								await this.app.vault.createBinary(attachmentPath, arrayBuffer);
-
-								return {
-									filename,
-									processed
-								};
-							})
-						);
-
-						// Insert all markdown image links at cursor position (one per line)
-						const markdownImages = results.map(result => `![[${result.filename}]]`).join('\n');
-						editor.replaceSelection(markdownImages);
-
-						// Show appropriate message
-						if (fileArray.length === 1) {
-							const result = results[0];
-							if (this.settings.autoWebpPaste) {
-								if (result.processed.isConverted) {
-									console.log(`画像をWebPに変換した (品質: ${Math.round(this.settings.webpQuality * 100)}%)`);
-								} else if (result.processed.originalType === 'image/gif') {
-									console.log('GIFファイルのためアニメーション保持のため変換をスキップ');
-								}
-								console.log(`画像がWebP形式でヴォルトに保存された: ${result.filename}`);
-							} else {
-								console.log(`画像がヴォルトに保存された: ${result.filename}`);
-							}
-						} else {
-							// Multiple images
-							const convertedCount = results.filter(r => r.processed.isConverted).length;
-							if (this.settings.autoWebpPaste && convertedCount > 0) {
-								console.log(`${fileArray.length}枚の画像を処理した (${convertedCount}枚をWebPに変換、品質: ${Math.round(this.settings.webpQuality * 100)}%)`);
-							} else {
-								console.log(`${fileArray.length}枚の画像がヴォルトに保存された`);
-							}
-						}
-
-						resolve();
-					} catch (error) {
-						console.error('Failed to process selected images:', error);
-						console.log(`画像の処理に失敗した: ${error.message}`);
-						resolve();
-					}
-				} else {
-					resolve();
-				}
-			});
-
-			// Trigger file selection dialog
-			input.click();
-		});
+	promptMultipleImagePaste(editor: Editor): Promise<void> {
+		return promptMultipleImagePaste(this.app, this.settings, this.imageProcessor, editor);
 	}
-
-	/**
-	 * Register commands (similar to marp.ts pattern)
-	 */
 
 	async onload() {
 		this.plugin.addCommand({
