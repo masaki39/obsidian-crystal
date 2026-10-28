@@ -1,6 +1,6 @@
 import { Plugin } from 'obsidian';
 import { type CrystalPluginSettings, DEFAULT_SETTINGS, CrystalSettingTab } from './src/settings';
-import { GeminiService } from './src/gemini-service';
+import { GeminiService } from './src/features/ai/ai-commands';
 import { BlueskyService } from './src/bluesky-service';
 import { DailyNotesManager } from './src/daily-notes';
 import { DailyNoteWeekday } from './src/daily-note-weekday';
@@ -16,7 +16,7 @@ import { MarpSlideToolbar } from './src/features/marp/toolbar';
 import { TerminalService } from './src/shared/terminal-service';
 import { QuartzService } from './src/features/quartz/quartz-service';
 import { MacroCommands } from './src/features/marp/macro';
-import { GitSummaryService } from './src/git-summary-service';
+import { GitSummaryService } from './src/features/git-summary/git-summary-service';
 import { OpacityService } from './src/features/workspace/opacity';
 import { GamificationManager } from './src/gamification';
 import { activateGamificationView, registerGamificationView } from './src/gamification-register';

@@ -1,7 +1,7 @@
 import { App, Editor, MarkdownView, Notice, TFile, Plugin } from 'obsidian';
-import type { CrystalPluginSettings } from './settings';
+import type { CrystalPluginSettings } from '../../settings';
 import { AIService } from './ai-service';
-import { promptForText } from './shared/ui/prompt-modal';
+import { promptForText } from '../../shared/ui/prompt-modal';
 
 const AI_KEY_MISSING_NOTICE = '⚠️ AIが設定されていません。設定でプロバイダーを確認してください（OpenAI/Gemini はAPIキー、Ollama はBase URLとモデル名）。';
 
