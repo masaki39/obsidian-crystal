@@ -8,7 +8,7 @@ import { DailyDraft } from './src/daily-draft';
 import { GyazoService } from './src/features/gyazo/service';
 import { GyazoImageMigrator } from './src/features/gyazo/image-migrator';
 import { GyazoLocalImageMigrator } from './src/features/gyazo/local-image-migrator';
-import { ImagePasteAndDropHandler } from './src/clipboard-paste-handler';
+import { ImagePasteAndDropHandler } from './src/features/images/paste-drop-handler';
 import { EditorCommands } from './src/editor-commands';
 import { MarpCommands } from './src/marp';
 import { MarpCursorSync } from './src/marp-sync';
