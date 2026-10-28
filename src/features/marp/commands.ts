@@ -1,4 +1,4 @@
-import { Editor, MarkdownView, Plugin } from 'obsidian';
+import type { Editor, MarkdownView, Plugin } from 'obsidian';
 import type { TerminalService } from '../../shared/terminal-service';
 import type { CrystalPluginSettings } from '../../settings';
 import { MarpExporter } from './export';

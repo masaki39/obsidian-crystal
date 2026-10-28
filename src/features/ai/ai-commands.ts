@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Plugin } from 'obsidian';
+import type { App, Editor, MarkdownView, Plugin } from 'obsidian';
 import type { CrystalPluginSettings } from '../../settings';
 import { AIService } from './ai-service';
 import { generateDescriptionForCurrentFile } from './description';
