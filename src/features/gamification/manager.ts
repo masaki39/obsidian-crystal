@@ -12,6 +12,7 @@ import {
     type VaultStatsFile,
 } from './word-stats';
 import { rollCharMilestoneBonus, resolveWordStatsTick } from './writing-goal';
+import { isDailyNoteFile } from '../../shared/daily-note';
 import { ALL_BADGES, type Badge, type BadgeSnapshot, charsBadgeEligible, checkNewlySpecialUnlocks, checkNewlyUnlockedBadges, findNearestBadgeTarget, titleForLevel } from './rules/badges';
 import { calculateLevel, type Reward, type RewardTier, rollReward } from './rules/level';
 import { resolveStreakAdvance } from './rules/streak';
@@ -132,10 +133,6 @@ export class GamificationManager {
         );
     }
 
-    private isDailyNote(file: TFile): boolean {
-        return getDateFromFile(file, 'day') !== null;
-    }
-
     /**
      * Record `xp` earned on `dateStr` into the daily XP log — the source for
      * the sidebar's weekly/monthly chart and the best-week personal record —
@@ -156,7 +153,7 @@ export class GamificationManager {
      * before the plugin observed the file.
      */
     private async cacheBaseline(file: TFile) {
-        if (!this.isDailyNote(file)) return;
+        if (!isDailyNoteFile(file)) return;
         if (this.taskCounts.has(file.path)) return;
         const content = await this.app.vault.cachedRead(file);
         // Re-check after the await: handleFileModify may have raced ahead and
@@ -190,7 +187,7 @@ export class GamificationManager {
     }
 
     private async handleFileModify(file: TFile) {
-        if (!this.settings.gamificationEnabled || !this.isDailyNote(file)) return;
+        if (!this.settings.gamificationEnabled || !isDailyNoteFile(file)) return;
 
         const date = getDateFromFile(file, 'day');
         const content = await this.app.vault.cachedRead(file);

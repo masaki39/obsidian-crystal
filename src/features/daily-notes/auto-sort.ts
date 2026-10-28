@@ -1,6 +1,6 @@
 import { App, Plugin, TFile } from 'obsidian';
 import type { CrystalPluginSettings } from '../../settings';
-import { isDailyNoteFile } from './paths';
+import { isDailyNoteFile } from '../../shared/daily-note';
 import { orderTaskList } from './task-order';
 import { transformBeforeTimeline } from './timeline';
 

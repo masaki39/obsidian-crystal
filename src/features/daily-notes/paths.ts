@@ -1,9 +1,7 @@
-import type { TFile } from 'obsidian';
 import {
     appHasDailyNotesPluginLoaded,
     DEFAULT_DAILY_NOTE_FORMAT,
-    getDailyNoteSettings,
-    getDateFromFile
+    getDailyNoteSettings
 } from 'obsidian-daily-notes-interface';
 const moment = require('moment');
 
@@ -63,8 +61,4 @@ function formatDateForDailyNote(date: Date, format: string): string {
         D: day.toString()
     };
     return format.replace(/YYYY|YY|MM|M|DD|D/g, token => replacements[token] ?? token);
-}
-
-export function isDailyNoteFile(file: TFile): boolean {
-    return getDateFromFile(file, 'day') !== null;
 }
