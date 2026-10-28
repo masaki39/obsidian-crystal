@@ -1,7 +1,7 @@
 import { Plugin } from 'obsidian';
 import { type CrystalPluginSettings, DEFAULT_SETTINGS, CrystalSettingTab } from './src/settings';
 import { GeminiService } from './src/features/ai/ai-commands';
-import { BlueskyService } from './src/bluesky-service';
+import { BlueskyService } from './src/features/bluesky/service';
 import { DailyNotesManager } from './src/daily-notes';
 import { DailyNoteWeekday } from './src/daily-note-weekday';
 import { DailyDraft } from './src/daily-draft';

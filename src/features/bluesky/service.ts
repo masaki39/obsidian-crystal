@@ -1,8 +1,8 @@
 import { AtpAgent, RichText } from '@atproto/api';
 import { App, Modal, Notice, requestUrl, Plugin } from 'obsidian';
-import type { CrystalPluginSettings } from './settings';
-import type { DailyNotesManager } from './daily-notes';
-import type { GyazoService } from './features/gyazo/service';
+import type { CrystalPluginSettings } from '../../settings';
+import type { DailyNotesManager } from '../../daily-notes';
+import type { GyazoService } from '../gyazo/service';
 
 interface UrlMetadata {
 	title: string;
