@@ -60,6 +60,7 @@ export class MarkdownView {
 export class Editor {}
 
 export class TFile {}
+export class TFolder {}
 
 export const MarkdownRenderer = {
 	renderMarkdown: async () => {}

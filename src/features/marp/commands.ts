@@ -6,6 +6,7 @@ import { getThemeSetOption } from './options';
 import { MarpImages } from './images';
 import { goToAdjacentSlide, moveCurrentSlide } from './navigation';
 import { MarpServer } from './server';
+import { createSlideFromNote } from './new-slide';
 
 export class MarpCommands {
 	private settings: CrystalPluginSettings;
@@ -89,6 +90,18 @@ export class MarpCommands {
 	}
 
 	async onload() {
+		this.plugin.addCommand({
+			id: 'crystal-marp-create-slide-from-note',
+			name: 'Marp: Create slide from current note',
+			icon: 'presentation',
+			checkCallback: (checking: boolean) => {
+				const file = this.plugin.app.workspace.getActiveFile();
+				if (!file || file.extension !== 'md') return false;
+				if (!checking) createSlideFromNote(this.plugin.app, this.settings, file);
+				return true;
+			}
+		});
+
 		this.plugin.addCommand({
 			id: 'crystal-preview-marp-slide',
 			name: 'Marp: Preview slide',

@@ -72,6 +72,20 @@ export interface CrystalPluginSettings {
 	marpSyncCursorToServer: boolean;
 	marpSyncSlideToCursor: boolean;
 	marpShowSlideToolbar: boolean;
+	/** "Marp: Create slide from current note" defaults. */
+	marpNewSlidePrefix: string;
+	/** moment.js format; empty omits the date. */
+	marpNewSlideDateFormat: string;
+	marpNewSlideSeparator: string;
+	marpNewSlideTitleSource: 'basename' | 'alias';
+	marpNewSlideTheme: string;
+	marpNewSlidePaginate: boolean;
+	/** Supports `{{title}}`, `{{date}}` and `{{date:FORMAT}}`. Empty omits it. */
+	marpNewSlideHeader: string;
+	/** Property on the parent note that receives the slide link. Empty disables it. */
+	marpNewSlideParentProperty: string;
+	/** Property on the slide that receives the parent link. Empty disables it. */
+	marpNewSlideChildProperty: string;
 	publishFolderPath: string;
 	quartzPath: string;
 	quartzSiteName: string;

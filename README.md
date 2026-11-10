@@ -158,6 +158,7 @@ BlueSkyへの投稿をアシストする。
 
 | コマンド | 機能 | 説明 |
 |---|---|---|
+| `Marp: Create slide from current note` | ノートからスライド作成 | 現在のノートを親としてMarpスライドノートを作成し、新規タブで開く。ファイル名（プレフィックス・日付・親タイトル/aliases[0]）とフロントマター（theme・paginate・header。`{{title}}`・`{{date}}`・`{{date:FORMAT}}` を利用可）は設定で変更可能。親の `slide` と子の `parents`（プロパティ名は設定可）に相互リンクを追加する。 |
 | `Marp: Preview slide` | Marpプレビュー | Marpのプレビュー用HTMLをMarkdownと同じフォルダに出力する。 |
 | `Marp: Export slide (PPTX)` | Marpエクスポート | PPTX形式でエクスポートする。 |
 | `Marp: Export slide (PPTX editable)` | Marpエクスポート（編集可） | スライド内容を編集可能なPPTX形式でエクスポートする。 |
