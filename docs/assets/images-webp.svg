@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 220" role="img" aria-label="Pasted images are scaled and saved as WebP" font-family="system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, sans-serif">
+  <style>@media (prefers-color-scheme: dark){.f4b5563{fill:#c9d1d9} .f6b7280{fill:#9ca3af} .fa78bfa{fill:#8b5cf6} .fc4b5fd{fill:#6d28d9} .ff5f3ff{fill:#1b1530} .fffffff{fill:#0d1117} .s7c3aed{stroke:#c4b5fd} .sc4b5fd{stroke:#6d28d9} .sddd6fe{stroke:#3b2a6b}}</style>
+  <rect class="ff5f3ff sc4b5fd" x="1" y="1" width="638" height="218" rx="16" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="2"/>
+  <g transform="translate(40 40)">
+    <rect class="fffffff sddd6fe" width="240" height="120" rx="8" fill="#ffffff" stroke="#ddd6fe" stroke-width="2"/>
+    <circle class="fc4b5fd" cx="60" cy="40" r="14" fill="#c4b5fd"/>
+    <path class="fa78bfa" d="M14 108 l70 -52 50 36 34 -22 60 38z" fill="#a78bfa"/>
+    <text class="f4b5563" x="120" y="148" text-anchor="middle" font-size="14" fill="#4b5563">Paste or drop · 2000 × 1000 PNG</text>
+  </g>
+  <g transform="translate(300 100)"><path class="s7c3aed" d="M0 0 h56" stroke="#7c3aed" stroke-width="4" stroke-linecap="round"/><path class="s7c3aed" d="M44 -11 l13 11 -13 11" fill="none" stroke="#7c3aed" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g transform="translate(400 70)">
+    <rect class="fffffff s7c3aed" width="120" height="60" rx="6" fill="#ffffff" stroke="#7c3aed" stroke-width="2"/>
+    <circle class="fc4b5fd" cx="30" cy="20" r="7" fill="#c4b5fd"/>
+    <path class="fa78bfa" d="M7 54 l35 -26 25 18 17 -11 30 19z" fill="#a78bfa"/>
+    <text class="f4b5563" x="60" y="88" text-anchor="middle" font-size="14" fill="#4b5563">700 × 350 WebP</text>
+    <text class="f6b7280" x="60" y="108" text-anchor="middle" font-size="12" fill="#6b7280">scale 0.8 · max 700 px</text>
+  </g>
+</svg>

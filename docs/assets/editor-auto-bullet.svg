@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 200" role="img" aria-label="Auto bullet: a space at the start of a line becomes a bullet" font-family="system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, sans-serif">
+  <style>@media (prefers-color-scheme: dark){.f1f2937{fill:#e6edf3} .f6b7280{fill:#9ca3af} .f6d28d9{fill:#c4b5fd} .f7c3aed{fill:#c4b5fd} .fddd6fe{fill:#3b2a6b} .ff5f3ff{fill:#1b1530} .fffffff{fill:#0d1117} .s7c3aed{stroke:#c4b5fd} .sc4b5fd{stroke:#6d28d9} .sddd6fe{stroke:#3b2a6b}}</style>
+  <rect class="ff5f3ff sc4b5fd" x="1" y="1" width="638" height="198" rx="16" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="2"/>
+  <text class="f6d28d9" x="40" y="44" font-size="16" font-weight="600" fill="#6d28d9">Type a space</text>
+  <rect class="fffffff sddd6fe" x="40" y="62" width="230" height="96" rx="10" fill="#ffffff" stroke="#ddd6fe"/>
+  <rect class="fddd6fe" x="58" y="96" width="14" height="24" rx="3" fill="#ddd6fe"/>
+  <text class="f1f2937" x="80" y="115" font-size="20" fill="#1f2937" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">foo</text>
+  <text class="f6b7280" x="58" y="146" font-size="12" fill="#6b7280">space at line start</text>
+  <g transform="translate(292 110)"><path class="s7c3aed" d="M0 0 h56" stroke="#7c3aed" stroke-width="4" stroke-linecap="round"/><path class="s7c3aed" d="M44 -11 l13 11 -13 11" fill="none" stroke="#7c3aed" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <text class="f6d28d9" x="370" y="44" font-size="16" font-weight="600" fill="#6d28d9">Get a bullet</text>
+  <rect class="fffffff sddd6fe" x="370" y="62" width="230" height="96" rx="10" fill="#ffffff" stroke="#ddd6fe"/>
+  <text class="f1f2937" x="388" y="115" font-size="20" fill="#1f2937" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"><tspan class="f7c3aed" fill="#7c3aed" font-weight="700">-</tspan> foo</text>
+  <text class="f6b7280" x="388" y="146" font-size="12" fill="#6b7280">one undo away</text>
+</svg>

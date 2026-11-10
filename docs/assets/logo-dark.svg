@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Crystal">
+  <g stroke="#ddd6fe" stroke-width="1.5" stroke-linejoin="round">
+    <polygon points="64,10 18,46 46,46" fill="#c4b5fd"/>
+    <polygon points="64,10 46,46 82,46" fill="#ede9fe"/>
+    <polygon points="64,10 82,46 110,46" fill="#a78bfa"/>
+    <polygon points="18,46 46,46 64,118" fill="#8b5cf6"/>
+    <polygon points="46,46 82,46 64,118" fill="#7c3aed"/>
+    <polygon points="82,46 110,46 64,118" fill="#6d28d9"/>
+  </g>
+  <path d="M100 8 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z" fill="#ddd6fe"/>
+</svg>

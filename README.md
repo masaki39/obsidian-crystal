@@ -1,213 +1,157 @@
-# Obsidian Crystal
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/logo-light.svg">
+    <img alt="Crystal logo" src="docs/assets/logo-light.svg" width="128">
+  </picture>
+</p>
 
-[![GitHub Release](https://img.shields.io/github/v/release/masaki39/obsidian-crystal?sort=semver&label=latest&color=%237c3aed)](https://github.com/masaki39/obsidian-crystal/releases/latest) [![Total Downloads](https://img.shields.io/github/downloads/masaki39/obsidian-crystal/main.js?logo=obsidian&label=total%20downloads&color=%237c3aed)](https://github.com/masaki39/obsidian-crystal/releases)
+<h1 align="center">Crystal</h1>
 
-このプラグインは、Obsidianを起点に「**書く → 整える → 発信する**」というワークフローを一気通貫で支援するためのものである。AIによる執筆補助、画像の取り込み・整形、そしてBluesky・Marp（スライド）・Quartz（サイト）への発信までをカバーする。
-個人用に作成したが、誰でも使用可能だ。
+<p align="center"><b>Write, polish, and publish — all from Obsidian.</b></p>
 
-> [!warning]
->
-> - デスクトップ版Obsidianでのみ動作する。
-> - 多くの機能は、外部サービス（OpenAI, Gemini, Ollama, Gyazo, Marp CLI）の事前設定やインストールが必要である。
-> - 個人用途に最適化されているため、利用者の環境に応じた設定調整が必要な場合がある。
-> - 一定以上の規模になったり独立した機能をもつコードは別リポジトリに適宜切り離される
->   - [Tab Swap](https://github.com/masaki39/tab-swap)
->   - [Daily Notes Timeline](https://github.com/masaki39/daily-notes-timeline)
+<p align="center">
+  <a href="https://github.com/masaki39/obsidian-crystal/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/masaki39/obsidian-crystal?sort=semver&label=latest&color=%237c3aed"></a>
+  <a href="https://github.com/masaki39/obsidian-crystal/releases"><img alt="Total downloads" src="https://img.shields.io/github/downloads/masaki39/obsidian-crystal/main.js?logo=obsidian&label=total%20downloads&color=%237c3aed"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-7c3aed"></a>
+  <img alt="Desktop only" src="https://img.shields.io/badge/platform-desktop%20only-7c3aed">
+</p>
 
-## インストール
+<p align="center"><b>English</b> | <a href="README.ja.md">日本語</a></p>
 
-[BRAT](https://github.com/TfTHacker/obsidian42-brat)プラグインを使用してインストールするのが最も簡単である。
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/hero-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/hero-light.svg">
+    <img alt="Write, then polish, then publish: AI, daily notes and the editor; images, Gyazo and properties; Bluesky, Marp and Quartz" src="docs/assets/hero-light.svg" width="820">
+  </picture>
+</p>
 
-1. BRATをインストールし、有効化する。
-2. BRATの設定で `Add Beta plugin` を選択する。
-3. このリポジトリのURL `https://github.com/masaki39/obsidian-crystal` を入力する。
+Crystal is an Obsidian plugin for the whole path from a rough note to something you share. It covers:
 
-## 機能一覧
+- AI help with writing
+- daily notes and editor tools
+- lightweight image handling
+- one-command publishing to Bluesky, Marp slides, and a Quartz site
 
-### 🤖 AI Editor Commands
+> [!NOTE]
+> - Crystal is desktop only.
+> - Some features need an external service or CLI tool; see [Requirements](#requirements).
+> - It began as a personal toolkit — anyone is welcome to use it.
 
-[OpenAI API](https://platform.openai.com/api-keys)、[Gemini API](https://aistudio.google.com/api-keys)、または[Ollama](https://ollama.com/)によるローカルLLMを利用して、文章作成や翻訳を強力にサポートする。設定の `AI Provider` でどれを使うか選択でき（既定はOpenAI）、全AIコマンドが選択中のプロバイダーを使用する。
+## Highlights
 
-Ollama を選ぶと、すべての処理がローカルで完結し、ノートの内容は外部に一切送信されない。事前に [Ollama](https://ollama.com/) をインストールしてサーバーを起動し（`ollama serve`）、使用するモデルを取得しておく（例: `ollama pull llama3.1`）。設定で `Ollama Base URL`（既定 `http://localhost:11434`）と `Ollama Model` を指定する。
+Here's a small taste. With **Auto Sort Tasks** turned on, a daily note tidies itself as you check things off:
 
-| コマンド | 機能 | 説明 |
-|---|---|---|
-| `AI: Generate description for current file` | ファイル説明生成 | 現在のファイル内容を解析し、検索に適した`description`をフロントマターに自動生成する。 |
-| `AI: Generate git commit summary` | Gitコミットサマリー生成 | アクティブファイルの日付（デイリーノートの場合はその日、それ以外は今日）のGitコミット差分（`.md`ファイルのみ）をAIで要約し、フロントマターの`summary`フィールドに書き込む。 |
-| `AI: Translate selected text` | 選択テキスト翻訳 | 選択した日本語テキストを自然な英語に翻訳し、元のテキストと置き換える。 |
-| `AI: Translate above cursor text` | カーソル上翻訳 | カーソルがある行の、一つ上の行のテキストを翻訳し、カーソル位置に挿入する。 |
-| `AI: Translate below cursor text` | カーソル下翻訳 | カーソルがある行の、一つ下の行のテキストを翻訳し、カーソル位置に挿入する。 |
-| `AI: Grammar check current line` | 文法チェック | 現在のカーソル行の文章（日/英）をチェックし、より自然で正確な表現に校正する。 |
-| `AI: Rewrite (replace selection or whole note)` | 指示に沿って置換 | 入力した指示に従い、選択範囲またはノート全体をAIで書き換えて置換する。 |
-| `AI: Rewrite (append result at end)` | 指示に沿って追記 | 入力した指示に従い、選択範囲またはノート全体を参照して生成したMarkdown断片を末尾に追記する。 |
+```markdown
+<!-- Before -->
+- [ ] Write README
+- [x] Fix build
+- [x] Review PR
+```
 
-### 🦋 Bluesky
+```markdown
+<!-- After -->
+- [x] Fix build
+- [x] Review PR
+- [ ] Write README
+```
 
-BlueSkyへの投稿をアシストする。
+### ✍️ Write
 
-| コマンド | 機能 | 説明 |
-|---|---|---|
-| `Bluesky: Post to Bluesky` | Blueskyに投稿 | テキストやURLを入力し、メタデータ付きでBlueskyに投稿する。 |
-| `Bluesky: Post to daily note timeline` | デイリーノートへ投稿 | 入力したメモをデイリーノートのタイムラインセクションにコールアウト形式で追記する。 |
+- 🤖 **AI writing tools**: translate, proofread, rewrite with your own instructions, and generate descriptions. Works with OpenAI, Gemini, or a fully local Ollama. → [AI](docs/en/ai.md)
+- 📅 **Daily notes**: jump between days, add tasks, post to a timeline, write in a draft note, and optionally sort and link automatically. → [Daily notes](docs/en/daily-notes.md)
+- ⌨️ **Editor**: Cosense-style auto bullets, timestamped notes, link tools, OGP link cards, and rule-based file organizing. → [Editor](docs/en/editor.md)
 
-### 📅 Daily Notes
+### 💎 Polish
 
-日々の記録とタスク管理を効率化する。
+- 🖼️ **Images**: pasted and dropped images become compact WebP files, and you can paste many images at once. → [Images](docs/en/images.md)
+- ☁️ **Gyazo**: upload images, or move a note's images to Gyazo in one step. → [Gyazo](docs/en/gyazo.md)
+- 🔗 **Property link**: keep links between frontmatter properties two-way, like `next` ↔ `previous`. → [Property link](docs/en/property-link.md)
+- 🎨 **Property colors**: give important property names their own color. → [Property colors](docs/en/property-colors.md)
 
-| コマンド | 機能 | 説明 |
-|---|---|---|
-| `Daily: Open today's note` | 今日のノート | 今日の日付のデイリーノートを開く。存在しない場合は自動で作成する。 |
-| `Daily: Open yesterday's note` | 昨日のノート | 現在のノートの日付を基準に、前日のデイリーノートを開く。 |
-| `Daily: Open tomorrow's note` | 明日のノート | 現在のノートの日付を基準に、翌日のデイリーノートを開く。 |
-| `Daily: Add task to daily note` | ﾀｽｸを今日のDNに追加 | 入力したタスクを今日のデイリーノートの末尾に追記する。 |
-| `Daily: Roll over yesterday's undone tasks` | 前日の未完了タスクを引き継ぎ | アクティブファイルの日付を基準に前日のデイリーノートから未完了タスクを抽出し、現在のカーソル位置に挿入する。前日ファイルからは未完了タスクを削除する。 |
+### 🚀 Publish
 
-**自動化機能（設定で有効化が必要）：**
+- 🦋 **Bluesky**: post with images and link cards, and keep each post in your daily note. → [Bluesky](docs/en/bluesky.md)
+- 🎞️ **Marp**: export slides to PPTX, PDF, or HTML, preview them live, and navigate with an in-editor toolbar. → [Marp](docs/en/marp.md)
+- 🌐 **Quartz**: sync and open your Quartz site with one command. → [Quartz](docs/en/quartz.md)
 
-- **Auto Sort Tasks:** デイリーノートが変更されると、完了済み`[x]`のタスクをリストの上に自動で移動し、空行を削除する。
-- **Auto Link Notes:** 新しいノートを作成すると、その日のデイリーノートに自動でリンクが追記される。
-- **Newest First (Daily Notes):** 新規タスク/リンク/タイムライン投稿を上に追加する。
+### 🧰 Extras
 
-### 🎮 Gamification
+- 🎮 **Gamification**: XP, levels, streaks, and badges for the tasks you finish. → [Gamification](docs/en/gamification.md)
+- 🪟 **Workspace**: toggle window opacity, focus commands that move between panes and into the sidebars, and status bar ordering. → [Workspace](docs/en/workspace.md)
+- 💻 **Hacker mode**: purely cosmetic terminal effects like a CRT overlay and a boot sequence. → [Hacker mode](docs/en/hacker-mode.md)
 
-デイリーノートの`- [x]`タスクを完了するとXPを獲得し、レベルアップ・連続記録（ストリーク）・称号（バッジ）解除ができる。報酬は「通常/ボーナス/レア」の可変抽選で、達成の予期感を演出する。既定では無効なので、設定の `Enable Gamification` から有効化する。
+## Quick start
 
-| コマンド | 機能 | 説明 |
-|---|---|---|
-| `Gamification: Open stats view` | 統計ビューを開く | サイドバーにレベル/XPバー、次の称号までの距離、今日のタスク進捗・執筆進捗、7日間のXP推移＋執筆目標達成日マーカー、30日間のアクティビティ、累計統計、自己ベスト記録（最長ストリーク・1日の最多タスク・週間最高XP・1日の最多文字数）、称号一覧をまとめて表示する。リボンアイコンまたはステータスバーのクリックからも開ける。 |
+1. Install [BRAT](https://github.com/TfTHacker/obsidian42-brat) and enable it.
+2. In BRAT's settings, select **Add Beta plugin** and enter `https://github.com/masaki39/obsidian-crystal`.
+3. Enable **Crystal** in **Settings → Community plugins**.
+4. Try a feature that needs no setup:
+   - Paste a screenshot into a note. It's saved as WebP.
+   - Type a space at the start of a line. It becomes a bullet.
+   - Run **Daily: Open today's note**. This needs the core **Daily notes** plugin.
+5. For AI, open **Settings → Crystal → AI** and choose an **AI Provider**. Paste its API key, or set up Ollama, and select **Verify**. Then select some text and run **AI: Translate selected text**.
 
-**自動化機能（設定で有効化が必要）：**
+## Requirements
 
-- **Enable Gamification:** デイリーノートのタスク完了を検知してXP・レベル・ストリーク・称号を自動更新し、ステータスバーに簡易表示する。
-- **Rest day:** 曜日を1つ指定すると、その日にタスクをこなさなくてもストリークが途切れず、freezeトークンも消費しない（週1日の意図的な休息日）。
-- **Daily writing goal (characters):** [Better Word Count](https://github.com/lukeleppan/better-word-count) プラグインを導入し、その設定で `Collect Stats` を有効にしている場合のみ表示される追加設定。1日の目標文字数（既定1000文字）に到達すると、タスク完了と同じ可変抽選でXPが入り、その日はタスクを完了しなくてもストリークが継続する（「タスク完了 or 執筆目標達成」のどちらかで良い）。さらに目標の25/50/75%地点を跨ぐたびに少額のボーナスが当たることがある（外れることもある）。累計文字数に応じたバッジ（Scribe/Wordsmith/Novelist/Chronicler）も追加される。Better Word Countが未導入・未設定の場合、これらのUIは表示されない。
+Crystal runs on desktop Obsidian 1.11.4 or later. Most features work out of the box. These need something extra:
 
-> [!note]
-> ストリークが途切れそうな場合、freezeトークン（月2個リフィル、30/100/365日到達でボーナス付与）を消費して1日分を自動的に穴埋めできる。設定タブの `Reset progress` で進捗を初期化できる。
+| Feature | Needs |
+|---|---|
+| AI | An OpenAI or Gemini API key, or a local [Ollama](https://ollama.com/) server |
+| AI: Generate git commit summary | A vault that is a git repository, `git` in your shell, and the core **Daily notes** plugin |
+| Daily notes, Gamification | The core **Daily notes** plugin |
+| Gyazo | A Gyazo access token |
+| Bluesky | A Bluesky account on `bsky.social` and an app password |
+| Marp | [Marp CLI](https://github.com/marp-team/marp-cli), plus Chrome, Edge, or Chromium for PDF and PPTX |
+| Quartz | A local [Quartz](https://quartz.jzhao.xyz/) repository and Node.js (`npx`) |
+| Gamification writing goal | [Better Word Count](https://github.com/lukeleppan/better-word-count) with **Collect Stats** on (optional) |
 
-### 🖼️ Image Processor
+The CLI-based features (Marp, Quartz, git summary) run through your login shell and are tested on macOS.
 
-画像をペーストする時に圧縮して容量を節約する。
-圧縮率やスケールは設定から変更できる。
+## Network use & privacy
 
-| コマンド | 機能 | 説明 |
-|---|---|---|
-| `Image: Paste multiple images from file system` | ファイルシステムから複数画像をペースト | ファイル選択ダイアログから複数の画像を選択し、一括でVaultに保存してリンクを挿入する。WebP変換にも対応。 |
+Crystal has no telemetry. It contacts a service only when you use a feature that needs one:
 
-**自動化機能（設定で有効化が必要）：**
+| Feature | Service | What is sent | When |
+|---|---|---|---|
+| AI with OpenAI | `api.openai.com` | The text the command works on: the selection, a line, the whole note, or the day's git diff | When you run an AI command |
+| AI with Gemini | Google Gemini API | Same as above | Same as above |
+| AI with Ollama | Your Ollama server (**Ollama Base URL**, default `localhost:11434`) | Same as above. Nothing leaves your machine if the server runs on your machine | Same as above |
+| AI **Verify** buttons | The provider whose key you're verifying | Only the API key (or a request to the Ollama server), to list models. No note text | When you select **Verify** |
+| Gyazo | `upload.gyazo.com`, `api.gyazo.com` | Image files and your access token. Uploaded images are public to anyone with the URL | When you run a Gyazo command or select **Verify**. Also, while a token is set, images attached in a Bluesky post window are uploaded when you submit, if the post goes to the daily note timeline: always in **Post to daily note timeline**, and in **Post to Bluesky** only while timeline appending is on |
+| Bluesky | `bsky.social` | Your handle and app password (to sign in), and the post's text and images | When you post or select **Verify** |
+| Bluesky link cards | The linked website | A request for the page and its preview image | When a post has a URL and no images |
+| Remote images | The image's host | A download request | When you run **Gyazo: Replace image URLs in active note**, or post a draft that embeds image URLs |
+| OGP link cards | `ogpf.vercel.app` | The URL you entered | Every time a note containing the card is displayed |
+| Quartz | GitHub, through your Quartz repository; `npx` may also contact the npm registry | Whatever `npx quartz sync` pushes | When you run a Quartz sync command. The open commands open `<user>.github.io` and the GitHub Actions page in your browser |
 
-- **Auto Convert Images to WebP on Paste:** クリップボードからのペーストやドラッグ＆ドロップで画像を貼り付けると、自動でWebP形式に変換し、Vault内の添付ファイルフォルダに保存してリンクを挿入する。GIFアニメはそのまま維持される。
+Credentials are kept in Obsidian's secret storage. Marp CLI, git, and Quartz run locally on your machine.
 
-### ☁️ Gyazo Uploader
+## Documentation
 
-[Gyazo](https://gyazo.com)に画像をアップロードし、Markdownリンクを挿入する。
-アクセストークンは[gyazo.com/oauth/applications](https://gyazo.com/oauth/applications)でアプリを作成して取得する。
+- 📚 [Documentation index](docs/en/README.md): every feature, command, and automatic behavior.
+- 📝 [Changelog](changelog/): release notes for each version.
 
-| コマンド | 機能 | 説明 |
-|---|---|---|
-| `Gyazo: Upload clipboard image` | クリップボード画像をGyazoにアップロード | クリップボードにある画像をGyazoにアップロードし、Markdownリンクをカーソル位置に挿入する。 |
-| `Gyazo: Upload image file` | 画像ファイルをGyazoにアップロード | ファイル選択ダイアログから画像を選び、Gyazoにアップロードしてリンクを挿入する。 |
-| `Gyazo: Replace image URLs in active note` | 外部画像URLをGyazoに置換 | アクティブノート内の外部画像URLをGyazoにアップロードし直し、Gyazoのリンクに置き換える。 |
-| `Gyazo: Replace local images in active note` | ローカル画像をGyazoに置換 | アクティブノートに埋め込まれたVault内のローカル画像をGyazoにアップロードし、ノート全体（他ノートの参照を含む）のリンクをGyazo URLに更新して元ファイルをゴミ箱へ移動する。wikiリンクのエイリアスやMarkdown画像リンクにも対応。 |
+## Related plugins
 
-### ✍️ Editor Extensions
+These started inside Crystal and now live in their own repositories:
 
-日々の編集作業を快適にするコマンド群。
+- [Tab Swap](https://github.com/masaki39/tab-swap)
+- [Daily Notes Timeline](https://github.com/masaki39/daily-notes-timeline): styles the `[!timeline]` callouts that Crystal writes
 
-| コマンド | 機能 | 説明 |
-|---|---|---|
-| `Editor: Create new file with timestamp` | タイムスタンプで新規ファイル作成 | `YYYYMMDDHHmmss`形式のファイル名で新しいノートを作成して開く。Vimモードが有効な場合はエディタのInsertモードで開始し、無効な場合はタイトル変更モードで開く。 |
-| `Editor: Create new file with link at cursor` | カーソル位置にリンク付きで新規ファイル作成 | タイムスタンプ名のファイルを作成し、現在のカーソル位置にそのファイルへのリンクを挿入して開く。Vimモードが有効な場合はエディタのInsertモードで開始し、無効な場合はタイトル変更モードで開く。 |
-| `Editor: Copy file link` | ファイルリンクをコピー | 現在開いているファイルのWikiリンク（`[[ファイル名]]`）をコピーする。 |
-| `Editor: Copy file link with alias` | エイリアス付きファイルリンクをコピー | ファイルのフロントマターに`aliases`があれば、それを使ったリンク（`[[ファイル名|エイリアス]]`）をコピーする。 |
-| `Editor: Wrap selection with subscript` | 下付き文字 | 選択テキストを`<sub>`タグで囲む。すでにある場合は解除する。 |
-| `Editor: Wrap selection with superscript` | 上付き文字 | 選択テキストを`<sup>`タグで囲む。すでにある場合は解除する。 |
-| `Editor: Increase blockquote level` | ブロッククォートレベル増加 | 選択した行のブロッククォート（`>`）レベルを1段階増加させる。 |
-| `Editor: Convert links to relative paths` | リンクを相対パスに変換 | ファイル内のWikiリンクやMarkdownリンクを、すべて相対パス形式のMarkdownリンクに一括変換する。 |
-| `Editor: Convert active file to bullet list` | 本文をバレット化 | アクティブファイルの本文をバレットリストに変換する（フロントマターは保持）。 |
-| `Editor: Organize file with prefix and tags` | タグでファイルを整理 | タグを選択し、ファイル名に絵文字プレフィックスや日付を追加、フロントマターを更新し、指定フォルダへ移動させる。 |
-| `Editor: Insert OGP link (horizontal)` | OGPリンク挿入（横） | URLからOGP情報を取得し、横並びレイアウトのリンクカードを挿入する。 |
-| `Editor: Insert OGP link (vertical)` | OGPリンク挿入（縦） | URLからOGP情報を取得し、縦並びレイアウトのリンクカードを挿入する。 |
-| `Editor: Move cursor after list marker` | リストマーカーの後ろへ移動 | リストマーカー（`- ` `* ` `+ ` `1. ` `1) `）の後ろ、チェックボックスがあればチェックボックスの後ろへカーソルを移動する。それ以外の行では行頭へ移動する。Home などにホットキーを割り当てて使う。 |
+## Development
 
-**Auto bullet（Cosense風の自動箇条書き）：**
+```bash
+pnpm install
+pnpm run dev     # watch build
+pnpm run build   # type-check and production build
+pnpm test
+```
 
-- 行頭で半角スペース・全角スペース・Tab を打つと `- ` の箇条書きになる（既存テキスト行の行頭でも `foo` → `- foo`）。カーソル前の空白は `- ` に置き換わり、ネストは既存リスト上の Tab（通常のインデント）で行う。Undo で元に戻せる（直前の入力と同じ Undo 単位にまとめられ、直前の入力ごと戻る場合がある。IME の確定経由で入った全角スペースは、直前の入力とまとめて1回、または2回の Undo で戻る）。
-- フロントマター、コードブロック（` ``` ` / `~~~`）、`$$` 数式ブロック、見出し、引用・コールアウト、既存のリスト（`- ` `* ` `+ ` `1. ` `1) ` チェックボックス）、テーブル、水平線では発動しない。貼り付け・削除・IME 変換中（未確定）の入力も対象外。
-- **Settings → Editor** で全体のオン/オフと、各トリガー（半角スペース・全角スペース・Tab）を切り替えられる（既定はすべてオン）。
-- [Auto Bullet](https://github.com/takitsuba/obsidian-auto-bullet) プラグインと併用すると二重に処理されるので、そちらは無効化すること。
+To try a build, copy `main.js`, `manifest.json`, and `styles.css` to `<Vault>/.obsidian/plugins/obsidian-crystal/` and reload Obsidian.
 
-**自動化機能（Vimモード有効時）：**
+## License
 
-- **Auto Reset Vim Mode on Leaf Change:** 別のペインに移動すると、離れたエディタのVimモードが自動でNormalモードにリセットされる。
-
-> [!note]
-> `Editor: Organize file with prefix and tags`には設定画面に専用設定UIがある。
-
-### 🪟 Window
-
-デスクトップ版のウィンドウ表示を調整する。
-
-| コマンド | 機能 | 説明 |
-|---|---|---|
-| `Window: Toggle opacity` | 不透明度切替 | ウィンドウの不透明度を100%と90%の間でトグルする。デスクトップ版のみ動作する。 |
-
-### 🎞 Marp
-
-[Marp](https://marp.app/)を使ったプレゼンテーション作成を支援する。
-
-| コマンド | 機能 | 説明 |
-|---|---|---|
-| `Marp: Create slide from current note` | ノートからスライド作成 | 現在のノートを親としてMarpスライドノートを作成し、新規タブで開く。ファイル名（プレフィックス・日付・親タイトル/aliases[0]）とフロントマター（theme・paginate・header。`{{title}}`・`{{date}}`・`{{date:FORMAT}}` を利用可）は設定で変更可能。親の `slide` と子の `parents`（プロパティ名は設定可）に相互リンクを追加する。 |
-| `Marp: Preview slide` | Marpプレビュー | Marpのプレビュー用HTMLをMarkdownと同じフォルダに出力する。 |
-| `Marp: Export slide (PPTX)` | Marpエクスポート | PPTX形式でエクスポートする。 |
-| `Marp: Export slide (PPTX editable)` | Marpエクスポート（編集可） | スライド内容を編集可能なPPTX形式でエクスポートする。 |
-| `Marp: Export slide (HTML)` | Marpエクスポート（HTML） | HTML形式でエクスポートする。 |
-| `Marp: Export slide (HTML folder with attachments)` | Marpエクスポート（HTMLフォルダ） | HTML・Markdownコピー・ローカル画像をひとつのフォルダにまとめてエクスポートする。画像リンクは相対パスに変換されるため、フォルダをそのまま配布・移動しても画像が正常に表示される。 |
-| `Marp: Export slide (PDF)` | Marpエクスポート（PDF） | PDF形式でエクスポートする。 |
-| `Marp: Start server` | Marpサーバー起動 | プレビュー用のMarpサーバーを起動する。起動後はサーバーの稼働を定期的に監視し、停止を検知すると通知する。 |
-| `Marp: Stop server` | Marpサーバー停止 | 起動中のMarpサーバーを停止する。 |
-| `Marp: Move images to Marp folder` | 画像をMarpフォルダに移動 | Vault内の画像ファイルをMarp用フォルダに移動し、リンクを更新する。 |
-| `Marp: Export presenter notes` | Marpノート出力 | Marp Presenter Notesをテキストファイルとして出力する。 |
-| `Marp: Move images and convert links to relative paths` | 画像移動＋リンク変換 | Marp用フォルダに画像を移動した後、リンクを相対パスに変換する処理を連続で行う（Marp関連マクロ）。 |
-
-**必要な依存関係:**
-
-- [Marp-cli](https://github.com/marp-team/marp-cli)
-
-### 🔗 Property Link
-
-フロントマターのlistプロパティ（例: `next`）に他ノートへのリンクを追加すると、リンク先ノートに対になるプロパティ（例: `previous`）を自動作成し、逆方向のリンクを追記する。既存のプロパティや値は削除・上書きせず、追加のみを行う。既定では無効なので、設定の `Enable Property Link` から有効化する。
-
-| コマンド | 機能 | 説明 |
-|---|---|---|
-| `Property link: Sync current note` | 現在のノートを同期 | アクティブなノートのプロパティリンクペアを確認し、不足している対になるリンクを追加する。 |
-| `Property link: Sync all notes` | 全ノートを同期 | Vault内の全Markdownノートに対して同様の同期を一括実行する。 |
-
-**自動化機能（設定で有効化が必要）：**
-
-- **Enable Property Link:** ノートの保存を検知し、設定した各ペアについて対になるリンクを自動で追加する。
-- **Pair設定:** `source`（検知対象）と`target`（追加先）のプロパティ名を1行ずつ登録する。`next`→`previous`のように異なる名前にすると有向のペアになり、`friends`→`friends`のように同じ名前にすると対称な関係になる。有向ペアで逆方向（`previous`→`next`）も自動検知したい場合は、逆向きのペアをもう1行追加する。
-
-> [!note]
-> リンク先ノートが解決できない場合（存在しないノートなど）はスキップされる。対象ノート側でリンクを削除しても、反対側のリンクは自動削除されない（手動で削除するか、削除後に上記コマンドを実行しても既存のリンクは消えない）。
-
-### 🎨 Property Colors
-
-プロパティ名（キー）の文字色を指定できる視認性向上機能。重要なプロパティを目立たせたり、種類ごとに色分けしたりできる。設定は **Settings → Property colors** で行う。
-
-- **Color palette:** スウォッチとして並べる配色を選ぶ（既定は Tokyo Night。ほかに Catppuccin Mocha / Nord / Dracula / Gruvbox）。スウォッチの隣のカラーピッカーで任意の色も指定できる。
-- **All properties:** 個別ルールのないすべてのプロパティ名に適用する色。リセットボタンでテーマ本来の色に戻る。
-- **Rule:** **Add rule** で行を追加し、プロパティ名と色を指定する。名前をカンマ区切りで並べると（例: `status, priority`）、複数のプロパティに同じ色をまとめて指定できる。名前の入力欄は Vault 内のプロパティ名を候補表示し、選んだ色でプレビュー表示される。
-- プロパティ名は大文字・小文字を区別しない。同じプロパティが複数のルールにある場合は、下のルールが優先される。
-- 表示上の色を変えるだけで、ノートの内容は一切変更しない。
-
-### 🌐 Quartz
-
-[Quartz](https://quartz.jzhao.xyz/)サイトの管理を効率化する。
-
-| コマンド | 機能 | 説明 |
-|---|---|---|
-| `Quartz: Sync` | Quartzと同期 | 設定した公開用フォルダの内容を、指定したQuartzリポジトリに同期する。 |
-| `Quartz: Open site ({サイト名})` | Quartzサイトを開く | 設定したQuartzサイトのURLをブラウザで開く。 |
-| `Quartz: Sync and open site ({サイト名})` | Quartzと同期してサイトを開く | 同期コマンドを実行後、サイトとGitHub Actionsのページを開く。 |
+[MIT](LICENSE) © masaki39

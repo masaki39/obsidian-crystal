@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 220" role="img" aria-label="Property link: next in Chapter 1 adds previous in Chapter 2" font-family="system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, sans-serif">
+  <style>@media (prefers-color-scheme: dark){.f1f2937{fill:#e6edf3} .f6b7280{fill:#9ca3af} .f6d28d9{fill:#c4b5fd} .f7c3aed{fill:#c4b5fd} .ff5f3ff{fill:#1b1530} .fffffff{fill:#0d1117} .s7c3aed{stroke:#c4b5fd} .sa78bfa{stroke:#8b5cf6} .sc4b5fd{stroke:#6d28d9} .sddd6fe{stroke:#3b2a6b} .sede9fe{stroke:#2a2140}}</style>
+  <rect class="ff5f3ff sc4b5fd" x="1" y="1" width="638" height="218" rx="16" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="2"/>
+  <text class="f6d28d9" x="320" y="36" text-anchor="middle" font-size="15" font-weight="600" fill="#6d28d9">Pair: next → previous</text>
+  <g transform="translate(40 56)">
+    <rect class="fffffff sddd6fe" width="220" height="120" rx="12" fill="#ffffff" stroke="#ddd6fe" stroke-width="2"/>
+    <text class="f1f2937" x="18" y="34" font-size="18" font-weight="700" fill="#1f2937">Chapter 1</text>
+    <line class="sede9fe" x1="18" y1="48" x2="202" y2="48" stroke="#ede9fe" stroke-width="2"/>
+    <text class="f7c3aed" x="18" y="78" font-size="15" fill="#7c3aed" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">next:</text>
+    <text class="f1f2937" x="18" y="102" font-size="15" fill="#1f2937" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">  - [[Chapter 2]]</text>
+  </g>
+  <g transform="translate(380 56)">
+    <rect class="fffffff sddd6fe" width="220" height="120" rx="12" fill="#ffffff" stroke="#ddd6fe" stroke-width="2"/>
+    <text class="f1f2937" x="18" y="34" font-size="18" font-weight="700" fill="#1f2937">Chapter 2</text>
+    <line class="sede9fe" x1="18" y1="48" x2="202" y2="48" stroke="#ede9fe" stroke-width="2"/>
+    <text class="f7c3aed" x="18" y="78" font-size="15" fill="#7c3aed" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">previous:</text>
+    <text class="f1f2937" x="18" y="102" font-size="15" fill="#1f2937" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">  - [[Chapter 1]]</text>
+  </g>
+  <path class="s7c3aed" d="M272 100 h88" stroke="#7c3aed" stroke-width="4" stroke-linecap="round"/><path class="s7c3aed" d="M348 89 l13 11 -13 11" fill="none" stroke="#7c3aed" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="f6b7280" x="316" y="88" text-anchor="middle" font-size="12" fill="#6b7280">you add</text>
+  <path class="sa78bfa" d="M360 140 h-88" stroke="#a78bfa" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 8"/><path class="sa78bfa" d="M284 129 l-13 11 13 11" fill="none" stroke="#a78bfa" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="f6b7280" x="316" y="166" text-anchor="middle" font-size="12" fill="#6b7280">Crystal adds</text>
+</svg>
