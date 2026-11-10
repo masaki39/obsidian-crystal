@@ -1,4 +1,4 @@
-import { App, type IconName, PluginSettingTab, SearchComponent, prepareSimpleSearch, setIcon } from 'obsidian';
+import { App, type IconName, PluginSettingTab, SearchComponent, getLanguage, prepareSimpleSearch, setIcon } from 'obsidian';
 import { renderPropertyColorSection } from '../features/properties/color-settings';
 import { renderHackerModeSection } from '../features/hacker/settings-section';
 import type { CrystalPluginHost } from '../types';
@@ -24,6 +24,35 @@ interface SettingsSection {
 	label: string;
 	icon: IconName;
 	render: (containerEl: HTMLElement) => void;
+	/** Doc pages (file names under `docs/<lang>/`, without `.md`) linked
+	 * from the top of this section. */
+	docs: string[];
+}
+
+const DOCS_BASE_URL = 'https://github.com/masaki39/obsidian-crystal/blob/main/docs';
+
+/** Display names for doc pages, matching each page's H1. */
+const DOC_TITLES: Record<string, string> = {
+	'README': 'Documentation index',
+	'ai': 'AI',
+	'bluesky': 'Bluesky',
+	'daily-notes': 'Daily notes',
+	'editor': 'Editor',
+	'gamification': 'Gamification',
+	'gyazo': 'Gyazo',
+	'hacker-mode': 'Hacker mode',
+	'images': 'Images',
+	'marp': 'Marp',
+	'property-colors': 'Property colors',
+	'property-link': 'Property link',
+	'quartz': 'Quartz',
+	'workspace': 'Workspace',
+};
+
+/** Docs exist in English and Japanese; follow Obsidian's UI language. */
+function docUrl(page: string): string {
+	const lang = getLanguage().startsWith('ja') ? 'ja' : 'en';
+	return `${DOCS_BASE_URL}/${lang}/${page}.md`;
 }
 
 export class CrystalSettingTab extends PluginSettingTab {
@@ -46,20 +75,20 @@ export class CrystalSettingTab extends PluginSettingTab {
 	 * can be shown alone (normal browsing) or alongside the others (search). */
 	private getSections(): SettingsSection[] {
 		return [
-			{ id: 'general', label: 'General', icon: 'settings-2', render: (el) => renderGeneralSection(el, this.app, this.plugin) },
-			{ id: 'editor', label: 'Editor', icon: 'list', render: (el) => renderEditorSection(el, this.app, this.plugin) },
-			{ id: 'ai', label: 'AI', icon: 'bot', render: (el) => renderAiSection(el, this.app, this.plugin) },
-			{ id: 'bluesky', label: 'Bluesky', icon: 'cloud', render: (el) => renderBlueskySection(el, this.app, this.plugin) },
-			{ id: 'daily-notes', label: 'Daily notes', icon: 'calendar-days', render: (el) => renderDailyNotesSection(el, this.app, this.plugin) },
-			{ id: 'gamification', label: 'Gamification', icon: 'gamepad-2', render: (el) => renderGamificationSection(el, this.app, this.plugin, () => this.display()) },
-			{ id: 'images', label: 'Images', icon: 'image', render: (el) => renderImageSection(el, this.app, this.plugin) },
-			{ id: 'marp', label: 'Marp', icon: 'presentation', render: (el) => renderMarpSection(el, this.app, this.plugin) },
-			{ id: 'quartz', label: 'Quartz', icon: 'globe', render: (el) => renderQuartzSection(el, this.app, this.plugin) },
-			{ id: 'property-link', label: 'Property link', icon: 'link', render: (el) => renderPropertyLinkSection(el, this.app, this.plugin) },
-			{ id: 'property-colors', label: 'Property colors', icon: 'palette', render: (el) => renderPropertyColorSection(el, this.app, this.plugin) },
-			{ id: 'hacker-mode', label: 'Hacker mode', icon: 'terminal', render: (el) => renderHackerModeSection(el, this.plugin) },
-			{ id: 'status-bar', label: 'Status bar', icon: 'panel-bottom', render: (el) => renderStatusBarSection(el, this.app, this.plugin) },
-			{ id: 'file-rules', label: 'File rules', icon: 'folder-tree', render: (el) => renderFileOrganizationSection(el, this.app, this.plugin) },
+			{ id: 'general', label: 'General', icon: 'settings-2', render: (el) => renderGeneralSection(el, this.app, this.plugin), docs: ['workspace', 'README'] },
+			{ id: 'editor', label: 'Editor', icon: 'list', render: (el) => renderEditorSection(el, this.app, this.plugin), docs: ['editor'] },
+			{ id: 'ai', label: 'AI', icon: 'bot', render: (el) => renderAiSection(el, this.app, this.plugin), docs: ['ai'] },
+			{ id: 'bluesky', label: 'Bluesky', icon: 'cloud', render: (el) => renderBlueskySection(el, this.app, this.plugin), docs: ['bluesky'] },
+			{ id: 'daily-notes', label: 'Daily notes', icon: 'calendar-days', render: (el) => renderDailyNotesSection(el, this.app, this.plugin), docs: ['daily-notes'] },
+			{ id: 'gamification', label: 'Gamification', icon: 'gamepad-2', render: (el) => renderGamificationSection(el, this.app, this.plugin, () => this.display()), docs: ['gamification'] },
+			{ id: 'images', label: 'Images', icon: 'image', render: (el) => renderImageSection(el, this.app, this.plugin), docs: ['images', 'gyazo'] },
+			{ id: 'marp', label: 'Marp', icon: 'presentation', render: (el) => renderMarpSection(el, this.app, this.plugin), docs: ['marp'] },
+			{ id: 'quartz', label: 'Quartz', icon: 'globe', render: (el) => renderQuartzSection(el, this.app, this.plugin), docs: ['quartz'] },
+			{ id: 'property-link', label: 'Property link', icon: 'link', render: (el) => renderPropertyLinkSection(el, this.app, this.plugin), docs: ['property-link'] },
+			{ id: 'property-colors', label: 'Property colors', icon: 'palette', render: (el) => renderPropertyColorSection(el, this.app, this.plugin), docs: ['property-colors'] },
+			{ id: 'hacker-mode', label: 'Hacker mode', icon: 'terminal', render: (el) => renderHackerModeSection(el, this.plugin), docs: ['hacker-mode'] },
+			{ id: 'status-bar', label: 'Status bar', icon: 'panel-bottom', render: (el) => renderStatusBarSection(el, this.app, this.plugin), docs: ['workspace'] },
+			{ id: 'file-rules', label: 'File rules', icon: 'folder-tree', render: (el) => renderFileOrganizationSection(el, this.app, this.plugin), docs: ['editor'] },
 		];
 	}
 
@@ -121,11 +150,25 @@ export class CrystalSettingTab extends PluginSettingTab {
 				this.applySearchFilter(contentEl, this.searchQuery);
 			} else {
 				const activeSection = sections.find(section => section.id === this.activeSectionId) ?? sections[0];
+				this.renderDocLinks(contentEl, activeSection.docs);
 				activeSection.render(contentEl);
 			}
 		};
 
 		renderContent();
+	}
+
+	/** A small "Docs: …" row linking to this section's documentation pages. */
+	private renderDocLinks(containerEl: HTMLElement, pages: string[]) {
+		if (pages.length === 0) return;
+		const row = containerEl.createDiv({ cls: 'crystal-settings-docs' });
+		const iconEl = row.createSpan({ cls: 'crystal-settings-docs-icon' });
+		setIcon(iconEl, 'book-open');
+		row.createSpan({ text: 'Docs:' });
+		pages.forEach((page, i) => {
+			if (i > 0) row.createSpan({ text: '·' });
+			row.createEl('a', { text: DOC_TITLES[page] ?? page, href: docUrl(page) });
+		});
 	}
 
 	/**

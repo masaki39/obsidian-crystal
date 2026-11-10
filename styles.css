@@ -81,6 +81,26 @@
 	height: 1em;
 }
 
+/* Per-section documentation links */
+.crystal-settings-docs {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.4em;
+	margin-bottom: 0.5em;
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+}
+
+.crystal-settings-docs-icon {
+	display: inline-flex;
+}
+
+.crystal-settings-docs-icon svg {
+	width: 1em;
+	height: 1em;
+}
+
 /* Rows hidden by the settings search filter */
 .crystal-search-hidden {
 	display: none !important;
