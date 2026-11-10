@@ -1,7 +1,7 @@
 {
 	"id": "obsidian-crystal",
 	"name": "Crystal",
-	"version": "0.24.0",
+	"version": "0.25.0",
 	"minAppVersion": "1.11.4",
 	"description": "Write, polish, and publish from Obsidian — AI writing tools, daily notes, image handling, Bluesky, Marp slides, and Quartz.",
 	"author": "masaki39",
