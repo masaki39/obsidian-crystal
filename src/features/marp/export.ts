@@ -38,19 +38,19 @@ export class MarpExporter {
 				// Marpコマンドを生成（-- 以降でMarkdownファイルを指定）
 				const marpCommand = `marp -p${themeOption} -o "${outputPath}" -- "${activeFilePath}"`;
 
-			new Notice('⏳ Marpプレビューを実行中...');
+			new Notice('⏳ Running Marp preview…');
 			
 			// コマンドを実行
 			const result = await this.terminalService.executeCommand(marpCommand);
 			
 			if (result.exitCode === 0) {
-				new Notice('✅ Marpプレビューが完了しました');
+				new Notice('✅ Marp preview finished');
 			} else {
-				new Notice(`❌ Marpプレビューでエラーが発生しました: ${result.stderr}`);
+				new Notice(`❌ Marp preview failed: ${result.stderr}`);
 			}
 		} catch (error) {
 			console.error('Failed to execute Marp preview command:', error);
-			new Notice('❌ Marpプレビューの実行に失敗しました: ' + error.message);
+			new Notice('❌ Failed to run Marp preview: ' + error.message);
 		}
 	}
 
@@ -82,8 +82,8 @@ export class MarpExporter {
 			console.log('Executing Marp command:', marpCommand);
 
 			const noticeMessage = (editable && format === 'pptx')
-				? `⏳ Marpエクスポート（${format.toUpperCase()}・編集可能）を実行中...`
-				: `⏳ Marpエクスポート（${format.toUpperCase()}）を実行中...`;
+				? `⏳ Exporting with Marp (${format.toUpperCase()}, editable)…`
+				: `⏳ Exporting with Marp (${format.toUpperCase()})…`;
 			new Notice(noticeMessage);
 
 			// コマンドを実行
@@ -91,15 +91,15 @@ export class MarpExporter {
 
 			if (result.exitCode === 0) {
 				const successMessage = (editable && format === 'pptx')
-					? `✅ Marpエクスポート（${format.toUpperCase()}・編集可能）が完了しました`
-					: `✅ Marpエクスポート（${format.toUpperCase()}）が完了しました`;
+					? `✅ Marp export finished (${format.toUpperCase()}, editable)`
+					: `✅ Marp export finished (${format.toUpperCase()})`;
 				new Notice(successMessage);
 			} else {
-				new Notice(`❌ Marpエクスポートでエラーが発生しました: ${result.stderr}`);
+				new Notice(`❌ Marp export failed: ${result.stderr}`);
 			}
 		} catch (error) {
 			console.error('Failed to execute Marp export command:', error);
-			new Notice('❌ Marpエクスポートの実行に失敗しました: ' + error.message);
+			new Notice('❌ Failed to run Marp export: ' + error.message);
 		}
 	}
 
@@ -167,18 +167,18 @@ export class MarpExporter {
 			const themeOption = getThemeSetOption(this.settings);
 			const marpCommand = `marp --allow-local-files${themeOption} -o "${htmlOutputPath}" -- "${mdCopyPath}"`;
 
-			new Notice('⏳ Marp HTML（添付ファイル付き）をエクスポート中...');
+			new Notice('⏳ Exporting Marp HTML with attachments…');
 
 			const result = await this.terminalService.executeCommand(marpCommand);
 
 			if (result.exitCode === 0) {
-				new Notice(`✅ エクスポート完了: ${outputFolderAbsPath}`);
+				new Notice(`✅ Exported: ${outputFolderAbsPath}`);
 			} else {
-				new Notice(`❌ Marpエクスポートでエラーが発生しました: ${result.stderr}`);
+				new Notice(`❌ Marp export failed: ${result.stderr}`);
 			}
 		} catch (error) {
 			console.error('Failed to export Marp HTML with attachments:', error);
-			new Notice('❌ エクスポートに失敗しました: ' + error.message);
+			new Notice('❌ Export failed: ' + error.message);
 		}
 	}
 
@@ -206,19 +206,19 @@ export class MarpExporter {
 			const marpCommand = `marp --notes "${activeFilePath}" -o "${outputPath}"`;
 			console.log('Executing Marp notes command:', marpCommand);
 
-			new Notice('⏳ Marp Presenter Notesを出力中...');
+			new Notice('⏳ Exporting Marp presenter notes…');
 			
 			// コマンドを実行
 			const result = await this.terminalService.executeCommand(marpCommand);
 			
 			if (result.exitCode === 0) {
-				new Notice('✅ Marp Presenter Notesの出力が完了しました');
+				new Notice('✅ Marp presenter notes exported');
 			} else {
-				new Notice(`❌ Marp Presenter Notesの出力でエラーが発生しました: ${result.stderr}`);
+				new Notice(`❌ Marp presenter notes export failed: ${result.stderr}`);
 			}
 		} catch (error) {
 			console.error('Failed to execute Marp notes command:', error);
-			new Notice('❌ Marp Presenter Notesの出力に失敗しました: ' + error.message);
+			new Notice('❌ Failed to export Marp presenter notes: ' + error.message);
 		}
 	}
 }

@@ -3,12 +3,12 @@ import { promptForText } from '../../shared/ui/prompt-modal';
 import { AI_KEY_MISSING_NOTICE, type AIService } from './ai-service';
 
 async function promptRewriteInstruction(app: App, mode: 'replace' | 'append'): Promise<string | null> {
-	const title = mode === 'append' ? 'AIへの追記指示' : 'AIへの書き換え指示';
+	const title = mode === 'append' ? 'Instructions for AI (append)' : 'Instructions for AI (rewrite)';
 	const placeholder =
 		mode === 'append'
-			? '例: 要約を3行で追加してください / 次の手順を書いてください'
-			: '例: 箇条書きでまとめてください / ですます調に直してください';
-	const buttonText = mode === 'append' ? '追記を生成' : '書き換え';
+			? 'e.g. Add a 3-line summary / Write the next steps'
+			: 'e.g. Summarize as bullet points / Make the tone more formal';
+	const buttonText = mode === 'append' ? 'Generate' : 'Rewrite';
 	return promptForText(
 		app,
 		title,
@@ -27,7 +27,7 @@ export async function rewriteWithInstruction(app: App, ai: AIService, editor: Ed
 
 	const instruction = await promptRewriteInstruction(app, mode);
 	if (!instruction || !instruction.trim()) {
-		new Notice('⚠️ 指示が入力されていません。');
+		new Notice('⚠️ No instructions entered');
 		return;
 	}
 
@@ -36,7 +36,7 @@ export async function rewriteWithInstruction(app: App, ai: AIService, editor: Ed
 	const targetText = useSelection ? selection : editor.getValue();
 
 	if (!targetText.trim()) {
-		new Notice('⚠️ 変換対象のテキストがありません。');
+		new Notice('⚠️ No text to rewrite');
 		return;
 	}
 
@@ -57,13 +57,13 @@ ${instruction}
 ${targetText}`;
 
 	try {
-		new Notice('⏳ AIで書き換え中...');
+		new Notice('⏳ Rewriting with AI…');
 		const prompt = mode === 'replace' ? basePromptReplace : basePromptAppend;
 
 		const rewritten = await ai.generateText(prompt);
 
 		if (!rewritten) {
-			new Notice('⚠️ AIから結果が返りませんでした。');
+			new Notice('⚠️ AI returned no result');
 			return;
 		}
 
@@ -73,15 +73,15 @@ ${targetText}`;
 			} else {
 				editor.setValue(rewritten);
 			}
-			new Notice('✅ 書き換え完了（置換）。');
+			new Notice('✅ Rewrite complete (replaced)');
 		} else {
 			const needsBreak = editor.getValue().endsWith('\n') ? '' : '\n';
 			const appendText = `${needsBreak}${rewritten}\n`;
 			editor.replaceRange(appendText, { line: editor.lineCount(), ch: 0 });
-			new Notice('✅ 結果を末尾に追記しました。');
+			new Notice('✅ Result appended at the end');
 		}
 	} catch (error) {
 		console.error('Error rewriting text:', error);
-		new Notice(`❌ 書き換えエラー: ${error.message}`);
+		new Notice(`❌ Rewrite failed: ${error.message}`);
 	}
 }

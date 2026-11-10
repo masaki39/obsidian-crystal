@@ -15,7 +15,7 @@ export class GyazoImageMigrator {
 
 	async replaceExternalImagesInActiveNote(editor: Editor, view: MarkdownView): Promise<void> {
 		if (!view.file) {
-			new Notice('⚠️ ファイルが開かれていません');
+			new Notice('⚠️ No file is currently open');
 			return;
 		}
 
@@ -24,11 +24,11 @@ export class GyazoImageMigrator {
 		const urls = this.collectImageUrls(content);
 
 		if (urls.length === 0) {
-			new Notice('⚠️ 置換対象の画像URLが見つかりませんでした');
+			new Notice('⚠️ No image URLs to replace');
 			return;
 		}
 
-		new Notice(`⏳ ${urls.length}件の画像をGyazoにアップロード中...`);
+		new Notice(`⏳ Uploading ${urls.length} image(s) to Gyazo…`);
 
 		const mapping = new Map<string, string>();
 		let failed = 0;
@@ -44,7 +44,7 @@ export class GyazoImageMigrator {
 		}
 
 		if (mapping.size === 0) {
-			new Notice(`❌ 画像のアップロードに失敗しました (${failed}件)`);
+			new Notice(`❌ Failed to upload images (${failed} failed)`);
 			return;
 		}
 
@@ -62,8 +62,8 @@ export class GyazoImageMigrator {
 		});
 
 		const summary = failed > 0
-			? `⚠️ ${mapping.size}件をGyazoに置換、${failed}件失敗`
-			: `✅ ${mapping.size}件の画像をGyazoに置換しました`;
+			? `⚠️ Replaced ${mapping.size} image(s) with Gyazo, ${failed} failed`
+			: `✅ Replaced ${mapping.size} image(s) with Gyazo`;
 		new Notice(summary);
 	}
 

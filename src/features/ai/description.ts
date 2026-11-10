@@ -47,12 +47,12 @@ export async function generateDescriptionForCurrentFile(app: App, ai: AIService,
 	}
 
 	if (!view.file) {
-		new Notice('⚠️ 現在のファイルが見つかりません。');
+		new Notice('⚠️ No file is currently open');
 		return;
 	}
 
 	try {
-		new Notice('⏳ Descriptionを生成中...');
+		new Notice('⏳ Generating description…');
 
 		// フロントマターを除去したコンテンツを取得
 		const titleForAnalysis = view.file.basename;
@@ -64,10 +64,10 @@ export async function generateDescriptionForCurrentFile(app: App, ai: AIService,
 		// フロントマターを更新
 		await updateFrontmatterDescription(app, view.file, description);
 
-		new Notice(`✅ Description生成完了: ${description}`);
+		new Notice(`✅ Description generated: ${description}`);
 
 	} catch (error) {
 		console.error('Error generating description:', error);
-		new Notice(`❌ Description生成エラー: ${error.message}`);
+		new Notice(`❌ Failed to generate description: ${error.message}`);
 	}
 }

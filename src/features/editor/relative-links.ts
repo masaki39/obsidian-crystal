@@ -6,7 +6,7 @@ import * as path from 'path';
  */
 export async function convertLinksToRelativePaths(app: App, editor: Editor, view: MarkdownView) {
 	if (!view.file) {
-		new Notice('⚠️ ファイルが開かれていません');
+		new Notice('⚠️ No file is currently open');
 		return;
 	}
 
@@ -79,9 +79,9 @@ export async function convertLinksToRelativePaths(app: App, editor: Editor, view
 
 	if (changeCount > 0) {
 		editor.setValue(convertedContent);
-		new Notice(`✅ ${changeCount}個のリンクを相対パスに変換済`);
+		new Notice(`✅ Converted links to relative paths: ${changeCount}`);
 	} else {
-		new Notice('⚠️ 変換対象のリンクが見つかりませんでした');
+		new Notice('⚠️ No links to convert');
 	}
 
 	// カーソル位置を復元

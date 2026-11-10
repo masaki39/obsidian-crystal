@@ -10,6 +10,22 @@ export interface PostResult {
 
 export const MAX_IMAGES = 4;
 
+/** Which window the post modal was opened from. */
+export type PostTarget = 'bluesky' | 'daily-note';
+
+/**
+ * Whether attached images should be uploaded to Gyazo (public) on submit.
+ * The Gyazo URLs are only used in the daily note timeline, so upload only when
+ * the post actually ends up there: always for the daily note window, and for
+ * the Bluesky window only while timeline appending is on.
+ */
+export function shouldUploadToGyazo(target: PostTarget, hasGyazoService: boolean, appendToDailyNote: boolean): boolean {
+	if (!hasGyazoService) {
+		return false;
+	}
+	return target === 'daily-note' || appendToDailyNote;
+}
+
 export function getImageDimensions(file: File): Promise<{ width: number; height: number }> {
 	return new Promise((resolve, reject) => {
 		const img = new Image();
@@ -49,6 +65,7 @@ export class PostModal extends Modal {
 	private title: string;
 	private buttonText: string;
 	private gyazoService: GyazoService | null;
+	private shouldUploadImages: () => boolean;
 	private selectedFiles: File[] = [];
 	private objectUrls: string[] = [];
 	private result: PostResult | null = null;
@@ -59,12 +76,14 @@ export class PostModal extends Modal {
 		title: string,
 		buttonText: string,
 		gyazoService: GyazoService | null,
+		shouldUploadImages: () => boolean,
 		resolve: (result: PostResult | null) => void
 	) {
 		super(app);
 		this.title = title;
 		this.buttonText = buttonText;
 		this.gyazoService = gyazoService;
+		this.shouldUploadImages = shouldUploadImages;
 		this.resolve = resolve;
 	}
 
@@ -73,17 +92,17 @@ export class PostModal extends Modal {
 		contentEl.createEl('h3', { text: this.title, cls: 'crystal-modal-title' });
 
 		const textarea = contentEl.createEl('textarea', { cls: 'crystal-modal-input' });
-		textarea.placeholder = '投稿内容を入力してください';
+		textarea.placeholder = 'What\'s on your mind?';
 
 		const imageSection = contentEl.createDiv();
 		imageSection.style.marginBottom = '16px';
 
 		const imageRow = imageSection.createDiv({ cls: 'crystal-image-row' });
 
-		const uploadButton = imageRow.createEl('button', { text: `ファイルを選択` });
+		const uploadButton = imageRow.createEl('button', { text: 'Choose files' });
 		uploadButton.style.flexShrink = '0';
 
-		const clipboardButton = imageRow.createEl('button', { text: 'クリップボードから貼り付け' });
+		const clipboardButton = imageRow.createEl('button', { text: 'Paste from clipboard' });
 		clipboardButton.style.flexShrink = '0';
 
 		const previewEl = imageSection.createDiv({ cls: 'crystal-image-preview-row' });
@@ -97,7 +116,7 @@ export class PostModal extends Modal {
 
 			if (this.selectedFiles.length === 0) {
 				previewEl.createEl('span', {
-					text: `未選択 (最大${MAX_IMAGES}枚)`,
+					text: `No images selected (max ${MAX_IMAGES})`,
 					cls: 'crystal-image-preview-empty',
 				});
 				return;
@@ -140,7 +159,7 @@ export class PostModal extends Modal {
 
 		clipboardButton.addEventListener('click', async () => {
 			if (this.selectedFiles.length >= MAX_IMAGES) {
-				new Notice(`⚠️ 画像は最大${MAX_IMAGES}枚まで選択できます`);
+				new Notice(`⚠️ You can select up to ${MAX_IMAGES} images`);
 				return;
 			}
 			try {
@@ -158,16 +177,16 @@ export class PostModal extends Modal {
 						}
 					}
 				}
-				new Notice('⚠️ クリップボードに画像が見つかりません');
+				new Notice('⚠️ No image found in clipboard');
 			} catch (e) {
-				new Notice('❌ クリップボードの読み取りに失敗しました');
+				new Notice('❌ Failed to read clipboard');
 				console.error('Clipboard read failed:', e);
 			}
 		});
 
 		const buttonContainer = contentEl.createDiv({ cls: 'crystal-modal-button-row' });
 
-		const cancelButton = buttonContainer.createEl('button', { text: 'キャンセル' });
+		const cancelButton = buttonContainer.createEl('button', { text: 'Cancel' });
 		const submitButton = buttonContainer.createEl('button', { text: this.buttonText });
 		submitButton.addClass('mod-cta');
 
@@ -180,9 +199,10 @@ export class PostModal extends Modal {
 			}
 
 			const gyazoUrls: string[] = [];
-			if (this.selectedFiles.length > 0 && this.gyazoService) {
+			// Checked at submit time so a settings change while the window is open is respected.
+			if (this.selectedFiles.length > 0 && this.gyazoService && this.shouldUploadImages()) {
 				submitButton.disabled = true;
-				submitButton.textContent = 'アップロード中...';
+				submitButton.textContent = 'Uploading…';
 				for (const file of this.selectedFiles) {
 					try {
 						const url = await this.gyazoService.uploadForUrl(file);

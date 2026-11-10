@@ -1,7 +1,7 @@
 import { App, Modal, MarkdownView } from 'obsidian';
 import { createModalButtonRow, createModalTitle } from './modal-markup';
 
-export function promptForText(app: App, title = 'テキストを入力してください', placeholder = '', buttonText = '追加', defaultValue = '', multiline = false): Promise<string | null> {
+export function promptForText(app: App, title = 'Enter text', placeholder = '', buttonText = 'Add', defaultValue = '', multiline = false): Promise<string | null> {
 	const activeView = app.workspace.getActiveViewOfType(MarkdownView);
 	const savedCursor = activeView?.editor.getCursor();
 
@@ -39,7 +39,7 @@ export function promptForText(app: App, title = 'テキストを入力してく�
 				input.value = defaultValue ?? '';
 
 				const buttonContainer = createModalButtonRow(contentEl);
-				const cancelButton = buttonContainer.createEl('button', { text: 'キャンセル' });
+				const cancelButton = buttonContainer.createEl('button', { text: 'Cancel' });
 				const addButton = buttonContainer.createEl('button', { text: buttonText });
 				addButton.addClass('mod-cta');
 				

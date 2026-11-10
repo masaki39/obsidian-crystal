@@ -13,7 +13,7 @@ export async function grammarCheckCurrentLine(ai: AIService, editor: Editor, vie
 	const currentLineText = editor.getLine(currentLine);
 
 	if (!currentLineText.trim()) {
-		new Notice('⚠️ 現在の行が空のため、文法チェックできません。');
+		new Notice('⚠️ Current line is empty; nothing to check');
 		return;
 	}
 
@@ -23,12 +23,12 @@ export async function grammarCheckCurrentLine(ai: AIService, editor: Editor, vie
 	const pureText = await getPureTextFromLine(currentLineText);
 
 	if (!pureText.trim()) {
-		new Notice('⚠️ 校正対象のテキストが空のため、文法チェックできません。');
+		new Notice('⚠️ No text to check');
 		return;
 	}
 
 	try {
-		new Notice('⏳ 文法チェック中...');
+		new Notice('⏳ Checking grammar…');
 
 		const prompt = `以下のテキストの文法をチェックして、より自然で正しい文に校正してください。言語は変更せず、日本語の場合は日本語のまま、英語の場合は英語のまま校正してください。校正結果のみを出力し、余計な説明は含めないでください。
 
@@ -42,10 +42,10 @@ ${pureText}`;
 		const lineEnd = { line: currentLine, ch: currentLineText.length };
 		editor.replaceRange(finalText, lineStart, lineEnd);
 
-		new Notice(`✅ 文法チェック完了: ${correctedText}`);
+		new Notice(`✅ Grammar checked: ${correctedText}`);
 
 	} catch (error) {
 		console.error('Error checking grammar:', error);
-		new Notice(`❌ 文法チェックエラー: ${error.message}`);
+		new Notice(`❌ Grammar check failed: ${error.message}`);
 	}
 }

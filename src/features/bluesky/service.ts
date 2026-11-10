@@ -6,7 +6,7 @@ import type { GyazoService } from '../gyazo/service';
 import { formatXrpcError, isAuthError } from './errors';
 import { registerBlueskyCommands } from './commands';
 import { createEmbedCard, extractUrls } from './link-card';
-import { getImageDimensions, MAX_IMAGES, PostModal, type PostResult } from './post-modal';
+import { getImageDimensions, MAX_IMAGES, PostModal, shouldUploadToGyazo, type PostResult } from './post-modal';
 
 export class BlueskyService {
 	private agent: AtpAgent | null = null;
@@ -42,7 +42,7 @@ export class BlueskyService {
 		} catch (error) {
 			console.error('Bluesky login failed:', error);
 			this.agent = null;
-			throw new Error(`Bluesky認証に失敗しました: ${formatXrpcError(error)}`);
+			throw new Error(`Bluesky authentication failed: ${formatXrpcError(error)}`);
 		}
 	}
 
@@ -77,7 +77,7 @@ export class BlueskyService {
 	/** `dailyNoteText` replaces the text (and images) added to the daily note, when given. */
 	async post(text: string, gyazoUrls: string[] = [], imageFiles: File[] = [], dailyNoteText?: string): Promise<void> {
 		if (!this.isAvailable()) {
-			throw new Error('Bluesky認証情報が設定されていません');
+			throw new Error('Bluesky credentials are not configured');
 		}
 
 		if (!this.agent) {
@@ -89,7 +89,7 @@ export class BlueskyService {
 		} catch (error) {
 			if (!isAuthError(error)) {
 				console.error('Error posting to Bluesky:', error);
-				throw new Error(`Bluesky投稿に失敗しました: ${formatXrpcError(error)}`);
+				throw new Error(`Failed to post to Bluesky: ${formatXrpcError(error)}`);
 			}
 			// The cached session was rejected (expired or revoked token). Drop it and
 			// re-authenticate once, so one stale session doesn't fail every post until
@@ -101,7 +101,7 @@ export class BlueskyService {
 				await this.createPost(text, imageFiles);
 			} catch (retryError) {
 				console.error('Error posting to Bluesky after re-authentication:', retryError);
-				throw new Error(`Bluesky投稿に失敗しました: ${formatXrpcError(retryError)}`);
+				throw new Error(`Failed to post to Bluesky: ${formatXrpcError(retryError)}`);
 			}
 		}
 
@@ -173,47 +173,55 @@ export class BlueskyService {
 	async promptAndAppendToDailyNote(): Promise<void> {
 		try {
 			const result = await new Promise<PostResult | null>((resolve) => {
-				new PostModal(this.app, 'デイリーノートに追加', '追加', this.gyazoService, resolve).open();
+				new PostModal(
+					this.app, 'Add to daily note', 'Add', this.gyazoService,
+					() => shouldUploadToGyazo('daily-note', this.gyazoService !== null, this.settings.blueskyAppendToDailyNote),
+					resolve
+				).open();
 			});
 
 			if (!result || !result.text.trim()) {
-				new Notice('⚠️ 内容が空のため、追加をキャンセルしました。');
+				new Notice('⚠️ Content is empty; nothing was added');
 				return;
 			}
 
 			const imagePart = result.gyazoUrls.map(url => `![](${url})`).join('\n');
 			const fullText = imagePart ? `${result.text}\n${imagePart}` : result.text;
 			await this.dailyNotesManager.appendToTimeline(fullText);
-			new Notice('✅ デイリーノートのタイムラインに追加しました。');
+			new Notice('✅ Added to daily note timeline');
 		} catch (error) {
 			console.error('Error in promptAndAppendToDailyNote:', error);
-			new Notice(`❌ 追加エラー: ${error.message}`);
+			new Notice(`❌ Failed to add: ${error.message}`);
 		}
 	}
 
 	async promptAndPost(): Promise<void> {
 		if (!this.isAvailable()) {
-			new Notice('⚠️ Bluesky認証情報が設定されていません。設定からユーザー名とアプリパスワードを入力してください。');
+			new Notice('⚠️ Bluesky credentials are not configured. Enter your Bluesky handle/email and app password in settings');
 			return;
 		}
 
 		try {
 			const result = await new Promise<PostResult | null>((resolve) => {
-				new PostModal(this.app, 'Blueskyに投稿', '投稿', this.gyazoService, resolve).open();
+				new PostModal(
+					this.app, 'Post to Bluesky', 'Post', this.gyazoService,
+					() => shouldUploadToGyazo('bluesky', this.gyazoService !== null, this.settings.blueskyAppendToDailyNote),
+					resolve
+				).open();
 			});
 
 			if (!result || !result.text.trim()) {
-				new Notice('⚠️ 投稿内容が空のため、投稿をキャンセルしました。');
+				new Notice('⚠️ Post is empty; nothing was posted');
 				return;
 			}
 
-			new Notice('⏳ Blueskyに投稿中...');
+			new Notice('⏳ Posting to Bluesky…');
 			await this.post(result.text, result.gyazoUrls, result.imageFiles);
-			new Notice('✅ Blueskyに投稿が完了しました！');
+			new Notice('✅ Posted to Bluesky');
 
 		} catch (error) {
 			console.error('Error in promptAndPost:', error);
-			new Notice(`❌ 投稿エラー: ${error.message}`);
+			new Notice(`❌ Failed to post: ${error.message}`);
 		}
 	}
 

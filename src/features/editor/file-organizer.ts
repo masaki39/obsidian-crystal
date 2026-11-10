@@ -48,7 +48,7 @@ class RuleSuggestModal extends SuggestModal<FileOrganizationRule> {
  */
 export async function organizeFileWithTags(app: App, settings: CrystalPluginSettings, editor: Editor, view: MarkdownView) {
 	if (!view.file) {
-		new Notice('⚠️ ファイルが開かれていません');
+		new Notice('⚠️ No file is currently open');
 		return;
 	}
 
@@ -56,7 +56,7 @@ export async function organizeFileWithTags(app: App, settings: CrystalPluginSett
 	const rules = settings.fileOrganizationRules;
 
 	if (rules.length === 0) {
-		new Notice('⚠️ ファイル整理ルールが設定されていません');
+		new Notice('⚠️ No file organization rules are configured');
 		return;
 	}
 
@@ -88,9 +88,9 @@ export async function organizeFileWithTags(app: App, settings: CrystalPluginSett
 			// ファイル名処理
 			await processFileNameWithRule(app, settings, view.file!, selectedRule);
 
-			new Notice('✅ ファイルが正常に分類されました');
+			new Notice('✅ File organized');
 		} catch (error) {
-			new Notice('❌ ファイル整理中にエラーが発生しました: ' + error.message);
+			new Notice('❌ Failed to organize file: ' + error.message);
 			console.error('File organization error:', error);
 		}
 
@@ -162,7 +162,7 @@ async function moveAndRenameFile(app: App, file: any, newname: string, folder: s
 			await app.fileManager.renameFile(file, targetPath);
 		} catch (error) {
 			console.error('File operation error:', error);
-			new Notice('❌ ファイル操作に失敗しました: ' + error.message);
+			new Notice('❌ File operation failed: ' + error.message);
 		}
 	}
 }

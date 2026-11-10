@@ -9,8 +9,8 @@ describe('resolveDraftPath', () => {
 		expect(resolveDraftPath('Draft.md')).toBe('Draft.md');
 	});
 
-	test('falls back to tmp.md when empty', () => {
-		expect(resolveDraftPath('  ')).toBe('tmp.md');
+	test('falls back to Draft.md when empty', () => {
+		expect(resolveDraftPath('  ')).toBe('Draft.md');
 	});
 });
 

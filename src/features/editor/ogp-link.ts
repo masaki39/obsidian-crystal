@@ -7,9 +7,9 @@ import { promptForText } from '../../shared/ui/prompt-modal';
 export async function insertOgpLink(app: App, editor: Editor, view: MarkdownView, layout: 'horizontal' | 'vertical') {
 	const url = await promptForText(
 		app,
-		'URLを入力してください',
+		'Enter URL',
 		'https://example.com',
-		'挿入'
+		'Insert'
 	);
 
 	if (!url) {
@@ -20,7 +20,7 @@ export async function insertOgpLink(app: App, editor: Editor, view: MarkdownView
 	try {
 		new URL(url);
 	} catch (error) {
-		new Notice('⚠️ 無効なURLです');
+		new Notice('⚠️ Invalid URL');
 		return;
 	}
 
@@ -33,5 +33,5 @@ export async function insertOgpLink(app: App, editor: Editor, view: MarkdownView
 	// Insert at cursor position
 	editor.replaceSelection(ogpLink);
 
-	new Notice('✅ OGPリンクを挿入しました');
+	new Notice('✅ OGP link inserted');
 }

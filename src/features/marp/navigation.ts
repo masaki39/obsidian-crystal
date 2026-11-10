@@ -24,7 +24,7 @@ export function moveCurrentSlide(editor: Editor, direction: -1 | 1) {
 	const move = moveSlide(content, current, direction);
 
 	if (!move) {
-		new Notice(direction === 1 ? '⚠️ これ以上後ろに移動できません' : '⚠️ これ以上前に移動できません');
+		new Notice(direction === 1 ? '⚠️ Already at the last slide' : '⚠️ Already at the first slide');
 		return;
 	}
 

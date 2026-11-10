@@ -3,7 +3,7 @@ import { requestUrl } from 'obsidian';
 import type { CrystalPluginSettings } from '../../settings';
 import { DEFAULT_SETTINGS } from '../../settings/defaults';
 
-export const AI_KEY_MISSING_NOTICE = '⚠️ AIが設定されていません。設定でプロバイダーを確認してください（OpenAI/Gemini はAPIキー、Ollama はBase URLとモデル名）。';
+export const AI_KEY_MISSING_NOTICE = '⚠️ AI is not configured. Check the provider in settings (API key for OpenAI/Gemini, base URL and model for Ollama)';
 
 export type AIProvider = 'gemini' | 'openai' | 'ollama';
 

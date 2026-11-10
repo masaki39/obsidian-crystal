@@ -97,34 +97,34 @@ export class MarpSlideToolbar {
 		return [
 			{
 				icon: 'chevron-up',
-				label: '前のスライドへ',
+				label: 'Previous slide',
 				onClick: view => this.marpCommands.goToAdjacentSlide(view.editor, -1)
 			},
 			{
 				icon: 'chevron-down',
-				label: '次のスライドへ',
+				label: 'Next slide',
 				onClick: view => this.marpCommands.goToAdjacentSlide(view.editor, 1)
 			},
 			{
 				icon: 'arrow-up',
-				label: 'スライドを前に移動',
+				label: 'Move slide up',
 				startsGroup: true,
 				onClick: view => this.marpCommands.moveCurrentSlide(view.editor, -1)
 			},
 			{
 				icon: 'arrow-down',
-				label: 'スライドを後ろに移動',
+				label: 'Move slide down',
 				onClick: view => this.marpCommands.moveCurrentSlide(view.editor, 1)
 			},
 			{
 				icon: 'file-down',
-				label: 'PPTXにエクスポート',
+				label: 'Export to PPTX',
 				startsGroup: true,
 				onClick: view => this.marpCommands.executeMarpExportCommand(view.editor, view, 'pptx')
 			},
 			{
 				icon: 'file-text',
-				label: 'PDFにエクスポート',
+				label: 'Export to PDF',
 				onClick: view => this.marpCommands.executeMarpExportCommand(view.editor, view, 'pdf')
 			}
 		];
@@ -143,7 +143,7 @@ export class MarpSlideToolbar {
 		toolbar.createDiv({ cls: 'crystal-marp-toolbar-separator' });
 		this.serverButtonEl = this.createButton(toolbar, {
 			icon: 'play',
-			label: 'Marpサーバーを起動',
+			label: 'Start Marp server',
 			onClick: () => this.toggleServer()
 		});
 
@@ -181,7 +181,7 @@ export class MarpSlideToolbar {
 
 		const running = this.marpCommands.isServerRunning();
 		setIcon(this.serverButtonEl, running ? 'square' : 'play');
-		this.serverButtonEl.setAttr('aria-label', running ? 'Marpサーバーを停止' : 'Marpサーバーを起動');
+		this.serverButtonEl.setAttr('aria-label', running ? 'Stop Marp server' : 'Start Marp server');
 		this.serverButtonEl.toggleClass('is-active', running);
 	}
 }

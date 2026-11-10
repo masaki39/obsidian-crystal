@@ -70,28 +70,28 @@ export async function promptMultipleImagePaste(app: App, settings: CrystalPlugin
 						const result = results[0];
 						if (settings.autoWebpPaste) {
 							if (result.processed.isConverted) {
-								console.log(`画像をWebPに変換した (品質: ${Math.round(settings.webpQuality * 100)}%)`);
+								console.log(`Converted image to WebP (quality: ${Math.round(settings.webpQuality * 100)}%)`);
 							} else if (result.processed.originalType === 'image/gif') {
-								console.log('GIFファイルのためアニメーション保持のため変換をスキップ');
+								console.log('Skipped conversion for GIF to keep animation');
 							}
-							console.log(`画像がWebP形式でヴォルトに保存された: ${result.filename}`);
+							console.log(`Saved WebP image to vault: ${result.filename}`);
 						} else {
-							console.log(`画像がヴォルトに保存された: ${result.filename}`);
+							console.log(`Saved image to vault: ${result.filename}`);
 						}
 					} else {
 						// Multiple images
 						const convertedCount = results.filter(r => r.processed.isConverted).length;
 						if (settings.autoWebpPaste && convertedCount > 0) {
-							console.log(`${fileArray.length}枚の画像を処理した (${convertedCount}枚をWebPに変換、品質: ${Math.round(settings.webpQuality * 100)}%)`);
+							console.log(`Processed ${fileArray.length} image(s) (${convertedCount} converted to WebP, quality: ${Math.round(settings.webpQuality * 100)}%)`);
 						} else {
-							console.log(`${fileArray.length}枚の画像がヴォルトに保存された`);
+							console.log(`Saved ${fileArray.length} image(s) to vault`);
 						}
 					}
 
 					resolve();
 				} catch (error) {
 					console.error('Failed to process selected images:', error);
-					console.log(`画像の処理に失敗した: ${error.message}`);
+					console.log(`Failed to process image: ${error.message}`);
 					resolve();
 				}
 			} else {

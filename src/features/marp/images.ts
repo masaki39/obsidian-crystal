@@ -47,7 +47,7 @@ export class MarpImages {
 	async moveImagesToMarpFolder(_editor: Editor, view: MarkdownView) {
 		const file = view.file;
 		if (!file) {
-			new Notice('⚠️ アクティブなファイルが見つかりません');
+			new Notice('⚠️ No file is currently open');
 			return;
 		}
 
@@ -55,14 +55,14 @@ export class MarpImages {
 			// 設定からmarp用のattachmentフォルダパスを取得
 			const marpAttachmentFolder = normalizeSettingPath(this.settings.marpAttachmentFolderPath);
 			if (!marpAttachmentFolder) {
-				new Notice('⚠️ Marp Attachment Folder Path が設定されていません');
+				new Notice('⚠️ Marp Attachment Folder Path is not set');
 				return;
 			}
 
 			// フォルダの存在確認
 			const folder = this.plugin.app.vault.getAbstractFileByPath(marpAttachmentFolder);
 			if (!folder) {
-				new Notice(`⚠️ Marp Attachment Folder が存在しません: ${marpAttachmentFolder}`);
+				new Notice(`⚠️ Marp attachment folder does not exist: ${marpAttachmentFolder}`);
 				return;
 			}
 
@@ -73,7 +73,7 @@ export class MarpImages {
 			const imageLinks = extractImageLinks(content);
 			
 			if (imageLinks.length === 0) {
-				new Notice('⚠️ 画像リンクが見つかりませんでした');
+				new Notice('⚠️ No image links found');
 				return;
 			}
 
@@ -104,14 +104,14 @@ export class MarpImages {
 			// ファイルを更新
 			if (movedCount > 0) {
 				await this.plugin.app.vault.modify(file, updatedContent);
-				new Notice(`✅ ${movedCount}個の画像をMarpフォルダに移動しました`);
+				new Notice(`✅ Moved images to Marp folder: ${movedCount}`);
 			} else {
-				new Notice('⚠️ 移動できる画像がありませんでした');
+				new Notice('⚠️ No images to move');
 			}
 
 		} catch (error) {
 			console.error('Failed to move images to Marp folder:', error);
-			new Notice('❌ 画像の移動に失敗しました: ' + error.message);
+			new Notice('❌ Failed to move images: ' + error.message);
 		}
 	}
 

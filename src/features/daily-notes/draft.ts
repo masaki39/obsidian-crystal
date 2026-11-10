@@ -1,5 +1,6 @@
 import { App, MarkdownView, Notice, Plugin, TFile, requestUrl } from 'obsidian';
 import type { CrystalPluginSettings } from '../../settings';
+import { DEFAULT_SETTINGS } from '../../settings/defaults';
 import { parseFrontmatter } from '../../shared/markdown/frontmatter';
 import type { DailyNotesManager } from './manager';
 import type { BlueskyService } from '../bluesky/service';
@@ -17,7 +18,7 @@ const IMAGE_MIME: Record<string, string> = {
 
 /** Vault path of the draft note: trimmed, no leading slash, `.md` appended if missing. */
 export function resolveDraftPath(setting: string): string {
-	const path = (setting.trim() || 'tmp.md').replace(/^\/+/, '');
+	const path = (setting.trim() || DEFAULT_SETTINGS.dailyNoteDraftPath).replace(/^\/+/, '');
 	return path.endsWith('.md') ? path : `${path}.md`;
 }
 
@@ -133,7 +134,7 @@ export class DailyDraft {
 			editor.setCursor(editor.offsetToPos(editor.getValue().length));
 		} catch (error) {
 			console.error('Failed to open draft:', error);
-			new Notice(`❌ 下書きを開けませんでした: ${error.message}`);
+			new Notice(`❌ Failed to open draft: ${error.message}`);
 		}
 	}
 
@@ -144,11 +145,11 @@ export class DailyDraft {
 
 		const posted = await this.dailyNotesManager.appendToTimeline(draft.body);
 		if (!posted) {
-			new Notice('❌ タイムラインへの追加に失敗しました。');
+			new Notice('❌ Failed to add to timeline');
 			return;
 		}
 		await this.clearDraft(draft);
-		new Notice('✅ デイリーノートのタイムラインに追加しました。');
+		new Notice('✅ Added to daily note timeline');
 	}
 
 	/**
@@ -158,7 +159,7 @@ export class DailyDraft {
 	 */
 	async postDraftToBluesky(): Promise<void> {
 		if (!this.blueskyService.isAvailable()) {
-			new Notice('⚠️ Bluesky認証情報が設定されていません。設定からユーザー名とアプリパスワードを入力してください。');
+			new Notice('⚠️ Bluesky credentials are not configured. Enter your Bluesky handle/email and app password in settings');
 			return;
 		}
 		const draft = await this.readDraft();
@@ -166,20 +167,20 @@ export class DailyDraft {
 
 		const { text, images } = splitDraftImages(draft.body);
 		if (images.length > MAX_BLUESKY_IMAGES) {
-			new Notice(`⚠️ 画像は最大${MAX_BLUESKY_IMAGES}枚までです。先頭の${MAX_BLUESKY_IMAGES}枚だけ添付します。`);
+			new Notice(`⚠️ Up to ${MAX_BLUESKY_IMAGES} images are allowed; attaching the first ${MAX_BLUESKY_IMAGES}`);
 		}
 
 		try {
-			new Notice('⏳ Blueskyに投稿中...');
+			new Notice('⏳ Posting to Bluesky…');
 			const files = await Promise.all(images.slice(0, MAX_BLUESKY_IMAGES).map(image => this.loadImage(image, draft.file)));
 			await this.blueskyService.post(text, [], files, draft.body);
 		} catch (error) {
 			console.error('Failed to post draft to Bluesky:', error);
-			new Notice(`❌ 投稿エラー: ${error.message}`);
+			new Notice(`❌ Failed to post: ${error.message}`);
 			return;
 		}
 		await this.clearDraft(draft);
-		new Notice('✅ Blueskyに投稿が完了しました！');
+		new Notice('✅ Posted to Bluesky');
 	}
 
 	private async loadImage(image: DraftImage, draftFile: TFile): Promise<File> {
@@ -190,7 +191,7 @@ export class DailyDraft {
 			return new File([response.arrayBuffer], name, { type });
 		}
 		const file = this.app.metadataCache.getFirstLinkpathDest(image.target, draftFile.path);
-		if (!file) throw new Error(`画像が見つかりません: ${image.target}`);
+		if (!file) throw new Error(`Image not found: ${image.target}`);
 		const data = await this.app.vault.readBinary(file);
 		return new File([data], file.name, { type: IMAGE_MIME[file.extension.toLowerCase()] ?? 'image/png' });
 	}
@@ -202,7 +203,7 @@ export class DailyDraft {
 	private async readDraft(): Promise<{ file: TFile; view?: MarkdownView; content: string; body: string } | null> {
 		const file = this.app.vault.getAbstractFileByPath(this.path);
 		if (!(file instanceof TFile)) {
-			new Notice('⚠️ 下書きノートがありません。「Daily: Open draft」で作成してください。');
+			new Notice('⚠️ No draft note found. Run "Daily: Open draft" to create one');
 			return null;
 		}
 
@@ -212,7 +213,7 @@ export class DailyDraft {
 		const content = view ? view.editor.getValue() : await this.app.vault.read(file);
 		const body = extractDraftBody(content);
 		if (!body) {
-			new Notice('⚠️ 下書きが空です。');
+			new Notice('⚠️ Draft is empty');
 			return null;
 		}
 		return { file, view, content, body };
@@ -228,7 +229,7 @@ export class DailyDraft {
 		if (draft.view) {
 			const editor = draft.view.editor;
 			if (editor.getValue() !== draft.content) {
-				new Notice('⚠️ 投稿中に下書きが編集されたため、下書きは消さずに残しました。');
+				new Notice('⚠️ Draft was edited while posting, so it was kept');
 				return;
 			}
 			editor.replaceRange('', editor.offsetToPos(frontmatter.length), editor.offsetToPos(draft.content.length));

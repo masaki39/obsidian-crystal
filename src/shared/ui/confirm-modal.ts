@@ -7,7 +7,7 @@ import { createModalButtonRow, createModalTitle } from './modal-markup';
  * user explicitly clicks the confirm button; closing the modal any other
  * way (Escape, clicking outside, the cancel button) resolves `false`.
  */
-export function promptForConfirmation(app: App, title: string, message: string, confirmText = '実行'): Promise<boolean> {
+export function promptForConfirmation(app: App, title: string, message: string, confirmText = 'Run'): Promise<boolean> {
 	return new Promise((resolve) => {
 		class ConfirmModal extends Modal {
 			private confirmed = false;
@@ -24,7 +24,7 @@ export function promptForConfirmation(app: App, title: string, message: string, 
 				contentEl.createEl('p', { text: message });
 
 				const buttonContainer = createModalButtonRow(contentEl);
-				const cancelButton = buttonContainer.createEl('button', { text: 'キャンセル' });
+				const cancelButton = buttonContainer.createEl('button', { text: 'Cancel' });
 				const confirmButton = buttonContainer.createEl('button', { text: confirmText });
 				confirmButton.addClass('mod-warning');
 

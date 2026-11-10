@@ -80,7 +80,7 @@ export function increaseBlockquote(editor: Editor, view: MarkdownView) {
  */
 export async function convertActiveFileToBulletList(app: App, editor: Editor, view: MarkdownView) {
 	if (!view.file) {
-		new Notice('⚠️ ファイルが開かれていません');
+		new Notice('⚠️ No file is currently open');
 		return;
 	}
 
@@ -109,5 +109,5 @@ export async function convertActiveFileToBulletList(app: App, editor: Editor, vi
 		.filter((line: string | null): line is string => line !== null);
 
 	editor.setValue(`${frontmatter}${bulletLines.join('\n')}`);
-	new Notice('✅ コンテンツをバレットリストに変換しました');
+	new Notice('✅ Converted content to bullet list');
 }

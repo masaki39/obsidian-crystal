@@ -24,20 +24,61 @@ export class QuartzService {
 		return command;
 	}
 
-	async quartzSync() {
+	private hasQuartzPath(): boolean {
+		if (!this.settings.quartzPath.trim()) {
+			new Notice('⚠️ Quartz path is not set. Set it in Settings → Crystal → Quartz');
+			return false;
+		}
+		return true;
+	}
+
+	private hasGithubUserName(): boolean {
+		if (!this.settings.githubUserName.trim()) {
+			new Notice('⚠️ GitHub user name is not set. Set it in Settings → Crystal → Quartz');
+			return false;
+		}
+		return true;
+	}
+
+	/** Returns true when `npx quartz sync` exited successfully. */
+	async quartzSync(): Promise<boolean> {
+		if (!this.hasQuartzPath()) {
+			return false;
+		}
 		const command = await this.generateQuartzSyncCommand();
-		await this.terminalService.executeCommand(command);
+		try {
+			const result = await this.terminalService.executeCommand(command);
+			if (result.exitCode !== 0) {
+				console.error('Quartz sync failed:', result.stderr || result.stdout);
+				new Notice(`❌ Quartz sync failed (exit code ${result.exitCode})`);
+				return false;
+			}
+		} catch (error) {
+			console.error('Quartz sync failed:', error);
+			new Notice('❌ Quartz sync failed');
+			return false;
+		}
 		new Notice('✅ Quartz Sync executed');
+		return true;
 	}
 
 	async openQuartzSite() {
+		if (!this.hasGithubUserName()) {
+			return;
+		}
 		const githubUserName = this.settings.githubUserName;
 		const quartzSiteUrl = `https://${githubUserName}.github.io`;
 		open(quartzSiteUrl);
 	}
 
 	async quartzSyncAndOpenSite() {
-		await this.quartzSync();
+		// Check both settings up front so nothing is pushed when the site can't be opened.
+		if (!this.hasQuartzPath() || !this.hasGithubUserName()) {
+			return;
+		}
+		if (!(await this.quartzSync())) {
+			return;
+		}
 		this.openQuartzSite();
 		const githubActionsUrl = `https://github.com/${this.settings.githubUserName}/${this.settings.githubUserName}.github.io/actions`;
 		open (githubActionsUrl);

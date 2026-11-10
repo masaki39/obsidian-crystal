@@ -65,7 +65,7 @@ export class MarpServer {
 			const pageUrl = this.activePageUrl();
 
 			if (await this.isServerAlive()) {
-				new Notice('ℹ️ Marpサーバーは既に起動しています');
+				new Notice('ℹ️ Marp server is already running');
 				this.setServerRunning(true);
 				await this.openServerInBrowser(pageUrl);
 				this.startServerMonitor();
@@ -77,7 +77,7 @@ export class MarpServer {
 			// Marpサーバーコマンドを生成
 				const marpCommand = `marp -s --allow-local-files${themeOption} -- "${this.settings.marpSlideFolderPath}"`;
 
-			new Notice('⏳ Marpサーバーを起動中...');
+			new Notice('⏳ Starting Marp server…');
 
 			// サーバーをバックグラウンドで起動し、停止できるようプロセスを保持する
 			const child = this.terminalService.spawnBackgroundCommand(marpCommand);
@@ -104,7 +104,7 @@ export class MarpServer {
 			this.waitForServerAndOpen(pageUrl);
 		} catch (error) {
 			console.error('Failed to start Marp server:', error);
-			new Notice('❌ Marpサーバーの起動に失敗しました: ' + error.message);
+			new Notice('❌ Failed to start Marp server: ' + error.message);
 		}
 	}
 
@@ -113,7 +113,7 @@ export class MarpServer {
 	 */
 	async stopMarpServerCommand() {
 		try {
-			new Notice('⏳ Marpサーバーを停止中...');
+			new Notice('⏳ Stopping Marp server…');
 
 			// プロセス監視と起動待ちを停止
 			this.stopServerMonitor();
@@ -138,10 +138,10 @@ export class MarpServer {
 			}
 
 			// プロセスが見つからない場合も停止済みとみなす
-			new Notice('✅ Marpサーバーを停止しました');
+			new Notice('✅ Marp server stopped');
 		} catch (error) {
 			console.error('Failed to stop Marp server:', error);
-			new Notice('❌ Marpサーバーの停止に失敗しました: ' + error.message);
+			new Notice('❌ Failed to stop Marp server: ' + error.message);
 		}
 	}
 
@@ -221,7 +221,7 @@ export class MarpServer {
 			if (await this.isServerAlive()) {
 				this.setServerRunning(true);
 				await this.openServerInBrowser(pageUrl);
-				new Notice('✅ Marpサーバーが起動しました');
+				new Notice('✅ Marp server started');
 				// 起動を確認できたらプロセス監視を開始する
 				this.startServerMonitor();
 				return;
@@ -230,12 +230,12 @@ export class MarpServer {
 			// 起動に失敗してプロセスが終了している場合は待ち続けない
 			// （ポート衝突などはここで検知される）
 			if (!this.serverProcess) {
-				new Notice('❌ Marpサーバーの起動に失敗しました');
+				new Notice('❌ Failed to start Marp server');
 				return;
 			}
 
 			if (attempts >= maxAttempts) {
-				new Notice('⚠️ Marpサーバーの起動を確認できませんでしたが、ブラウザを開きます');
+				new Notice('⚠️ Could not confirm the Marp server started; opening the browser anyway');
 				shell.openExternal(pageUrl);
 				return;
 			}
@@ -323,7 +323,7 @@ export class MarpServer {
 			if (!(await this.isServerAlive())) {
 				this.stopServerMonitor();
 				this.setServerRunning(false);
-				new Notice('✅ Marpサーバーが停止しました');
+				new Notice('✅ Marp server stopped');
 			}
 		}, 5000);
 

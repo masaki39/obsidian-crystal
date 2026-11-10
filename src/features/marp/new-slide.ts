@@ -111,8 +111,8 @@ export async function createSlideFromNote(app: App, settings: CrystalPluginSetti
 		}
 
 		await app.workspace.getLeaf('tab').openFile(slide);
-		new Notice(`✅ スライドを作成しました: ${slide.basename}`);
+		new Notice(`✅ Slide created: ${slide.basename}`);
 	} catch (error) {
-		new Notice('❌ スライドの作成に失敗しました: ' + (error as Error).message);
+		new Notice('❌ Failed to create slide: ' + (error as Error).message);
 	}
 }

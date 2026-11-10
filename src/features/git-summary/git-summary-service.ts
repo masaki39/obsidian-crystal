@@ -39,7 +39,7 @@ export class GitSummaryService {
 
 	async generateSummary(): Promise<void> {
 		if (!this.aiCommands.isAvailable()) {
-			new Notice('⚠️ AIのAPIキーが設定されていません。設定でプロバイダーとAPIキーを確認してください。');
+			new Notice('⚠️ AI is not configured. Check the provider and API key in settings');
 			return;
 		}
 
@@ -53,7 +53,7 @@ export class GitSummaryService {
 			const isToday = dateStr === this.formatDate(new Date());
 			const useWorkingTree = !isDailyNote || isToday;
 
-			new Notice('⏳ Gitコミット差分を取得中...');
+			new Notice('⏳ Fetching git commit diff…');
 
 			let lastCommit = '';
 			if (!useWorkingTree) {
@@ -63,7 +63,7 @@ export class GitSummaryService {
 				);
 				lastCommit = lastCommitResult.stdout.trim();
 				if (!lastCommit) {
-					new Notice(`⚠️ ${dateStr} のコミットが見つかりませんでした。`);
+					new Notice(`⚠️ No commits found for ${dateStr}`);
 					return;
 				}
 			}
@@ -83,11 +83,11 @@ export class GitSummaryService {
 			const diff = diffResult.stdout.trim();
 
 			if (!diff) {
-				new Notice('⚠️ 差分が見つかりませんでした。');
+				new Notice('⚠️ No diff found');
 				return;
 			}
 
-			new Notice('⏳ AIでサマリーを生成中...');
+			new Notice('⏳ Generating summary with AI…');
 			const summary = await this.aiCommands.generateGitSummary(diff, dateStr);
 
 			// 書き込み先: デイリーノートならそのファイル、そうでなければ今日のデイリーノート
@@ -95,7 +95,7 @@ export class GitSummaryService {
 			if (!isDailyNote) {
 				const todayNote = getDailyNote(moment(), getAllDailyNotes());
 				if (!todayNote) {
-					new Notice('⚠️ 今日のデイリーノートが見つかりませんでした。');
+					new Notice('⚠️ Today\'s daily note was not found');
 					return;
 				}
 				targetFile = todayNote;
@@ -105,11 +105,11 @@ export class GitSummaryService {
 				frontmatter.summary = summary;
 			});
 
-			new Notice(`✅ サマリー生成完了: ${summary}`);
+			new Notice(`✅ Summary generated: ${summary}`);
 
 		} catch (error) {
 			console.error('Error generating git summary:', error);
-			new Notice(`❌ サマリー生成エラー: ${error.message}`);
+			new Notice(`❌ Failed to generate summary: ${error.message}`);
 		}
 	}
 

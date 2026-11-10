@@ -86,7 +86,6 @@ export interface CrystalPluginSettings {
 	marpNewSlideParentProperty: string;
 	/** Property on the slide that receives the parent link. Empty disables it. */
 	marpNewSlideChildProperty: string;
-	publishFolderPath: string;
 	quartzPath: string;
 	quartzSiteName: string;
 	githubUserName: string;

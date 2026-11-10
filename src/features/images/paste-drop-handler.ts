@@ -87,7 +87,7 @@ export class ImagePasteAndDropHandler {
 			await this.processImagePaste(imageFile, editor);
 		} catch (error) {
 			console.error('Failed to process image drop:', error);
-			console.log(`画像の処理に失敗した: ${error.message}`);
+			console.log(`Failed to process image: ${error.message}`);
 		}
 	}
 
@@ -165,7 +165,7 @@ export class ImagePasteAndDropHandler {
 			await this.processImagePaste(imageFile, editor);
 		} catch (error) {
 			console.error('Failed to process image paste:', error);
-			console.log(`画像の処理に失敗した: ${error.message}`);
+			console.log(`Failed to process image: ${error.message}`);
 		}
 	}
 
@@ -210,13 +210,13 @@ export class ImagePasteAndDropHandler {
 			// Show appropriate message
 			if (this.settings.autoWebpPaste) {
 				if (processed.isConverted) {
-					console.log(`画像をWebPに変換した (品質: ${Math.round(this.settings.webpQuality * 100)}%)`);
+					console.log(`Converted image to WebP (quality: ${Math.round(this.settings.webpQuality * 100)}%)`);
 				} else if (processed.originalType === 'image/gif') {
-					console.log('GIFファイルのためアニメーション保持のため変換をスキップ');
+					console.log('Skipped conversion for GIF to keep animation');
 				}
-				console.log(`画像がWebP形式でヴォルトに保存された: ${filename}`);
+				console.log(`Saved WebP image to vault: ${filename}`);
 			} else {
-				console.log(`画像がヴォルトに保存された: ${filename}`);
+				console.log(`Saved image to vault: ${filename}`);
 			}
 
 		} catch (error) {

@@ -188,7 +188,7 @@ export class DailyNotesManager {
 	 * 入力したタスクを今日のデイリーノートのタイムライン上部に追記する
 	 */
 	async addTaskToDailyNote(): Promise<void> {
-		const task = await promptForText(this.app, 'タスクを入力してください', 'タスクの内容...', '追加');
+		const task = await promptForText(this.app, 'Enter task', 'Task…', 'Add');
 		if (!task || task.trim() === '') {
 			return;
 		}
@@ -209,9 +209,9 @@ export class DailyNotesManager {
 				});
 				return newContent.endsWith('\n') ? newContent : `${newContent}\n`;
 			});
-			new Notice('✅ デイリーノートにタスクを追加しました');
+			new Notice('✅ Task added to daily note');
 		} catch (error) {
-			new Notice('❌ タスクの追加に失敗しました: ' + error.message);
+			new Notice('❌ Failed to add task: ' + error.message);
 			console.error('Add task to daily note error:', error);
 		}
 	}

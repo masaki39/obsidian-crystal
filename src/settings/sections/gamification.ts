@@ -43,9 +43,9 @@ export function renderGamificationSection(containerEl: HTMLElement, app: App, pl
 			.onClick(async () => {
 				const confirmed = await promptForConfirmation(
 					app,
-					'進捗をリセットしますか？',
-					'レベル・XP・連続日数・フリーズトークン・バッジ・記録をすべて削除します。この操作は取り消せません。',
-					'リセット'
+					'Reset progress?',
+					'This deletes your level, XP, streak, freeze tokens, badges, and history. This cannot be undone.',
+					'Reset'
 				);
 				if (!confirmed) return;
 				plugin.settings.gamificationTotalXP = 0;

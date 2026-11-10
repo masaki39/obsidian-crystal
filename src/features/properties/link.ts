@@ -49,11 +49,11 @@ export class PropertyLinkService {
 			callback: async () => {
 				const file = this.app.workspace.getActiveFile();
 				if (!file) {
-					new Notice('⚠️ ファイルが開かれていません');
+					new Notice('⚠️ No file is currently open');
 					return;
 				}
 				const added = await this.syncFile(file);
-				new Notice(added > 0 ? `✅ ${added}件の対になるリンクを作成しました` : 'ℹ️ 追加するリンクはありませんでした');
+				new Notice(added > 0 ? `✅ Created ${added} paired link(s)` : 'ℹ️ No links to add');
 			}
 		});
 
@@ -63,7 +63,7 @@ export class PropertyLinkService {
 			icon: 'link',
 			callback: async () => {
 				const { files, added } = await this.syncVault();
-				new Notice(`✅ ${files}件のノートを確認し、${added}件の対になるリンクを作成しました`);
+				new Notice(`✅ Checked ${files} note(s) and created ${added} paired link(s)`);
 			}
 		});
 	}

@@ -11,12 +11,12 @@ export async function translateSelectedText(ai: AIService, editor: Editor, view:
 	const selectedText = editor.getSelection();
 
 	if (!selectedText.trim()) {
-		new Notice('⚠️ 選択されたテキストが空のため、翻訳できません。');
+		new Notice('⚠️ Selection is empty; nothing to translate');
 		return;
 	}
 
 	try {
-		new Notice('⏳ 翻訳中...');
+		new Notice('⏳ Translating…');
 
 		const prompt = `以下のテキストを翻訳してください。日本語の場合は英語に、英語の場合は日本語に翻訳してください。翻訳結果のみを出力し、余計な説明は含めないでください。
 
@@ -26,11 +26,11 @@ ${selectedText}`;
 
 		// 選択範囲を翻訳結果で置換
 		editor.replaceSelection(translatedText);
-		new Notice(`✅ 翻訳完了: ${translatedText}`);
+		new Notice(`✅ Translated: ${translatedText}`);
 
 	} catch (error) {
 		console.error('Error translating text:', error);
-		new Notice(`❌ 翻訳エラー: ${error.message}`);
+		new Notice(`❌ Translation failed: ${error.message}`);
 	}
 }
 
@@ -46,12 +46,12 @@ export async function translateAdjacentText(ai: AIService, editor: Editor, view:
 
 	// 境界チェック
 	if (direction === 'above' && currentLine === 0) {
-		new Notice('⚠️ カーソルが最初の行にあるため、上の行が存在しません。');
+		new Notice('⚠️ Cursor is on the first line; there is no line above');
 		return;
 	}
 
 	if (direction === 'below' && currentLine === totalLines - 1) {
-		new Notice('⚠️ カーソルが最後の行にあるため、下の行が存在しません。');
+		new Notice('⚠️ Cursor is on the last line; there is no line below');
 		return;
 	}
 
@@ -61,14 +61,14 @@ export async function translateAdjacentText(ai: AIService, editor: Editor, view:
 	const targetLinePureText = await getPureTextFromLine(targetLineText);
 
 	if (!targetLinePureText) {
-		const directionText = direction === 'above' ? '上' : '下';
-		new Notice(`⚠️ ${directionText}の行が空行のため、翻訳できません。`);
+		const directionText = direction === 'above' ? 'above' : 'below';
+		new Notice(`⚠️ The line ${directionText} is empty; nothing to translate`);
 		return;
 	}
 
 	try {
-		const directionText = direction === 'above' ? '上' : '下';
-		new Notice(`⏳ ${directionText}の行を翻訳中...`);
+		const directionText = direction === 'above' ? 'above' : 'below';
+		new Notice(`⏳ Translating the line ${directionText}…`);
 
 		const prompt = `以下のテキストを翻訳してください。日本語の場合は英語に、英語の場合は日本語に翻訳してください。翻訳結果のみを出力し、余計な説明は含めないでください。
 
@@ -93,11 +93,11 @@ ${targetLinePureText}`;
 			editor.setCursor({ line: currentLine, ch: newLineText.length });
 		}
 
-		new Notice(`✅ 翻訳完了: ${translatedText}`);
+		new Notice(`✅ Translated: ${translatedText}`);
 
 	} catch (error) {
 		console.error('Error translating text:', error);
-		new Notice(`❌ 翻訳エラー: ${error.message}`);
+		new Notice(`❌ Translation failed: ${error.message}`);
 	}
 }
 

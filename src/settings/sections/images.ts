@@ -2,6 +2,7 @@ import { App, Setting } from 'obsidian';
 import type { CrystalPluginHost } from '../../types';
 import { addVerifyButton, secretSetting, sectionHeading } from '../components';
 import { verifyGyazoToken } from '../verifiers';
+import { DEFAULT_SETTINGS } from '../defaults';
 
 export function renderImageSection(containerEl: HTMLElement, app: App, plugin: CrystalPluginHost) {
 	sectionHeading(containerEl, 'Image processor', 'image');
@@ -44,10 +45,10 @@ export function renderImageSection(containerEl: HTMLElement, app: App, plugin: C
 		.setName('Image Max Size')
 		.setDesc('Maximum size for images (in pixels)')
 		.addText(text => text
-			.setPlaceholder('1024')
+			.setPlaceholder(DEFAULT_SETTINGS.imageMaxSize.toString())
 			.setValue(plugin.settings.imageMaxSize.toString())
 			.onChange(async (value) => {
-				plugin.settings.imageMaxSize = parseInt(value) || 1024;
+				plugin.settings.imageMaxSize = parseInt(value) || DEFAULT_SETTINGS.imageMaxSize;
 				await plugin.saveSettings();
 			}));
 
