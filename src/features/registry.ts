@@ -25,6 +25,7 @@ import { PropertyColorService } from './properties/color';
 import { PropertyLinkService } from './properties/link';
 import { QuartzService } from './quartz/quartz-service';
 import { OpacityService } from './workspace/opacity';
+import { SidebarAutoToggleService } from './workspace/sidebar-auto-toggle';
 import { SidebarFocusCommands } from './workspace/sidebar-focus';
 import { StatusBarOrderService } from './workspace/status-bar-order';
 
@@ -52,6 +53,7 @@ export interface CrystalServices {
 	opacityService: OpacityService;
 	gamificationManager: GamificationManager;
 	sidebarFocusCommands: SidebarFocusCommands;
+	sidebarAutoToggleService: SidebarAutoToggleService;
 	propertyLinkService: PropertyLinkService;
 	propertyColorService: PropertyColorService;
 	statusBarOrderService: StatusBarOrderService;
@@ -85,6 +87,7 @@ export function createServices(plugin: CrystalPluginHost, settings: CrystalPlugi
 		app, plugin, settings, Math.random, () => activateGamificationView(app)
 	);
 	const sidebarFocusCommands = new SidebarFocusCommands(app, plugin);
+	const sidebarAutoToggleService = new SidebarAutoToggleService(plugin);
 	const propertyLinkService = new PropertyLinkService(app, plugin, settings);
 	const propertyColorService = new PropertyColorService(app, plugin, settings);
 	const statusBarOrderService = new StatusBarOrderService(plugin);
@@ -95,7 +98,7 @@ export function createServices(plugin: CrystalPluginHost, settings: CrystalPlugi
 		gyazoService, gyazoImageMigrator, gyazoLocalImageMigrator, gyazoCommands,
 		imagePasteAndDropHandler, editorCommands, autoBulletService, terminalService,
 		marpCommands, marpCursorSync, marpSlideToolbar, quartzService, macroCommands,
-		gitSummaryService, opacityService, gamificationManager, sidebarFocusCommands,
+		gitSummaryService, opacityService, gamificationManager, sidebarFocusCommands, sidebarAutoToggleService,
 		propertyLinkService, propertyColorService, statusBarOrderService, hackerModeService,
 	};
 }
@@ -122,6 +125,7 @@ export function loadServices(plugin: CrystalPluginHost, s: CrystalServices): voi
 	s.opacityService.onload();
 	s.gamificationManager.onload();
 	s.sidebarFocusCommands.onload();
+	s.sidebarAutoToggleService.onload();
 	s.propertyLinkService.onload();
 	s.propertyColorService.onload();
 	s.statusBarOrderService.onload();
@@ -139,6 +143,7 @@ export function unloadServices(s: CrystalServices): void {
 	// unload/reload isn't silently dropped, then clears its timers.
 	s.gamificationManager.onunload();
 	s.opacityService.onunload();
+	s.sidebarAutoToggleService.onunload();
 	s.statusBarOrderService.onunload();
 	s.hackerModeService.onunload();
 	// 起動した Marp サーバーを残さない（Obsidian終了・プラグイン無効化・リロード時）
@@ -168,4 +173,5 @@ export async function updateServiceSettings(s: CrystalServices, settings: Crysta
 	s.propertyColorService.updateSettings(settings);
 	s.statusBarOrderService.updateSettings(settings);
 	s.hackerModeService.updateSettings();
+	s.sidebarAutoToggleService.updateSettings();
 }
