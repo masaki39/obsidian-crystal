@@ -56,7 +56,7 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	fileOrganizationRules: [],
 	windowOpacity: 1.0,
 	sidebarAutoToggleEnabled: false,
-	sidebarAutoToggleMinEditorWidth: 900,
+	sidebarAutoToggleMinEditorWidth: 700,
 	sidebarAutoTogglePriority: 'left',
 	gamificationEnabled: false,
 	gamificationTotalXP: 0,

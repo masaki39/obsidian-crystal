@@ -34,7 +34,7 @@ Obsidian のウィンドウそのものに関するツールです。切り替�
 |---|---|---|
 | **Window opacity** | 1.0 | Obsidian ウィンドウの不透明度。0.5〜1.0 の範囲です。プラグインを無効にすると 1.0 に戻ります。 |
 | **Auto open/close sidebars** | オフ | ウィンドウのリサイズに合わせてサイドバーを開閉し、エディターが **Minimum editor width** より狭くならないようにします。**Sidebar priority** で選んだ側を先に開き、次にもう一方を開きます。各サイドバーの実際の幅を使います。 |
-| **Minimum editor width** | 900 | ピクセル単位。値を決めるには、エディターがちょうどよい幅になるようウィンドウを調整し、**Sidebar: Show measured widths** で現在の幅を確認してください。900 でサイドバーが 300px なら、1200px 未満で両方閉じ、1200px から左、1500px から右も開きます。 |
+| **Minimum editor width** | 700 | ピクセル単位。値を決めるには、エディターがちょうどよい幅になるようウィンドウを調整し、**Sidebar: Show measured widths** で現在の幅を確認してください。700 でサイドバーが 300px（左優先）なら、1000px 未満で両方閉じ、1000px から左、1300px から右も開きます。 |
 | **Sidebar priority** | Left | ウィンドウが広がるときに先に開く（狭まるときは後に閉じる）サイドバー。700 でサイドバーが 300px なら、Left では 1000px で左、1300px で右が開きます。Right ではその逆です。 |
 
 **Settings → Crystal → Status bar**

@@ -34,7 +34,7 @@ Tools for the Obsidian window itself: a translucent window you can toggle, focus
 |---|---|---|
 | **Window opacity** | 1.0 | Opacity of the Obsidian window, from 0.5 to 1.0. It's reset to 1.0 when the plugin is disabled. |
 | **Auto open/close sidebars** | Off | Opens or closes the sidebars as the window is resized so the editor never gets narrower than **Minimum editor width**. The sidebar set in **Sidebar priority** opens first, then the other. Each sidebar's own width is used. |
-| **Minimum editor width** | 900 | In pixels. To pick a value, resize the window until the editor feels right and run **Sidebar: Show measured widths**. With 900 and 300px sidebars, both are closed below 1200px, the left one opens from 1200px, and the right one from 1500px. |
+| **Minimum editor width** | 700 | In pixels. To pick a value, resize the window until the editor feels right and run **Sidebar: Show measured widths**. With 700 and 300px sidebars (left priority), both are closed below 1000px, the left one opens from 1000px, and the right one from 1300px. |
 | **Sidebar priority** | Left | Which sidebar opens first as the window widens (and closes last as it narrows). With 700 and 300px sidebars, left priority opens the left one at 1000px and the right one at 1300px; right priority does the reverse. |
 
 **Settings → Crystal → Status bar**
