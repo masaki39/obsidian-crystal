@@ -1,11 +1,61 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Crystal">
-  <g stroke="#ddd6fe" stroke-width="1.5" stroke-linejoin="round">
-    <polygon points="64,10 18,46 46,46" fill="#c4b5fd"/>
-    <polygon points="64,10 46,46 82,46" fill="#ede9fe"/>
-    <polygon points="64,10 82,46 110,46" fill="#a78bfa"/>
-    <polygon points="18,46 46,46 64,118" fill="#8b5cf6"/>
-    <polygon points="46,46 82,46 64,118" fill="#7c3aed"/>
-    <polygon points="82,46 110,46 64,118" fill="#6d28d9"/>
+  <defs>
+    <radialGradient id="aura" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#7aa2f7" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#7aa2f7" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="f1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef2ff"/><stop offset="0.45" stop-color="#c7e6ff"/><stop offset="1" stop-color="#7dcfff"/></linearGradient>
+    <linearGradient id="f2" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#c7e6ff"/><stop offset="1" stop-color="#7dcfff"/></linearGradient>
+    <linearGradient id="f3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7dcfff"/><stop offset="1" stop-color="#7aa2f7"/></linearGradient>
+    <linearGradient id="f4" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8c96f0"/><stop offset="1" stop-color="#bb9af7"/></linearGradient>
+    <linearGradient id="g1" x1="0" y1="0" x2="0.5" y2="1"><stop offset="0" stop-color="#2ac3de"/><stop offset="1" stop-color="#3d59a1"/></linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7aa2f7"/><stop offset="0.5" stop-color="#3d59a1"/><stop offset="1" stop-color="#283469"/></linearGradient>
+    <linearGradient id="g3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d59a1"/><stop offset="1" stop-color="#1f2335"/></linearGradient>
+    <linearGradient id="g4" x1="1" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#9d7cd8"/><stop offset="1" stop-color="#5b4a9e"/></linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7dcfff"/><stop offset="1" stop-color="#bb9af7"/></linearGradient>
+    <linearGradient id="spec" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef2ff" stop-opacity="0.95"/><stop offset="1" stop-color="#eef2ff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="caustic" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef2ff" stop-opacity="0.35"/><stop offset="1" stop-color="#7dcfff" stop-opacity="0"/></linearGradient>
+    <radialGradient id="core" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#eef2ff" stop-opacity="0.85"/>
+      <stop offset="0.4" stop-color="#7dcfff" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#7dcfff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <ellipse cx="64" cy="64" rx="44" ry="62" fill="url(#aura)"/>
+
+  <!-- crown -->
+  <polygon points="64,5 31,54 46,61" fill="url(#f1)"/>
+  <polygon points="64,5 46,61 66,63" fill="url(#f2)"/>
+  <polygon points="64,5 66,63 84,60" fill="url(#f3)"/>
+  <polygon points="64,5 84,60 97,53" fill="url(#f4)"/>
+  <!-- pavilion -->
+  <polygon points="31,54 46,61 64,124" fill="url(#g1)"/>
+  <polygon points="46,61 66,63 64,124" fill="url(#g2)"/>
+  <polygon points="66,63 84,60 64,124" fill="url(#g3)"/>
+  <polygon points="84,60 97,53 64,124" fill="url(#g4)"/>
+
+  <!-- internal refraction -->
+  <polygon points="52,64 62,65 61,98" fill="url(#caustic)" opacity="0.7"/>
+  <polygon points="70,65 80,62 67,90" fill="url(#caustic)" opacity="0.4"/>
+  <g fill="none" stroke="#eef2ff" stroke-width="0.5" stroke-linecap="round">
+    <path d="M31 54 L84 60 M46 61 L97 53" stroke-opacity="0.18"/>
+    <path d="M46 61 L70 108 M84 60 L58 106" stroke-opacity="0.22"/>
+    <path d="M64 5 L54 58 M64 5 L76 57" stroke-opacity="0.15"/>
   </g>
-  <path d="M100 8 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z" fill="#ddd6fe"/>
+  <ellipse cx="62" cy="61" rx="17" ry="9" fill="url(#core)"/>
+
+  <!-- facet edges -->
+  <g fill="none" stroke="#eef2ff" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M64 5 L46 61 L64 124" stroke-opacity="0.75" stroke-width="0.8"/>
+    <path d="M64 5 L66 63 L64 124" stroke-opacity="0.55" stroke-width="0.8"/>
+    <path d="M64 5 L84 60 L64 124" stroke-opacity="0.35" stroke-width="0.8"/>
+    <path d="M31 54 L46 61 L66 63 L84 60 L97 53" stroke-opacity="0.9" stroke-width="1.1"/>
+  </g>
+  <polygon points="64,5 31,54 64,124 97,53" fill="none" stroke="url(#rim)" stroke-width="1.1" stroke-linejoin="round"/>
+
+  <!-- specular -->
+  <polygon points="62,10 36,53 41,55" fill="url(#spec)" opacity="0.9"/>
+  <polygon points="63,12 52,56 55,57" fill="url(#spec)" opacity="0.5"/>
+  <path d="M31 54 L46 61" stroke="#eef2ff" stroke-width="1.8" stroke-linecap="round"/>
 </svg>

@@ -11,10 +11,10 @@
 <p align="center"><b>書く・整える・発信する。すべてを Obsidian から。</b></p>
 
 <p align="center">
-  <a href="https://github.com/masaki39/obsidian-crystal/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/masaki39/obsidian-crystal?sort=semver&label=latest&color=%237c3aed"></a>
-  <a href="https://github.com/masaki39/obsidian-crystal/releases"><img alt="Total downloads" src="https://img.shields.io/github/downloads/masaki39/obsidian-crystal/main.js?logo=obsidian&label=total%20downloads&color=%237c3aed"></a>
-  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-7c3aed"></a>
-  <img alt="Desktop only" src="https://img.shields.io/badge/platform-desktop%20only-7c3aed">
+  <a href="https://github.com/masaki39/obsidian-crystal/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/masaki39/obsidian-crystal?sort=semver&label=latest&color=%237aa2f7&labelColor=%2324283b"></a>
+  <a href="https://github.com/masaki39/obsidian-crystal/releases"><img alt="Total downloads" src="https://img.shields.io/github/downloads/masaki39/obsidian-crystal/main.js?logo=obsidian&label=total%20downloads&color=%237aa2f7&labelColor=%2324283b"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-7aa2f7?labelColor=24283b"></a>
+  <img alt="Desktop only" src="https://img.shields.io/badge/platform-desktop%20only-7aa2f7?labelColor=24283b">
 </p>
 
 <p align="center"><a href="README.md">English</a> | <b>日本語</b></p>
