@@ -91,12 +91,6 @@ export interface CrystalPluginSettings {
 	githubUserName: string;
 	fileOrganizationRules: FileOrganizationRule[];
 	windowOpacity: number;
-	/** Open/close the sidebars automatically as the window is resized. */
-	sidebarAutoToggleEnabled: boolean;
-	/** Narrowest the editor may get before a sidebar is closed (px). */
-	sidebarAutoToggleMinEditorWidth: number;
-	/** Sidebar that opens first (and closes last). */
-	sidebarAutoTogglePriority: 'left' | 'right';
 	gamificationEnabled: boolean;
 	gamificationTotalXP: number;
 	gamificationStreak: number;
