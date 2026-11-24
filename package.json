@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-crystal",
-	"version": "0.26.2",
+	"version": "0.27.0",
 	"description": "Extensible plugin for adding custom features to Obsidian",
 	"main": "main.js",
 	"scripts": {
