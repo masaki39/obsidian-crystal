@@ -26,6 +26,7 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	dailyNoteTimelineHeading: '# Time Line',
 	dailyNoteAutoSort: false,
 	dailyNoteAutoLink: false,
+	dailyNoteAutoLinkExcludeFolders: [],
 	dailyNoteNewestFirst: false,
 	dailyNoteShowWeekday: true,
 	dailyNoteWeekdayFormat: 'dddd',

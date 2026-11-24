@@ -1,6 +1,7 @@
 import { App, Plugin, TFile } from 'obsidian';
 import type { CrystalPluginSettings } from '../../settings';
 import { resolveDraftPath } from './draft';
+import { isExcludedFromAutoLink } from './auto-link-exclude';
 import { getDailyNoteFilePath } from './paths';
 import { transformBeforeTimeline } from './timeline';
 const moment = require('moment');
@@ -23,6 +24,10 @@ export function registerDailyNoteAutoLink(app: App, plugin: Plugin, getSettings:
 				}
 				// The draft note is scratch space, not a note worth linking.
 				if (file.path === resolveDraftPath(getSettings().dailyNoteDraftPath)) {
+					return;
+				}
+				// Notes inside the user's excluded folders are not linked.
+				if (isExcludedFromAutoLink(file.path, getSettings().dailyNoteAutoLinkExcludeFolders)) {
 					return;
 				}
 				const todayNote = todayNotePath ? app.vault.getAbstractFileByPath(todayNotePath) : null;

@@ -54,6 +54,8 @@ export interface CrystalPluginSettings {
 	dailyNoteTimelineHeading: string;
 	dailyNoteAutoSort: boolean;
 	dailyNoteAutoLink: boolean;
+	/** Vault-root folders whose new notes are not auto-linked from the daily note. */
+	dailyNoteAutoLinkExcludeFolders: string[];
 	dailyNoteNewestFirst: boolean;
 	/** Show the day of the week after a daily note's inline title. */
 	dailyNoteShowWeekday: boolean;

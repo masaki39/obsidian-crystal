@@ -1,4 +1,5 @@
-import type { App } from 'obsidian';
+import { type App, Setting } from 'obsidian';
+import { parseExcludeFolders } from '../../features/daily-notes/auto-link-exclude';
 import type { CrystalPluginHost } from '../../types';
 import { sectionHeading, textSetting, toggleSetting } from '../components';
 import { DEFAULT_SETTINGS } from '../defaults';
@@ -8,6 +9,18 @@ export function renderDailyNotesSection(containerEl: HTMLElement, app: App, plug
 
 	toggleSetting(containerEl, plugin, 'Auto Sort Tasks', 'Sort tasks in daily notes automatically', 'dailyNoteAutoSort');
 	toggleSetting(containerEl, plugin, 'Auto Link Notes', 'Add link to today\'s daily note when create any note', 'dailyNoteAutoLink');
+	new Setting(containerEl)
+		.setName('Auto Link exclude folders')
+		.setDesc('Notes created in these folders are not linked from the daily note. One folder per line, relative to the vault root (subfolders included)')
+		.addTextArea(text => {
+			text.setPlaceholder('kaname/logs')
+				.setValue(plugin.settings.dailyNoteAutoLinkExcludeFolders.join('\n'))
+				.onChange(async (value) => {
+					plugin.settings.dailyNoteAutoLinkExcludeFolders = parseExcludeFolders(value);
+					await plugin.saveSettings();
+				});
+			text.inputEl.rows = 4;
+		});
 	toggleSetting(containerEl, plugin, 'Newest First (Daily Notes)', 'Place new daily note entries at the top (tasks, links, timeline)', 'dailyNoteNewestFirst');
 	toggleSetting(containerEl, plugin, 'Show weekday after inline title', 'Display the day of the week next to the inline title of daily notes', 'dailyNoteShowWeekday');
 	textSetting(containerEl, plugin, 'Weekday format', 'moment.js format for the weekday label (e.g. dddd, ddd, (ddd)). Follows Obsidian\'s language', 'dailyNoteWeekdayFormat', 'dddd');
