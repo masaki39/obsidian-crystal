@@ -12,7 +12,7 @@ A purely cosmetic layer of terminal-style effects over your theme: CRT scanlines
 
 ## Quick setup
 
-1. Run **Hacker mode: Toggle**, or turn on **Enable hacker mode** in **Settings → Crystal → Hacker mode**.
+1. Run **Hacker mode: Toggle hacker mode**, or turn on **Enable hacker mode** in **Settings → Crystal → Hacker mode**.
 2. Pick an **Accent color**.
 3. Turn off any effects you don't want.
 
@@ -20,7 +20,7 @@ A purely cosmetic layer of terminal-style effects over your theme: CRT scanlines
 
 | Command | What it does |
 |---|---|
-| `Hacker mode: Toggle` | Turns hacker mode on or off. |
+| `Hacker mode: Toggle hacker mode` | Turns hacker mode on or off. |
 | `Hacker mode: Play boot sequence` | Plays the boot animation now. |
 | `Hacker mode: Preview reward banner` | Shows a sample reward banner. |
 
@@ -37,7 +37,7 @@ A purely cosmetic layer of terminal-style effects over your theme: CRT scanlines
 | **Typing particles** | On | A few faint 0/1 glyphs at the caret on each keystroke, with a combo counter. |
 | **Boot sequence** | On | A fake boot log on startup and when hacker mode is turned on. Press any key to skip it. |
 | **Status bar HUD** | On | A clock, the JS heap size, and your typing speed (WPM) with a sparkline. |
-| **Background rain** | Off | Faint digital rain over the whole window, all the time. |
+| **Background rain** | Off | Faint digital rain over the whole window, all the time. It pauses while Obsidian is in the background and resumes shortly after you come back. |
 | **Title decode** | On | Note titles resolve from random glyphs when a note opens. |
 | **Reward banner** | On | [Gamification](gamification.md) rewards also show an "ACCESS GRANTED" banner or a terminal line. |
 | **Background rain opacity** | 0.15 | How visible the background rain is, from 0.05 to 0.5. |

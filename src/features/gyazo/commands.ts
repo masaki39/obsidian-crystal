@@ -15,7 +15,7 @@ export class GyazoCommands {
 		// Gyazo Upload Command
 		this.plugin.addCommand({
 			id: 'crystal-upload-clipboard-image',
-			name: 'Gyazo: Upload clipboard image',
+			name: 'Gyazo: Upload clipboard image to Gyazo',
 			icon: 'upload-cloud',
 			editorCallback: async (editor: Editor) => {
 				try {
@@ -29,7 +29,7 @@ export class GyazoCommands {
 		// Gyazo File Upload Command
 		this.plugin.addCommand({
 			id: 'crystal-upload-file-image',
-			name: 'Gyazo: Upload image file',
+			name: 'Gyazo: Upload image file to Gyazo',
 			icon: 'upload-cloud',
 			editorCallback: async (editor: Editor) => {
 				try {
@@ -43,7 +43,7 @@ export class GyazoCommands {
 		// Replace external image URLs in the active note with Gyazo-hosted copies
 		this.plugin.addCommand({
 			id: 'crystal-replace-image-urls-with-gyazo',
-			name: 'Gyazo: Replace image URLs in active note',
+			name: 'Gyazo: Replace image URLs with Gyazo',
 			icon: 'image-plus',
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
 				try {
@@ -57,7 +57,7 @@ export class GyazoCommands {
 		// Replace local (vault) image embeds in the active note with Gyazo-hosted copies
 		this.plugin.addCommand({
 			id: 'crystal-replace-local-images-with-gyazo',
-			name: 'Gyazo: Replace local images in active note',
+			name: 'Gyazo: Replace local images with Gyazo',
 			icon: 'image-plus',
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
 				try {

@@ -12,7 +12,7 @@
 
 ## クイックセットアップ
 
-1. **Hacker mode: Toggle** を実行するか、**Settings → Crystal → Hacker mode** で **Enable hacker mode** をオンにします。
+1. **Hacker mode: Toggle hacker mode** を実行するか、**Settings → Crystal → Hacker mode** で **Enable hacker mode** をオンにします。
 2. **Accent color** を選びます。
 3. 不要なエフェクトをオフにします。
 
@@ -20,7 +20,7 @@
 
 | コマンド | 動作 |
 |---|---|
-| `Hacker mode: Toggle` | ハッカーモードのオン・オフを切り替えます。 |
+| `Hacker mode: Toggle hacker mode` | ハッカーモードのオン・オフを切り替えます。 |
 | `Hacker mode: Play boot sequence` | 起動アニメーションをすぐに再生します。 |
 | `Hacker mode: Preview reward banner` | 報酬バナーのサンプルを表示します。 |
 
@@ -37,7 +37,7 @@
 | **Typing particles** | オン | キーを押すたびにキャレット位置にかすかな 0/1 の文字を表示し、コンボカウンターも表示します。 |
 | **Boot sequence** | オン | 起動時とハッカーモードをオンにしたときに、架空の起動ログを表示します。任意のキーでスキップできます。 |
 | **Status bar HUD** | オン | 時計、JS ヒープサイズ、タイピング速度（WPM）とスパークライン。 |
-| **Background rain** | オフ | ウィンドウ全体に常にかすかなデジタルレインを表示します。 |
+| **Background rain** | オフ | ウィンドウ全体に常にかすかなデジタルレインを表示します。Obsidian がバックグラウンドの間は止まり、戻ると少し遅れて再開します。 |
 | **Title decode** | オン | ノートを開くと、ノートのタイトルがランダムな文字から復元されるように表示されます。 |
 | **Reward banner** | オン | [ゲーミフィケーション](gamification.md)の報酬時に "ACCESS GRANTED" のバナーまたはターミナル風の行も表示します。 |
 | **Background rain opacity** | 0.15 | バックグラウンドレインの見えやすさ。0.05〜0.5 の範囲です。 |

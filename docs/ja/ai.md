@@ -37,8 +37,8 @@ OpenAI、Gemini、またはローカルの Ollama モデルを使って、ノー
 | `AI: Translate above cursor text` | カーソルの上の行を翻訳し、結果をカーソル位置に挿入します。 |
 | `AI: Translate below cursor text` | カーソルの下の行を翻訳し、結果をカーソル位置に挿入します。 |
 | `AI: Grammar check current line` | 現在の行をその言語のまま校正し、修正後のテキストで置き換えます。 |
-| `AI: Rewrite (replace selection or whole note)` | 指示を入力させたうえで、選択範囲（何も選択していなければノート全体）をリライトして置き換えます。 |
-| `AI: Rewrite (append result at end)` | 指示を入力させたうえで、選択範囲（またはノート全体）を読み込み、新しく生成した Markdown をノートの末尾に追記します。 |
+| `AI: Rewrite with AI (replace selection or whole note)` | 指示を入力させたうえで、選択範囲（何も選択していなければノート全体）をリライトして置き換えます。 |
+| `AI: Rewrite with AI (append result at end)` | 指示を入力させたうえで、選択範囲（またはノート全体）を読み込み、新しく生成した Markdown をノートの末尾に追記します。 |
 | `AI: Generate description for current file` | 検索しやすい 1 文の `description` をノートの frontmatter に書き込みます。 |
 | `AI: Generate git commit summary` | その日の `.md` ファイルの git diff を要約し、デイリーノートの `summary` プロパティに書き込みます。 |
 
@@ -68,7 +68,7 @@ OpenAI、Gemini、またはローカルの Ollama モデルを使って、ノー
 I released a new plugin today.
 ```
 
-**AI: Rewrite (replace selection or whole note)** に「Summarize as bullet points」（箇条書きで要約して）と指示した場合:
+**AI: Rewrite with AI (replace selection or whole note)** に「Summarize as bullet points」（箇条書きで要約して）と指示した場合:
 
 ```markdown
 We met on Monday to plan the release. The docs need an update, and the build has to pass on CI before we tag it.

@@ -2,16 +2,14 @@ import { type App, Notice, type Plugin } from 'obsidian';
 import { EditorView } from '@codemirror/view';
 import type { CrystalPluginSettings } from '../../../settings';
 import { VimBindings } from './bindings';
-import { commandName } from './command-suggest';
+import { commandCategory, shortCommandLabel } from './command-label';
+import { commandName } from '../../../shared/ui/command-suggest-modal';
 import { buildLeaderTree, commandIdsUnder, DEFAULT_LEADER_GROUPS, DEFAULT_LEADER_MAPPINGS, type LeaderNode, resolveLeaderMappings } from './leader-keymap';
 import { LeaderSession } from './leader-session';
 import { getVimApi } from './vim-api';
 import { flashYank, yankHighlightField } from './yank-highlight';
 
 const DEFAULT_COMMAND_IDS = new Set(DEFAULT_LEADER_MAPPINGS.map(mapping => mapping.commandId));
-
-/** `Daily: Open today's note` → `Daily`. */
-const categoryOf = (name: string) => /^([^:]+):\s/.exec(name)?.[1] ?? null;
 
 /**
  * A small replacement for Vimrc Support: display-line `j`/`k`, yank to the
@@ -93,7 +91,10 @@ export class VimExtensionService {
 			hostEl: editorEl,
 			hintDelayMs: this.settings.vimLeaderHints ? Math.max(0, this.settings.vimLeaderHintDelay) : null,
 			groupLabel: (keys, node) => this.groupLabel(keys, node),
-			commandLabel: id => commandName(this.app, id) ?? id,
+			commandLabel: id => {
+				const name = commandName(this.app, id);
+				return name ? shortCommandLabel(id, name) : id;
+			},
 			runCommand: id => this.runCommand(id),
 			onEnd: () => {
 				if (this.session === session) this.session = null;
@@ -116,7 +117,7 @@ export class VimExtensionService {
 		const known = DEFAULT_LEADER_GROUPS[keys.join('')];
 		// The default name, unless the user's own mappings have replaced the whole group.
 		if (known && this.settings.vimDefaultLeaderMappings && ids.some(id => DEFAULT_COMMAND_IDS.has(id))) return known;
-		const categories = new Set(ids.map(id => categoryOf(commandName(this.app, id) ?? '')));
+		const categories = new Set(ids.map(id => commandCategory(id, commandName(this.app, id) ?? '')));
 		const [only] = [...categories];
 		if (categories.size === 1 && only) return only;
 		return `${ids.length} commands`;

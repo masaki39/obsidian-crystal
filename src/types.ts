@@ -1,6 +1,7 @@
 import type { Plugin } from 'obsidian';
 import type { CrystalPluginSettings } from './settings';
 import type { HackerModeService } from './features/hacker/mode';
+import type { OpacityService } from './features/workspace/opacity';
 
 /**
  * The plugin as seen from feature modules. Declared here (not imported from
@@ -10,4 +11,5 @@ export type CrystalPluginHost = Plugin & {
 	settings: CrystalPluginSettings;
 	saveSettings(): Promise<void>;
 	hackerModeService?: HackerModeService;
+	opacityService?: OpacityService;
 };

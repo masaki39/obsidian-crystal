@@ -14,7 +14,7 @@ import {
 import { rollCharMilestoneBonus, resolveWordStatsTick } from './writing-goal';
 import { isDailyNoteFile } from '../../shared/daily-note';
 import { ALL_BADGES, type Badge, type BadgeSnapshot, charsBadgeEligible, checkNewlySpecialUnlocks, checkNewlyUnlockedBadges, findNearestBadgeTarget, titleForLevel } from './rules/badges';
-import { calculateLevel, type Reward, type RewardTier, rollReward } from './rules/level';
+import { calculateLevel, type RewardTier, rollReward } from './rules/level';
 import { resolveStreakAdvance } from './rules/streak';
 import { countCompletedTasks, countTotalTasks } from './rules/tasks';
 import { getWeeklyXPSeries, pruneDailyXPLog, sumRecentXP } from './rules/xp-log';

@@ -26,9 +26,9 @@ Move between daily notes, capture tasks and quick posts, and optionally keep eac
 | `Daily: Open tomorrow's note` | Opens the day after the active daily note (or after today). |
 | `Daily: Add task to daily note` | Asks for a task and adds `- [ ] task` to today's note, above the timeline heading. |
 | `Daily: Roll over yesterday's undone tasks` | Moves the open tasks (`- [ ]`) out of the previous day's note and inserts them at the cursor. |
-| `Daily: Open draft` | Opens the draft note (**Draft note path**) in a tab and creates it if needed. |
-| `Daily: Post draft to timeline` | Adds the draft's text to today's timeline as a callout, then empties the draft. Frontmatter is kept. |
-| `Daily: Post draft to Bluesky` | Posts the draft to Bluesky with up to 4 embedded images, then empties the draft. See [Bluesky](bluesky.md). |
+| `Daily: Open daily draft` | Opens the draft note (**Draft note path**) in a tab and creates it if needed. |
+| `Daily: Post daily draft to timeline` | Adds the draft's text to today's timeline as a callout, then empties the draft. Frontmatter is kept. |
+| `Daily: Post daily draft to Bluesky` | Posts the draft to Bluesky with up to 4 embedded images, then empties the draft. See [Bluesky](bluesky.md). |
 | `Bluesky: Post to daily note timeline` | Opens a small editor and adds what you write to today's timeline. See [Bluesky](bluesky.md). |
 
 ## Settings
@@ -86,9 +86,9 @@ The draft workflow:
 
 ```mermaid
 flowchart LR
-  A["Daily: Open draft"] --> B[Write in Draft.md]
-  B --> C["Daily: Post draft to timeline"]
-  B --> D["Daily: Post draft to Bluesky"]
+  A["Daily: Open daily draft"] --> B[Write in Draft.md]
+  B --> C["Daily: Post daily draft to timeline"]
+  B --> D["Daily: Post daily draft to Bluesky"]
   C --> E[Today's timeline]
   D --> F[Bluesky]
   D -. "if Append posts… is on" .-> E

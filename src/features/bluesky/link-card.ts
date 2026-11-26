@@ -10,7 +10,7 @@ export interface UrlMetadata {
 export function extractMetadataFromHtml(html: string): UrlMetadata | null {
 	try {
 		let title = '';
-		const ogTitleMatch = html.match(/<meta[^>]*property=["\']og:title["\'][^>]*content=["\']([^"\']*)["\'][^>]*>/i);
+		const ogTitleMatch = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']*)["'][^>]*>/i);
 		if (ogTitleMatch) {
 			title = ogTitleMatch[1];
 		} else {
@@ -21,18 +21,18 @@ export function extractMetadataFromHtml(html: string): UrlMetadata | null {
 		}
 
 		let description = '';
-		const ogDescMatch = html.match(/<meta[^>]*property=["\']og:description["\'][^>]*content=["\']([^"\']*)["\'][^>]*>/i);
+		const ogDescMatch = html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']*)["'][^>]*>/i);
 		if (ogDescMatch) {
 			description = ogDescMatch[1];
 		} else {
-			const descMatch = html.match(/<meta[^>]*name=["\']description["\'][^>]*content=["\']([^"\']*)["\'][^>]*>/i);
+			const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']*)["'][^>]*>/i);
 			if (descMatch) {
 				description = descMatch[1];
 			}
 		}
 
 		let image = '';
-		const ogImageMatch = html.match(/<meta[^>]*property=["\']og:image["\'][^>]*content=["\']([^"\']*)["\'][^>]*>/i);
+		const ogImageMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']*)["'][^>]*>/i);
 		if (ogImageMatch) {
 			image = ogImageMatch[1];
 		}

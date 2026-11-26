@@ -21,7 +21,7 @@ export function registerGamificationView(plugin: Plugin, getSnapshot: () => Gami
 	plugin.addRibbonIcon('gamepad-2', 'Crystal: Gamification stats', () => activateGamificationView(plugin.app));
 	plugin.addCommand({
 		id: 'crystal-open-gamification-view',
-		name: 'Gamification: Open stats view',
+		name: 'Gamification: Open gamification stats',
 		icon: 'gamepad-2',
 		callback: () => activateGamificationView(plugin.app),
 	});

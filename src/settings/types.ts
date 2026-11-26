@@ -47,6 +47,8 @@ export interface VimLeaderMapping {
 
 export interface CrystalPluginSettings {
 	exportFolderPath: string;
+	/** Note opened by "Open home page" (a link path like `Home` or a vault path). */
+	homePagePath: string;
 	aiProvider: 'gemini' | 'openai' | 'ollama';
 	GeminiAPIKey: string;
 	GeminiModel: string;
@@ -69,7 +71,7 @@ export interface CrystalPluginSettings {
 	dailyNoteShowWeekday: boolean;
 	/** moment.js format for the weekday label (follows Obsidian's language). */
 	dailyNoteWeekdayFormat: string;
-	/** Note used by "Daily: Open draft" / "Daily: Post draft to timeline". */
+	/** Note used by "Daily: Open daily draft" / "Daily: Post daily draft to timeline". */
 	dailyNoteDraftPath: string;
 	webpQuality: number;
 	imageResizeScale: number;

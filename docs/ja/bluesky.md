@@ -24,7 +24,7 @@ Obsidian から離れずに Bluesky へ投稿できます。画像を最大 4 �
 |---|---|
 | `Bluesky: Post to Bluesky` | テキストと最大 4 枚の画像（**Choose files** または **Paste from clipboard**）を入力する投稿ウィンドウを開き、投稿します。画像がない場合は、テキスト内の最初の URL がリンクカードになります。 |
 | `Bluesky: Post to daily note timeline` | 同じウィンドウを開きますが、投稿する代わりにテキストを今日のデイリーノートのタイムラインに追加します。 |
-| `Daily: Post draft to Bluesky` | 下書きノートを投稿します。埋め込まれた画像（ローカルでも URL でも）が添付されます（最大 4 枚）。[デイリーノート](daily-notes.md)を参照してください。 |
+| `Daily: Post daily draft to Bluesky` | 下書きノートを投稿します。埋め込まれた画像（ローカルでも URL でも）が添付されます（最大 4 枚）。[デイリーノート](daily-notes.md)を参照してください。 |
 
 ## 設定
 

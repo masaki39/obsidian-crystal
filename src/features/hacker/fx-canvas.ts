@@ -21,6 +21,8 @@ export class OverlayCanvas {
 	readonly ctx: CanvasRenderingContext2D;
 	width = 0;
 	height = 0;
+	/** Backing store freed by `release()`; resizes wait for `restore()`. */
+	private released = false;
 	private readonly onResize = () => this.resize();
 
 	constructor(cls: string, parent: HTMLElement = document.body) {
@@ -31,6 +33,7 @@ export class OverlayCanvas {
 	}
 
 	resize() {
+		if (this.released) return;
 		const dpr = window.devicePixelRatio || 1;
 		this.width = window.innerWidth;
 		this.height = window.innerHeight;
@@ -43,6 +46,25 @@ export class OverlayCanvas {
 
 	clear() {
 		this.ctx.clearRect(0, 0, this.width, this.height);
+	}
+
+	/** Frees the backing store (the next `resize()` restores it), so a paused
+	 * effect holds no full-window GPU surface for the compositor to restore. */
+	release() {
+		this.released = true;
+		this.el.width = 0;
+		this.el.height = 0;
+	}
+
+	/** Gives back the backing store freed by `release()`. */
+	restore() {
+		this.released = false;
+		this.resize();
+	}
+
+	/** Hides the canvas (no compositing layer) without destroying it. */
+	setVisible(visible: boolean) {
+		this.el.toggleClass('is-hidden', !visible);
 	}
 
 	destroy() {

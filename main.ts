@@ -10,7 +10,7 @@ export default class CrystalPlugin extends Plugin {
 	settings: CrystalPluginSettings;
 	private services: CrystalServices;
 	// Read by the settings tab.
-	private opacityService: OpacityService;
+	opacityService: OpacityService;
 	statusBarOrderService: StatusBarOrderService;
 	hackerModeService: HackerModeService;
 

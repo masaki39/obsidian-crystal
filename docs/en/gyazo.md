@@ -14,16 +14,16 @@ Upload images to [Gyazo](https://gyazo.com) and link them from your notes. You c
 
 1. Open [gyazo.com/oauth/applications](https://gyazo.com/oauth/applications), create an application, and copy its access token.
 2. Paste it into **Settings → Crystal → Images → Gyazo → Access token**, then select **Verify**.
-3. Copy an image and run **Gyazo: Upload clipboard image**.
+3. Copy an image and run **Gyazo: Upload clipboard image to Gyazo**.
 
 ## Commands
 
 | Command | What it does |
 |---|---|
-| `Gyazo: Upload clipboard image` | Uploads the image on the clipboard and inserts `![](https://i.gyazo.com/…)` at the cursor. |
-| `Gyazo: Upload image file` | Pick an image file, upload it, and insert the link at the cursor. |
-| `Gyazo: Replace image URLs in active note` | Re-uploads every external image URL in the note to Gyazo and replaces the URLs with Gyazo ones. |
-| `Gyazo: Replace local images in active note` | Uploads the vault images embedded in the note. Links to them across the whole vault, other notes included, are updated to the Gyazo URL, and the original files are moved to the trash. Wikilinks, wikilink aliases, and Markdown image links are all handled. |
+| `Gyazo: Upload clipboard image to Gyazo` | Uploads the image on the clipboard and inserts `![](https://i.gyazo.com/…)` at the cursor. |
+| `Gyazo: Upload image file to Gyazo` | Pick an image file, upload it, and insert the link at the cursor. |
+| `Gyazo: Replace image URLs with Gyazo` | Re-uploads every external image URL in the note to Gyazo and replaces the URLs with Gyazo ones. |
+| `Gyazo: Replace local images with Gyazo` | Uploads the vault images embedded in the note. Links to them across the whole vault, other notes included, are updated to the Gyazo URL, and the original files are moved to the trash. Wikilinks, wikilink aliases, and Markdown image links are all handled. |
 
 ## Settings
 
@@ -36,7 +36,7 @@ Upload images to [Gyazo](https://gyazo.com) and link them from your notes. You c
 
 ## Examples
 
-**Gyazo: Replace local images in active note**:
+**Gyazo: Replace local images with Gyazo**:
 
 ```markdown
 ![[screenshot.png]]

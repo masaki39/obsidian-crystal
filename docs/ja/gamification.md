@@ -15,13 +15,13 @@
 
 1. **Settings → Crystal → Gamification** で **Enable gamification** をオンにします。
 2. 今日のデイリーノートでタスクをチェックします。
-3. ゲームパッドのリボンアイコンかステータスバーの項目を選択するか、**Gamification: Open stats view** を実行します。
+3. ゲームパッドのリボンアイコンかステータスバーの項目を選択するか、**Gamification: Open gamification stats** を実行します。
 
 ## コマンド
 
 | コマンド | 動作 |
 |---|---|
-| `Gamification: Open stats view` | サイドバーに統計ビューを開きます。 |
+| `Gamification: Open gamification stats` | サイドバーに統計ビューを開きます。 |
 
 統計ビューには次の内容が表示されます。
 

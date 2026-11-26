@@ -16,6 +16,10 @@ type PluginHost = Plugin & { settings: CrystalPluginSettings; saveSettings(): Pr
 /** Flashes shown at least this long are the big moments (level up, badge, best). */
 const MAJOR_FLASH_MS = 2200;
 
+/** Wait this long after Obsidian regains focus before the rain starts again,
+ * so the window can repaint first. */
+const MATRIX_RESUME_DELAY_MS = 600;
+
 /**
  * "Hacker mode": purely cosmetic effects layered over the existing theme.
  * Everything is either a class on `body`, an overlay element the plugin owns,
@@ -30,6 +34,11 @@ export class HackerModeService {
 	private crtEl: HTMLElement | null = null;
 	private matrixCanvas: OverlayCanvas | null = null;
 	private matrixRain: MatrixRain | null = null;
+	/** The rain is paused while Obsidian is in the background. */
+	private matrixPaused = false;
+	private matrixResumeTimer: number | null = null;
+	/** Removes the focus listeners of each open pop-out window. */
+	private popoutUnwatch = new Map<Window, () => void>();
 	/** Last file whose title was decoded in each leaf, so re-activating an
 	 * already-open tab doesn't replay the effect. */
 	private decodedFileByLeaf = new WeakMap<WorkspaceLeaf, string>();
@@ -46,6 +55,17 @@ export class HackerModeService {
 		settings.hackerEffects = { ...DEFAULT_HACKER_EFFECTS, ...settings.hackerEffects };
 
 		this.plugin.registerEditorExtension(EditorView.updateListener.of(update => this.onEditorUpdate(update)));
+		// Pause the rain while Obsidian is in the background: restoring a
+		// full-window canvas that kept drawing (or was throttled) is what makes
+		// coming back to Obsidian stall.
+		this.plugin.registerDomEvent(window, 'blur', this.onWindowBlur);
+		this.plugin.registerDomEvent(window, 'focus', this.onWindowFocus);
+		this.plugin.registerEvent(this.plugin.app.workspace.on('window-open', (_win, win) => this.watchPopout(win)));
+		this.plugin.registerEvent(this.plugin.app.workspace.on('window-close', (_win, win) => this.unwatchPopout(win)));
+		this.plugin.registerDomEvent(document, 'visibilitychange', () => {
+			if (document.hidden) this.pauseMatrix();
+			else if (this.isObsidianFocused()) this.scheduleMatrixResume();
+		});
 		this.plugin.registerEvent(this.plugin.app.workspace.on('file-open', file => this.onFileOpen(file)));
 		this.plugin.registerEvent(
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -56,7 +76,7 @@ export class HackerModeService {
 
 		this.plugin.addCommand({
 			id: 'crystal-hacker-mode-toggle',
-			name: 'Hacker mode: Toggle',
+			name: 'Hacker mode: Toggle hacker mode',
 			icon: 'terminal',
 			callback: async () => {
 				this.plugin.settings.hackerModeEnabled = !this.plugin.settings.hackerModeEnabled;
@@ -76,12 +96,16 @@ export class HackerModeService {
 		});
 
 		this.plugin.app.workspace.onLayoutReady(() => {
+			// Pop-outs already open (e.g. after a plugin reload) fire no `window-open`.
+			this.popoutWindows().forEach(win => this.watchPopout(win));
 			this.apply();
 			if (this.isOn('boot')) this.boot.play();
 		});
 	}
 
 	onunload() {
+		this.popoutUnwatch.forEach(unwatch => unwatch());
+		this.popoutUnwatch.clear();
 		this.stopAll();
 	}
 
@@ -120,7 +144,9 @@ export class HackerModeService {
 			if (!this.matrixCanvas) {
 				this.matrixCanvas = new OverlayCanvas('crystal-hx-matrix-bg');
 				this.matrixRain = new MatrixRain(this.matrixCanvas, () => this.plugin.settings.hackerColor, 10);
-				this.matrixRain.start();
+				this.matrixPaused = false;
+				if (this.isObsidianFocused()) this.matrixRain.start();
+				else this.pauseMatrix(true);
 			}
 			this.matrixCanvas.el.style.opacity = String(settings.hackerMatrixOpacity);
 		} else {
@@ -149,7 +175,68 @@ export class HackerModeService {
 		this.crtEl = null;
 	}
 
+	/** Blur/focus of the main window or a pop-out drives the rain's pause. */
+	private readonly onWindowBlur = () => {
+		// Focus moving to another Obsidian window blurs this one first.
+		window.setTimeout(() => {
+			if (!this.isObsidianFocused()) this.pauseMatrix();
+		}, 0);
+	};
+
+	private readonly onWindowFocus = () => this.scheduleMatrixResume();
+
+	private watchPopout(win: Window) {
+		if (this.popoutUnwatch.has(win)) return;
+		win.addEventListener('blur', this.onWindowBlur);
+		win.addEventListener('focus', this.onWindowFocus);
+		this.popoutUnwatch.set(win, () => {
+			win.removeEventListener('blur', this.onWindowBlur);
+			win.removeEventListener('focus', this.onWindowFocus);
+		});
+	}
+
+	private unwatchPopout(win: Window) {
+		this.popoutUnwatch.get(win)?.();
+		this.popoutUnwatch.delete(win);
+	}
+
+	/** Whether the main window or any pop-out window has focus. */
+	private isObsidianFocused(): boolean {
+		return document.hasFocus() || this.popoutWindows().some(win => win.document.hasFocus());
+	}
+
+	/** Open pop-out windows, from the workspace's (non-public) floating split. */
+	private popoutWindows(): Window[] {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const popouts: Array<{ win?: Window }> = (this.plugin.app.workspace as any).floatingSplit?.children ?? [];
+		return popouts.map(({ win }) => win).filter((win): win is Window => !!win && !win.closed);
+	}
+
+	private pauseMatrix(force = false) {
+		this.cancelMatrixResume();
+		if (!this.matrixRain || (this.matrixPaused && !force)) return;
+		this.matrixPaused = true;
+		this.matrixRain.pause();
+	}
+
+	private scheduleMatrixResume() {
+		if (!this.matrixRain || !this.matrixPaused || this.matrixResumeTimer !== null) return;
+		this.matrixResumeTimer = window.setTimeout(() => {
+			this.matrixResumeTimer = null;
+			if (!this.matrixRain || !this.matrixPaused || document.hidden) return;
+			this.matrixPaused = false;
+			this.matrixRain.resume();
+		}, MATRIX_RESUME_DELAY_MS);
+	}
+
+	private cancelMatrixResume() {
+		if (this.matrixResumeTimer !== null) window.clearTimeout(this.matrixResumeTimer);
+		this.matrixResumeTimer = null;
+	}
+
 	private removeMatrix() {
+		this.cancelMatrixResume();
+		this.matrixPaused = false;
 		this.matrixRain?.stop();
 		this.matrixRain = null;
 		this.matrixCanvas?.destroy();

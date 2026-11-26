@@ -33,6 +33,23 @@ export class MatrixRain {
 		this.canvas.clear();
 	}
 
+	/** Stops drawing and frees the canvas until `resume()`. */
+	pause() {
+		this.stop();
+		this.canvas.release();
+		this.canvas.setVisible(false);
+	}
+
+	resume() {
+		this.canvas.restore();
+		// Set here too: the rain may have been paused before it ever started.
+		this.font = monospaceFont(FONT_SIZE);
+		this.canvas.setVisible(true);
+		// Start from a fresh screen instead of the old drop positions.
+		this.columns = 0;
+		this.loop.start();
+	}
+
 	private reset() {
 		this.columns = Math.ceil(this.canvas.width / FONT_SIZE);
 		const rows = this.canvas.height / FONT_SIZE;

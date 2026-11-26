@@ -63,9 +63,10 @@
 | **Highlight yanked text** | オン | ヤンクした範囲を一瞬ハイライトします（vim-highlightedyank 相当）。 |
 | **Yank to system clipboard** | オフ | 無名レジスタへのヤンクをシステムクリップボードにもコピーします（`set clipboard=unnamed` 相当）。削除や名前付きレジスタ（`"ay`）は Vim の中だけに残ります。`p` での貼り付けは Vim のレジスタを使います。クリップボードから貼り付けるには `"+p` を使います。 |
 | **Default keymap** | オン | Normal モードで Space に続けて 1〜2 キーを押すと、Crystal のコマンドを実行します。下のキーマップを参照してください。 |
-| **Show key hints** | オン | Space を押すと、次に押せるキーとその動作をエディター下部のパネルに表示します（which-key 風）。Esc で中止、Backspace で 1 キー戻ります。 |
+| **Show key hints** | オン | Space を押すと、次に押せるキーとその動作をエディター下部のパネルに表示します（which-key 風）。狭いパネルに収まるよう、コマンド名からプラグイン名（Crystal のコマンドはさらに機能名）を省きます。ハッカーモード中はパネルもターミナル風の見た目になります。Esc で中止、Backspace で 1 キー戻ります。 |
 | **Hint delay** | 200 | パネルが出るまでのミリ秒数。素早く入力したときにパネルが邪魔にならないようにします。 |
-| **Your mappings** | （なし） | Space ＋キー（例: `dt`）に、他のプラグインを含む任意のコマンドを一覧から選んで割り当てます。自分のマッピングはデフォルトより優先されます。同じキーならそのデフォルトを置き換え、前方一致するキーならグループごと置き換えます（`d` を **Do nothing** にすると `Space d` のキーがすべて無効になります）。 |
+| **Your mappings** | （なし） | Space ＋キー（例: `dt`）に、他のプラグインを含む任意のコマンドを一覧から選んで割り当てます。自分のマッピングはデフォルトより優先されます。同じキーならそのデフォルトを置き換え、前方一致するキーならグループごと置き換えます（`d` を **Do nothing** にすると `Space d` のキーがすべて無効になります）。コマンド一覧では Ctrl+J / Ctrl+K で選択を上下に動かせます。 |
+| **Check for conflicts** | — | 自分のマッピング同士の衝突（後の行が優先）、デフォルトを置き換えるマッピング、キーやコマンドが未設定の行を一覧表示します。 |
 
 リーダーが有効な間、Normal モードの Space はカーソルを右に動かさず、キー入力の開始になります。Visual モードの Space は通常どおりです。日本語 IME がオンでも物理キーで判定するので、IME を切らずに `Space d d` が使えます。
 
@@ -81,15 +82,15 @@
 | `Space d l` | Daily: Open tomorrow's note |
 | `Space d a` | Daily: Add task to daily note |
 | `Space d r` | Daily: Roll over yesterday's undone tasks |
-| `Space d f` | Daily: Open draft |
-| `Space d p` | Daily: Post draft to timeline |
-| `Space d s` | Daily: Post draft to Bluesky |
+| `Space d f` | Daily: Open daily draft |
+| `Space d p` | Daily: Post daily draft to timeline |
+| `Space d s` | Daily: Post daily draft to Bluesky |
 | **Space s** | *Send (Bluesky)* |
 | `Space s s` | Bluesky: Post to Bluesky |
 | `Space s d` | Bluesky: Post to daily note timeline |
 | **Space a** | *AI* |
-| `Space a a` | AI: Rewrite (append result at end) |
-| `Space a r` | AI: Rewrite (replace selection or whole note) |
+| `Space a a` | AI: Rewrite with AI (append result at end) |
+| `Space a r` | AI: Rewrite with AI (replace selection or whole note) |
 | `Space a t` | AI: Translate selected text |
 | `Space a k` | AI: Translate above cursor text |
 | `Space a j` | AI: Translate below cursor text |
@@ -105,10 +106,10 @@
 | `Space f r` | Editor: Convert links to relative paths |
 | `Space f b` | Editor: Convert active file to bullet list |
 | **Space g** | *Gyazo / images* |
-| `Space g g` | Gyazo: Upload clipboard image |
-| `Space g f` | Gyazo: Upload image file |
-| `Space g r` | Gyazo: Replace image URLs in active note |
-| `Space g l` | Gyazo: Replace local images in active note |
+| `Space g g` | Gyazo: Upload clipboard image to Gyazo |
+| `Space g f` | Gyazo: Upload image file to Gyazo |
+| `Space g r` | Gyazo: Replace image URLs with Gyazo |
+| `Space g l` | Gyazo: Replace local images with Gyazo |
 | `Space g p` | Image: Paste multiple images from file system |
 | **Space e** | *Edit* |
 | `Space e j` | Editor: Wrap selection with subscript |
@@ -123,8 +124,8 @@
 | `Space m K` | Marp: Move slide up |
 | `Space m c` | Marp: Create slide from current note |
 | `Space m p` | Marp: Preview slide |
-| `Space m s` | Marp: Start server |
-| `Space m q` | Marp: Stop server |
+| `Space m s` | Marp: Start Marp server |
+| `Space m q` | Marp: Stop Marp server |
 | `Space m i` | Marp: Move images to Marp folder |
 | `Space m I` | Marp: Move images and convert links to relative paths |
 | `Space m x d` | Marp: Export slide (PDF) |
@@ -134,18 +135,19 @@
 | `Space m x f` | Marp: Export slide (HTML folder with attachments) |
 | `Space m x n` | Marp: Export presenter notes |
 | **Space p** | *Property link* |
-| `Space p p` | Property link: Sync current note |
-| `Space p a` | Property link: Sync all notes |
+| `Space p p` | Property link: Sync property links in current note |
+| `Space p a` | Property link: Sync property links in all notes |
 | **Space q** | *Quartz* |
-| `Space q q` | Quartz: Sync and open site (…) |
-| `Space q s` | Quartz: Sync |
-| `Space q o` | Quartz: Open site (…) |
+| `Space q q` | Quartz: Sync and open Quartz site (…) |
+| `Space q s` | Quartz: Sync Quartz |
+| `Space q o` | Quartz: Open Quartz site (…) |
+| `Space h` | Workspace: Open home page |
 | **Space w** | *Window* |
-| `Space w h` | Focus: Left |
-| `Space w l` | Focus: Right |
-| `Space w o` | Window: Toggle opacity |
-| `Space w g` | Gamification: Open stats view |
-| `Space w m` | Hacker mode: Toggle |
+| `Space w h` | Workspace: Focus left pane |
+| `Space w l` | Workspace: Focus right pane |
+| `Space w o` | Workspace: Toggle window opacity |
+| `Space w g` | Gamification: Open gamification stats |
+| `Space w m` | Hacker mode: Toggle hacker mode |
 
 Vim の拡張はポップアウトウィンドウでも動きます。一般的な `.obsidian.vimrc` の次の行の代わりになります。
 

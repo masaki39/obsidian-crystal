@@ -20,7 +20,7 @@ Markdown でスライドを書き、[Marp](https://marp.app/) で PPTX、PDF、H
 1. Marp CLI をインストールし、ターミナルで `marp -v` が動くことを確認します。
 2. **Settings → Crystal → Marp** で **Slide folder** を設定します（例: `Slides`）。
 3. そのフォルダー内にある、frontmatter が `marp: true` で始まるノートを開きます。
-4. **Marp: Start server** を実行するか、フローティングツールバーの再生ボタンを選択します。
+4. **Marp: Start Marp server** を実行するか、フローティングツールバーの再生ボタンを選択します。
 
 ## コマンド
 
@@ -34,8 +34,8 @@ Markdown でスライドを書き、[Marp](https://marp.app/) で PPTX、PDF、H
 | `Marp: Export slide (HTML folder with attachments)` | HTML、Markdown のコピー、ローカル画像を含むフォルダーを書き出し、リンクを相対パスに書き換えます。フォルダーはそのまま移動・共有できます。 |
 | `Marp: Export slide (PDF)` | PDF ファイルを書き出します。 |
 | `Marp: Export presenter notes` | 発表者ノートを `<note>-notes.txt` に書き出します。 |
-| `Marp: Start server` | スライドフォルダーの Marp サーバーを `http://localhost:8080` で起動し、現在のスライドを開きます（Web viewer のタブ、またはブラウザー）。Crystal はサーバーを監視し、停止すると通知します。 |
-| `Marp: Stop server` | サーバーを停止します。 |
+| `Marp: Start Marp server` | スライドフォルダーの Marp サーバーを `http://localhost:8080` で起動し、現在のスライドを開きます（Web viewer のタブ、またはブラウザー）。Crystal はサーバーを監視し、停止すると通知します。 |
+| `Marp: Stop Marp server` | サーバーを停止します。 |
 | `Marp: Go to next slide` | カーソルを次のスライドに移動します。 |
 | `Marp: Go to previous slide` | カーソルを前のスライドに移動します。 |
 | `Marp: Move slide down` | 現在のスライドを次のスライドと入れ替えます。 |
@@ -97,7 +97,7 @@ parents:
 
 ```mermaid
 flowchart LR
-  A[Note in slide folder] -->|Marp: Start server| B["localhost:8080"]
+  A[Note in slide folder] -->|Marp: Start Marp server| B["localhost:8080"]
   B --> C[Web viewer tab or browser]
   A -->|Export| D[PPTX / PDF / HTML]
 ```

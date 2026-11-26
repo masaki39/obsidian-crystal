@@ -86,21 +86,21 @@ export class DailyDraft {
 	onload() {
 		this.plugin.addCommand({
 			id: 'crystal-open-daily-draft',
-			name: 'Daily: Open draft',
+			name: 'Daily: Open daily draft',
 			icon: 'pencil-line',
 			callback: () => this.openDraft(),
 		});
 
 		this.plugin.addCommand({
 			id: 'crystal-post-daily-draft',
-			name: 'Daily: Post draft to timeline',
+			name: 'Daily: Post daily draft to timeline',
 			icon: 'send',
 			callback: () => this.postDraft(),
 		});
 
 		this.plugin.addCommand({
 			id: 'crystal-post-daily-draft-to-bluesky',
-			name: 'Daily: Post draft to Bluesky',
+			name: 'Daily: Post daily draft to Bluesky',
 			icon: 'cloud',
 			callback: () => this.postDraftToBluesky(),
 		});
@@ -203,7 +203,7 @@ export class DailyDraft {
 	private async readDraft(): Promise<{ file: TFile; view?: MarkdownView; content: string; body: string } | null> {
 		const file = this.app.vault.getAbstractFileByPath(this.path);
 		if (!(file instanceof TFile)) {
-			new Notice('⚠️ No draft note found. Run "Daily: Open draft" to create one');
+			new Notice('⚠️ No draft note found. Run "Daily: Open daily draft" to create one');
 			return null;
 		}
 

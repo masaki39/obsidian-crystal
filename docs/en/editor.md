@@ -63,9 +63,10 @@ These run automatically:
 | **Highlight yanked text** | On | The yanked text flashes briefly, like vim-highlightedyank. |
 | **Yank to system clipboard** | Off | Yanks to the unnamed register are also copied to the system clipboard, like `set clipboard=unnamed`. Deletes and named registers (`"ay`) stay inside Vim. Pasting with `p` still uses Vim's register; use `"+p` to paste from the clipboard. |
 | **Default keymap** | On | Space followed by a key or two runs a Crystal command in normal mode. See the keymap below. |
-| **Show key hints** | On | After Space, a panel at the bottom of the editor lists the keys that can come next and what they do, like which-key. Esc cancels, Backspace goes back one key. |
+| **Show key hints** | On | After Space, a panel at the bottom of the editor lists the keys that can come next and what they do, like which-key. Command names are shortened to fit (the plugin name, and for Crystal also the feature name, is left out). In hacker mode the panel takes the terminal look. Esc cancels, Backspace goes back one key. |
 | **Hint delay** | 200 | Milliseconds before the panel appears, so it stays out of the way when you type a mapping quickly. |
-| **Your mappings** | (none) | Map Space plus keys (for example `dt`) to any command, including other plugins', chosen from a command list. Your mappings override the defaults: one with the same keys replaces the default, and one that is a prefix replaces the whole group (map `d` to **Do nothing** to turn off every `Space d` key). |
+| **Your mappings** | (none) | Map Space plus keys (for example `dt`) to any command, including other plugins', chosen from a command list. Your mappings override the defaults: one with the same keys replaces the default, and one that is a prefix replaces the whole group (map `d` to **Do nothing** to turn off every `Space d` key). In the command list, Ctrl+J / Ctrl+K move the selection down / up. |
+| **Check for conflicts** | — | Lists your mappings that clash with each other (the later one wins) or replace default mappings, and rows still missing keys or a command. |
 
 While the leader is on, Space starts a key sequence in normal mode instead of moving right. Visual mode keeps Space as usual. With a Japanese IME on, the physical keys are used, so `Space d d` works without switching the IME off.
 
@@ -81,15 +82,15 @@ The first key picks a group. The most used groups (AI, send, daily, file, Gyazo)
 | `Space d l` | Daily: Open tomorrow's note |
 | `Space d a` | Daily: Add task to daily note |
 | `Space d r` | Daily: Roll over yesterday's undone tasks |
-| `Space d f` | Daily: Open draft |
-| `Space d p` | Daily: Post draft to timeline |
-| `Space d s` | Daily: Post draft to Bluesky |
+| `Space d f` | Daily: Open daily draft |
+| `Space d p` | Daily: Post daily draft to timeline |
+| `Space d s` | Daily: Post daily draft to Bluesky |
 | **Space s** | *Send (Bluesky)* |
 | `Space s s` | Bluesky: Post to Bluesky |
 | `Space s d` | Bluesky: Post to daily note timeline |
 | **Space a** | *AI* |
-| `Space a a` | AI: Rewrite (append result at end) |
-| `Space a r` | AI: Rewrite (replace selection or whole note) |
+| `Space a a` | AI: Rewrite with AI (append result at end) |
+| `Space a r` | AI: Rewrite with AI (replace selection or whole note) |
 | `Space a t` | AI: Translate selected text |
 | `Space a k` | AI: Translate above cursor text |
 | `Space a j` | AI: Translate below cursor text |
@@ -105,10 +106,10 @@ The first key picks a group. The most used groups (AI, send, daily, file, Gyazo)
 | `Space f r` | Editor: Convert links to relative paths |
 | `Space f b` | Editor: Convert active file to bullet list |
 | **Space g** | *Gyazo / images* |
-| `Space g g` | Gyazo: Upload clipboard image |
-| `Space g f` | Gyazo: Upload image file |
-| `Space g r` | Gyazo: Replace image URLs in active note |
-| `Space g l` | Gyazo: Replace local images in active note |
+| `Space g g` | Gyazo: Upload clipboard image to Gyazo |
+| `Space g f` | Gyazo: Upload image file to Gyazo |
+| `Space g r` | Gyazo: Replace image URLs with Gyazo |
+| `Space g l` | Gyazo: Replace local images with Gyazo |
 | `Space g p` | Image: Paste multiple images from file system |
 | **Space e** | *Edit* |
 | `Space e j` | Editor: Wrap selection with subscript |
@@ -123,8 +124,8 @@ The first key picks a group. The most used groups (AI, send, daily, file, Gyazo)
 | `Space m K` | Marp: Move slide up |
 | `Space m c` | Marp: Create slide from current note |
 | `Space m p` | Marp: Preview slide |
-| `Space m s` | Marp: Start server |
-| `Space m q` | Marp: Stop server |
+| `Space m s` | Marp: Start Marp server |
+| `Space m q` | Marp: Stop Marp server |
 | `Space m i` | Marp: Move images to Marp folder |
 | `Space m I` | Marp: Move images and convert links to relative paths |
 | `Space m x d` | Marp: Export slide (PDF) |
@@ -134,18 +135,19 @@ The first key picks a group. The most used groups (AI, send, daily, file, Gyazo)
 | `Space m x f` | Marp: Export slide (HTML folder with attachments) |
 | `Space m x n` | Marp: Export presenter notes |
 | **Space p** | *Property link* |
-| `Space p p` | Property link: Sync current note |
-| `Space p a` | Property link: Sync all notes |
+| `Space p p` | Property link: Sync property links in current note |
+| `Space p a` | Property link: Sync property links in all notes |
 | **Space q** | *Quartz* |
-| `Space q q` | Quartz: Sync and open site (…) |
-| `Space q s` | Quartz: Sync |
-| `Space q o` | Quartz: Open site (…) |
+| `Space q q` | Quartz: Sync and open Quartz site (…) |
+| `Space q s` | Quartz: Sync Quartz |
+| `Space q o` | Quartz: Open Quartz site (…) |
+| `Space h` | Workspace: Open home page |
 | **Space w** | *Window* |
-| `Space w h` | Focus: Left |
-| `Space w l` | Focus: Right |
-| `Space w o` | Window: Toggle opacity |
-| `Space w g` | Gamification: Open stats view |
-| `Space w m` | Hacker mode: Toggle |
+| `Space w h` | Workspace: Focus left pane |
+| `Space w l` | Workspace: Focus right pane |
+| `Space w o` | Workspace: Toggle window opacity |
+| `Space w g` | Gamification: Open gamification stats |
+| `Space w m` | Hacker mode: Toggle hacker mode |
 
 The Vim extras also work in pop-out windows. They replace these lines of a typical `.obsidian.vimrc`:
 

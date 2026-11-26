@@ -37,8 +37,8 @@ You need one of these:
 | `AI: Translate above cursor text` | Translates the line above the cursor and inserts the result at the cursor. |
 | `AI: Translate below cursor text` | Translates the line below the cursor and inserts the result at the cursor. |
 | `AI: Grammar check current line` | Proofreads the current line in its own language and replaces it with the corrected text. |
-| `AI: Rewrite (replace selection or whole note)` | Asks for an instruction, then rewrites the selection (or the whole note if nothing is selected) and replaces it. |
-| `AI: Rewrite (append result at end)` | Asks for an instruction, reads the selection (or the whole note), and appends newly generated Markdown at the end of the note. |
+| `AI: Rewrite with AI (replace selection or whole note)` | Asks for an instruction, then rewrites the selection (or the whole note if nothing is selected) and replaces it. |
+| `AI: Rewrite with AI (append result at end)` | Asks for an instruction, reads the selection (or the whole note), and appends newly generated Markdown at the end of the note. |
 | `AI: Generate description for current file` | Writes a one-sentence, search-friendly `description` into the note's frontmatter. |
 | `AI: Generate git commit summary` | Summarizes the day's git diff of `.md` files and writes it to the `summary` property of the daily note. |
 
@@ -68,7 +68,7 @@ becomes
 I released a new plugin today.
 ```
 
-**AI: Rewrite (replace selection or whole note)** with the instruction "Summarize as bullet points":
+**AI: Rewrite with AI (replace selection or whole note)** with the instruction "Summarize as bullet points":
 
 ```markdown
 We met on Monday to plan the release. The docs need an update, and the build has to pass on CI before we tag it.

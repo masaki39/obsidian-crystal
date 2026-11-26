@@ -44,7 +44,7 @@ export class PropertyLinkService {
 
 		this.plugin.addCommand({
 			id: 'crystal-property-link-sync-current-note',
-			name: 'Property link: Sync current note',
+			name: 'Property link: Sync property links in current note',
 			icon: 'link',
 			callback: async () => {
 				const file = this.app.workspace.getActiveFile();
@@ -59,7 +59,7 @@ export class PropertyLinkService {
 
 		this.plugin.addCommand({
 			id: 'crystal-property-link-sync-vault',
-			name: 'Property link: Sync all notes',
+			name: 'Property link: Sync property links in all notes',
 			icon: 'link',
 			callback: async () => {
 				const { files, added } = await this.syncVault();

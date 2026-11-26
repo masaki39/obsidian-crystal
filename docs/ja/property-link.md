@@ -20,8 +20,8 @@
 
 | コマンド | 動作 |
 |---|---|
-| `Property link: Sync current note` | アクティブなノートをすべてのペアと照合し、相手側に足りないリンクを追加します。 |
-| `Property link: Sync all notes` | Vault 内のすべての Markdown ノートに対して同じ処理を行います。 |
+| `Property link: Sync property links in current note` | アクティブなノートをすべてのペアと照合し、相手側に足りないリンクを追加します。 |
+| `Property link: Sync property links in all notes` | Vault 内のすべての Markdown ノートに対して同じ処理を行います。 |
 
 機能がオンの間は、次の処理が自動で行われます。
 

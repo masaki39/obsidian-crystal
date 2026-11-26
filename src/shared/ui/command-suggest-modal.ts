@@ -1,5 +1,5 @@
 import { type App, type Command, FuzzySuggestModal } from 'obsidian';
-import { VIM_NOP } from './leader-keymap';
+import { addVimNavigation } from './suggest-navigation';
 
 interface CommandRegistry {
 	commands: Record<string, Command>;
@@ -15,19 +15,26 @@ export function commandName(app: App, commandId: string): string | null {
 	return commandRegistry(app)?.commands[commandId]?.name ?? null;
 }
 
-/** Shown first in the picker; choosing it disables the key (`<Nop>`). */
-const NOP_COMMAND: Command = { id: VIM_NOP, name: 'Do nothing (disable this key)' };
+export interface CommandSuggestOptions {
+	placeholder?: string;
+	/** Pseudo commands listed first, ahead of the real ones. */
+	extraItems?: Command[];
+}
 
-/** Pick any Obsidian command, like the command palette, or "do nothing". */
+/**
+ * Pick any Obsidian command, like the command palette. Ctrl+J / Ctrl+K move
+ * the selection as well as the arrow keys.
+ */
 export class CommandSuggestModal extends FuzzySuggestModal<Command> {
-	constructor(app: App, private onChoose: (command: Command) => void) {
+	constructor(app: App, private onChoose: (command: Command) => void, private options: CommandSuggestOptions = {}) {
 		super(app);
-		this.setPlaceholder('Select a command…');
+		this.setPlaceholder(options.placeholder ?? 'Select a command…');
+		addVimNavigation(this);
 	}
 
 	getItems(): Command[] {
 		const commands = Object.values(commandRegistry(this.app)?.commands ?? {});
-		return [NOP_COMMAND, ...commands.sort((a, b) => a.name.localeCompare(b.name))];
+		return [...(this.options.extraItems ?? []), ...commands.sort((a, b) => a.name.localeCompare(b.name))];
 	}
 
 	getItemText(command: Command): string {

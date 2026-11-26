@@ -61,14 +61,14 @@ export class SidebarFocusCommands {
 	onload() {
 		this.plugin.addCommand({
 			id: 'crystal-focus-left',
-			name: 'Focus: Left',
+			name: 'Workspace: Focus left pane',
 			icon: 'panel-left',
 			callback: () => this.focusDirection('left'),
 		});
 
 		this.plugin.addCommand({
 			id: 'crystal-focus-right',
-			name: 'Focus: Right',
+			name: 'Workspace: Focus right pane',
 			icon: 'panel-right',
 			callback: () => this.focusDirection('right'),
 		});
