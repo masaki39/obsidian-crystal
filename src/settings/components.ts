@@ -1,34 +1,42 @@
-import { type IconName, Notice, Setting, setIcon } from 'obsidian';
+import { Notice, Setting, SettingGroup } from 'obsidian';
 import type { CrystalPluginHost } from '../types';
 import type { CrystalPluginSettings } from './types';
 
-// Small builders shared by every settings section.
+// Small builders shared by every settings section. Settings are laid out in
+// Obsidian's own `SettingGroup`s (1.11+), like the core settings tabs.
 
-export function sectionHeading(containerEl: HTMLElement, name: string, icon: IconName, sub = false) {
-	const setting = new Setting(containerEl).setName(name).setHeading();
-	setting.settingEl.addClass('crystal-section-heading');
-	if (sub) setting.settingEl.addClass('crystal-section-heading-sub');
-	const iconEl = createSpan({ cls: 'crystal-section-icon' });
-	setIcon(iconEl, icon);
-	setting.nameEl.prepend(iconEl);
-	return setting;
+/** A group of settings, optionally under a heading. */
+export function settingGroup(containerEl: HTMLElement, heading?: string): SettingGroup {
+	const group = new SettingGroup(containerEl);
+	if (heading) group.setHeading(heading);
+	return group;
 }
 
-export function textSetting(containerEl: HTMLElement, plugin: CrystalPluginHost, name: string, desc: string, key: string, value: string) {
-	return new Setting(containerEl)
+/** Adds a setting to `group` and returns it, so callers can keep a reference. */
+export function addSetting(group: SettingGroup, build: (setting: Setting) => void = () => {}): Setting {
+	let created: Setting | null = null;
+	group.addSetting(setting => {
+		created = setting;
+		build(setting);
+	});
+	return created as unknown as Setting;
+}
+
+export function textSetting(group: SettingGroup, plugin: CrystalPluginHost, name: string, desc: string, key: string, placeholder: string) {
+	return addSetting(group, setting => setting
 		.setName(name)
 		.setDesc(desc)
 		.addText(text => text
-			.setPlaceholder(value)
+			.setPlaceholder(placeholder)
 			.setValue((plugin.settings as any)[key])
 			.onChange(async (value) => {
 				(plugin.settings as any)[key] = value;
 				await plugin.saveSettings();
-			}));
+			})));
 }
 
-export function toggleSetting(containerEl: HTMLElement, plugin: CrystalPluginHost, name: string, desc: string, key: string) {
-	return new Setting(containerEl)
+export function toggleSetting(group: SettingGroup, plugin: CrystalPluginHost, name: string, desc: string, key: string) {
+	return addSetting(group, setting => setting
 		.setName(name)
 		.setDesc(desc)
 		.addToggle(toggle => toggle
@@ -36,13 +44,13 @@ export function toggleSetting(containerEl: HTMLElement, plugin: CrystalPluginHos
 			.onChange(async (value) => {
 				(plugin.settings as any)[key] = value;
 				await plugin.saveSettings();
-			}));
+			})));
 }
 
-export function secretSetting(containerEl: HTMLElement, plugin: CrystalPluginHost, name: string, desc: string | DocumentFragment, placeholder: string, field: keyof CrystalPluginSettings) {
+export function secretSetting(group: SettingGroup, plugin: CrystalPluginHost, name: string, desc: string | DocumentFragment, placeholder: string, field: keyof CrystalPluginSettings) {
 	// Persist through saveSettings() so the secret is written to SecretStorage
 	// and the affected services are refreshed immediately (no reload required).
-	return new Setting(containerEl)
+	return addSetting(group, setting => setting
 		.setName(name)
 		.setDesc(desc)
 		.addText(text => {
@@ -54,7 +62,7 @@ export function secretSetting(containerEl: HTMLElement, plugin: CrystalPluginHos
 				});
 			text.inputEl.type = 'password';
 			return text;
-		});
+		}));
 }
 
 export function addVerifyButton(setting: Setting, verify: () => Promise<void>) {
@@ -73,4 +81,11 @@ export function addVerifyButton(setting: Setting, verify: () => Promise<void>) {
 				button.setButtonText('Verify');
 			}
 		}));
+}
+
+/** Swaps two entries of a list in place; out-of-range moves are ignored. */
+export function moveItem<T>(list: T[], from: number, to: number): boolean {
+	if (to < 0 || to >= list.length || from === to) return false;
+	[list[from], list[to]] = [list[to], list[from]];
+	return true;
 }

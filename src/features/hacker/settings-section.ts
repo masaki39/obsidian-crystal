@@ -1,6 +1,6 @@
-import { Setting } from 'obsidian';
 import type { HackerEffectToggles } from '../../settings';
 import type { CrystalPluginHost } from '../../types';
+import { addSetting, settingGroup } from '../../settings/components';
 import { showRewardBanner } from './glitch';
 
 const EFFECTS: Array<{ key: keyof HackerEffectToggles; name: string; desc: string }> = [
@@ -17,19 +17,18 @@ const EFFECTS: Array<{ key: keyof HackerEffectToggles; name: string; desc: strin
 export function renderHackerModeSection(containerEl: HTMLElement, plugin: CrystalPluginHost) {
 	const { settings } = plugin;
 
-	new Setting(containerEl).setName('Hacker mode').setHeading()
-		.setDesc('Cosmetic animations and effects layered over your theme. Toggle quickly with the "Hacker mode: Toggle" command.');
-
-	new Setting(containerEl)
+	const general = settingGroup(containerEl);
+	addSetting(general, setting => setting
 		.setName('Enable hacker mode')
+		.setDesc('Cosmetic animations and effects layered over your theme. Toggle quickly with the "Hacker mode: Toggle" command.')
 		.addToggle(toggle => toggle
 			.setValue(settings.hackerModeEnabled)
 			.onChange(async (value) => {
 				settings.hackerModeEnabled = value;
 				await plugin.saveSettings();
-			}));
+			})));
 
-	new Setting(containerEl)
+	addSetting(general, setting => setting
 		.setName('Accent color')
 		.setDesc('Color used by every effect.')
 		.addColorPicker(picker => picker
@@ -37,11 +36,11 @@ export function renderHackerModeSection(containerEl: HTMLElement, plugin: Crysta
 			.onChange(async (value) => {
 				settings.hackerColor = value;
 				await plugin.saveSettings();
-			}));
+			})));
 
-	new Setting(containerEl).setName('Effects').setHeading();
+	const effects = settingGroup(containerEl, 'Effects');
 	for (const effect of EFFECTS) {
-		new Setting(containerEl)
+		addSetting(effects, setting => setting
 			.setName(effect.name)
 			.setDesc(effect.desc)
 			.addToggle(toggle => toggle
@@ -49,11 +48,11 @@ export function renderHackerModeSection(containerEl: HTMLElement, plugin: Crysta
 				.onChange(async (value) => {
 					settings.hackerEffects[effect.key] = value;
 					await plugin.saveSettings();
-				}));
+				})));
 	}
 
-	new Setting(containerEl).setName('Tuning').setHeading();
-	new Setting(containerEl)
+	const tuning = settingGroup(containerEl, 'Tuning');
+	addSetting(tuning, setting => setting
 		.setName('Background rain opacity')
 		.addSlider(slider => slider
 			.setLimits(0.05, 0.5, 0.05)
@@ -62,14 +61,14 @@ export function renderHackerModeSection(containerEl: HTMLElement, plugin: Crysta
 			.onChange(async (value) => {
 				settings.hackerMatrixOpacity = value;
 				await plugin.saveSettings();
-			}));
+			})));
 
-	new Setting(containerEl)
+	addSetting(tuning, setting => setting
 		.setName('Preview')
 		.addButton(button => button
 			.setButtonText('Boot sequence')
 			.onClick(() => plugin.hackerModeService?.playBoot()))
 		.addButton(button => button
 			.setButtonText('Reward banner')
-			.onClick(() => showRewardBanner('LEVEL UP Lv42', true)));
+			.onClick(() => showRewardBanner('LEVEL UP Lv42', true))));
 }

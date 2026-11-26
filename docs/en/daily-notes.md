@@ -15,7 +15,7 @@ Move between daily notes, capture tasks and quick posts, and optionally keep eac
 
 1. Enable **Settings → Core plugins → Daily notes** and set its folder and date format.
 2. Run **Daily: Open today's note**.
-3. Optional: turn on **Auto Sort Tasks** or **Auto Link Notes** in **Settings → Crystal → Daily notes**. Both are off by default.
+3. Optional: turn on **Auto sort tasks** or **Auto link notes** in **Settings → Crystal → Daily notes**. Both are off by default.
 
 ## Commands
 
@@ -37,9 +37,9 @@ Move between daily notes, capture tasks and quick posts, and optionally keep eac
 
 | Setting | Default | Description |
 |---|---|---|
-| **Auto Sort Tasks** | Off | Each time a daily note changes, sorts every list block above the timeline heading: completed tasks first, then open tasks, then other bullets. Nested lines move with their parent, and a checked parent stays with the open tasks until all of its nested tasks are checked. |
-| **Auto Link Notes** | Off | When you create a note anywhere in the vault, adds `- HH:mm [[note]]` to today's daily note. The line is removed again if the note is deleted. Restart Obsidian after changing this setting. |
-| **Newest First (Daily Notes)** | Off | Adds new tasks, links, and timeline entries at the top instead of the bottom. With **Auto Sort Tasks**, open tasks come before completed ones. |
+| **Auto sort tasks** | Off | Each time a daily note changes, sorts every list block above the timeline heading: completed tasks first, then open tasks, then other bullets. Nested lines move with their parent, and a checked parent stays with the open tasks until all of its nested tasks are checked. |
+| **Auto link notes** | Off | When you create a note anywhere in the vault, adds `- HH:mm [[note]]` to today's daily note. The line is removed again if the note is deleted. Restart Obsidian after changing this setting. |
+| **Newest first** | Off | Adds new tasks, links, and timeline entries at the top instead of the bottom. With **Auto sort tasks**, open tasks come before completed ones. |
 | **Show weekday after inline title** | On | Shows the weekday next to a daily note's inline title. This is display only; the note isn't changed. |
 | **Weekday format** | `dddd` | moment.js format for the weekday label (for example `ddd` or `(ddd)`). Follows Obsidian's language. |
 | **Draft note path** | `Draft.md` | The note used by the draft commands. `.md` is added if missing. |
@@ -48,7 +48,7 @@ Move between daily notes, capture tasks and quick posts, and optionally keep eac
 
 | Setting | Default | Description |
 |---|---|---|
-| **Daily Note timeline heading** | `# Time Line` | The heading that marks the timeline section. It must match the line exactly. |
+| **Timeline heading** | `# Time Line` | The heading that marks the timeline section. It must match the line exactly. |
 
 ## Examples
 
@@ -64,7 +64,7 @@ What the timeline commands write (the heading is added if it's missing):
 > Posted to Bluesky 🦋
 ```
 
-**Auto Sort Tasks**: an edit to
+**Auto sort tasks**: an edit to
 
 ```markdown
 - [ ] Write README
@@ -91,13 +91,13 @@ flowchart LR
   B --> D["Daily: Post draft to Bluesky"]
   C --> E[Today's timeline]
   D --> F[Bluesky]
-  D -. "if Append Bluesky posts… is on" .-> E
+  D -. "if Append posts… is on" .-> E
 ```
 
 ## Notes and troubleshooting
 
 - **"Daily Notes plugin is disabled."**: enable the core **Daily notes** plugin.
-- **Auto Link Notes adds links for notes you didn't create by hand**: it reacts to every new `.md` file, including ones made by templates or other plugins. Turn it off if that's noisy.
-- **Auto Link Notes doesn't add a link**: the link goes into today's note only if that note already exists. The setting is read at startup, so restart after changing it.
-- **The timeline gets added in the wrong place**: **Daily Note timeline heading** has to match the heading line exactly, including the `#` characters.
+- **Auto link notes adds links for notes you didn't create by hand**: it reacts to every new `.md` file, including ones made by templates or other plugins. Turn it off if that's noisy.
+- **Auto link notes doesn't add a link**: the link goes into today's note only if that note already exists. The setting is read at startup, so restart after changing it.
+- **The timeline gets added in the wrong place**: **Timeline heading** has to match the heading line exactly, including the `#` characters.
 - **Posting a draft didn't empty it**: if you edit the draft while it's being posted, Crystal keeps it so nothing is lost.

@@ -12,8 +12,8 @@
 
 ## クイックセットアップ
 
-1. **Settings → Crystal → Property link** で **Enable Property Link** をオンにします。
-2. **Add New Pair** を選択し、ソースに `next`、ターゲットに `previous` を入力します。
+1. **Settings → Crystal → Property link** で **Enable property link** をオンにします。
+2. **Add pair** を選択し、ソースに `next`、ターゲットに `previous` を入力します。
 3. ノートに `next: ["[[Another note]]"]` を追加します。すると `Another note` に `previous: ["[[This note]]"]` が追加されます。
 
 ## コマンド
@@ -33,8 +33,8 @@
 
 | 設定 | デフォルト | 説明 |
 |---|---|---|
-| **Enable Property Link** | オフ | ノートが変更されたときにペアを自動で同期します。ターゲットのプロパティがなければ、リストとして作成されます。 |
-| **Add New Pair** | — | ペアの行を追加します。 |
+| **Enable property link** | オフ | ノートが変更されたときにペアを自動で同期します。ターゲットのプロパティがなければ、リストとして作成されます。 |
+| **Add pair** | — | ペアの行を追加します。 |
 | **Pair *n*** | — | **Source** は監視するプロパティ、**Target** はリンク先のノートで埋めるプロパティです。**-** を選択するとペアを削除します。 |
 
 ## 使用例

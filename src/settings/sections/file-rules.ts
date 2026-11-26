@@ -1,80 +1,42 @@
-import { App, Setting } from 'obsidian';
+import type { App, TextComponent } from 'obsidian';
 import type { CrystalPluginHost } from '../../types';
-import { sectionHeading } from '../components';
+import { addSetting, moveItem, settingGroup } from '../components';
 
 export function renderFileOrganizationSection(containerEl: HTMLElement, app: App, plugin: CrystalPluginHost) {
-	sectionHeading(containerEl, 'File organization rules', 'folder-tree')
-		.setDesc('Configure rules for file organization. You can set display name, tag, folder, prefix, and date inclusion.');
-
-	const rulesContainer = containerEl.createDiv({ cls: 'file-organization-rules' });
-	displayFileOrganizationRules(rulesContainer, plugin);
-
-	new Setting(containerEl)
-		.setName('Add New Rule')
-		.setDesc('Add an empty rule')
-		.addButton(button => button
-			.setButtonText('Add')
-			.onClick(async () => {
-				plugin.settings.fileOrganizationRules.push({
-					displayName: '',
-					tag: '',
-					folder: '',
-					prefix: '',
-					includeDate: false
-				});
-				await plugin.saveSettings();
-				displayFileOrganizationRules(rulesContainer, plugin);
-			}));
+	const rootEl = containerEl.createDiv();
+	renderRules(rootEl, plugin);
 }
 
-function displayFileOrganizationRules(container: HTMLElement, plugin: CrystalPluginHost) {
-	container.empty();
+function renderRules(rootEl: HTMLElement, plugin: CrystalPluginHost) {
+	rootEl.empty();
+	const redraw = () => renderRules(rootEl, plugin);
+	const rules = plugin.settings.fileOrganizationRules;
+	const group = settingGroup(rootEl);
 
-	plugin.settings.fileOrganizationRules.forEach((rule, index) => {
-		const ruleContainer = container.createDiv({ cls: 'file-organization-rule-row' });
+	rules.forEach((rule, index) => {
+		const field = (key: 'displayName' | 'tag' | 'folder' | 'prefix', placeholder: string, cls: string) =>
+			(text: TextComponent) => {
+				text.setPlaceholder(placeholder)
+					.setValue(rule[key])
+					.onChange(async (value) => {
+						rule[key] = value;
+						await plugin.saveSettings();
+					});
+				text.inputEl.addClass(cls);
+			};
+		const move = async (to: number) => {
+			if (!moveItem(rules, index, to)) return;
+			await plugin.saveSettings();
+			redraw();
+		};
 
-		new Setting(ruleContainer)
+		addSetting(group, setting => setting
 			.setName(`Rule ${index + 1}`)
-			.addText(text => {
-				text.setPlaceholder('Display name')
-					.setValue(rule.displayName)
-					.onChange(async (value) => {
-						rule.displayName = value;
-						await plugin.saveSettings();
-					});
-				text.inputEl.style.width = '140px';
-				return text;
-			})
-			.addText(text => {
-				text.setPlaceholder('Tag')
-					.setValue(rule.tag)
-					.onChange(async (value) => {
-						rule.tag = value;
-						await plugin.saveSettings();
-					});
-				text.inputEl.style.width = '100px';
-				return text;
-			})
-			.addText(text => {
-				text.setPlaceholder('Folder')
-					.setValue(rule.folder)
-					.onChange(async (value) => {
-						rule.folder = value;
-						await plugin.saveSettings();
-					});
-				text.inputEl.style.width = '80px';
-				return text;
-			})
-			.addText(text => {
-				text.setPlaceholder('Prefix')
-					.setValue(rule.prefix)
-					.onChange(async (value) => {
-						rule.prefix = value;
-						await plugin.saveSettings();
-					});
-				text.inputEl.style.width = '60px';
-				return text;
-			})
+			.setClass('crystal-file-rule-row')
+			.addText(field('displayName', 'Display name', 'crystal-file-rule-name'))
+			.addText(field('tag', 'Tag', 'crystal-file-rule-tag'))
+			.addText(field('folder', 'Folder', 'crystal-file-rule-folder'))
+			.addText(field('prefix', 'Prefix', 'crystal-file-rule-prefix'))
 			.addToggle(toggle => toggle
 				.setTooltip('Include date in filename')
 				.setValue(rule.includeDate)
@@ -82,38 +44,35 @@ function displayFileOrganizationRules(container: HTMLElement, plugin: CrystalPlu
 					rule.includeDate = value;
 					await plugin.saveSettings();
 				}))
-			.addButton(button => button
-				.setButtonText('↑')
+			.addExtraButton(button => button
+				.setIcon('arrow-up')
 				.setTooltip('Move up')
-				.onClick(async () => {
-					if (index > 0) {
-						const temp = plugin.settings.fileOrganizationRules[index];
-						plugin.settings.fileOrganizationRules[index] = plugin.settings.fileOrganizationRules[index - 1];
-						plugin.settings.fileOrganizationRules[index - 1] = temp;
-						await plugin.saveSettings();
-						displayFileOrganizationRules(container, plugin);
-					}
-				}))
-			.addButton(button => button
-				.setButtonText('↓')
+				.setDisabled(index === 0)
+				.onClick(() => move(index - 1)))
+			.addExtraButton(button => button
+				.setIcon('arrow-down')
 				.setTooltip('Move down')
-				.onClick(async () => {
-					if (index < plugin.settings.fileOrganizationRules.length - 1) {
-						const temp = plugin.settings.fileOrganizationRules[index];
-						plugin.settings.fileOrganizationRules[index] = plugin.settings.fileOrganizationRules[index + 1];
-						plugin.settings.fileOrganizationRules[index + 1] = temp;
-						await plugin.saveSettings();
-						displayFileOrganizationRules(container, plugin);
-					}
-				}))
-			.addButton(button => button
-				.setButtonText('-')
-				.setClass('mod-destructive')
+				.setDisabled(index === rules.length - 1)
+				.onClick(() => move(index + 1)))
+			.addExtraButton(button => button
+				.setIcon('trash-2')
 				.setTooltip('Delete rule')
 				.onClick(async () => {
-					plugin.settings.fileOrganizationRules.splice(index, 1);
+					rules.splice(index, 1);
 					await plugin.saveSettings();
-					displayFileOrganizationRules(container, plugin);
-				}));
+					redraw();
+				})));
 	});
+
+	addSetting(group, setting => setting
+		.setName('Add rule')
+		.setDesc('Rules used by "Editor: Organize file with prefix and tags": each sets a display name, tag, folder, prefix, and whether the date is included.')
+		.addButton(button => button
+			.setButtonText('Add')
+			.setCta()
+			.onClick(async () => {
+				rules.push({ displayName: '', tag: '', folder: '', prefix: '', includeDate: false });
+				await plugin.saveSettings();
+				redraw();
+			})));
 }

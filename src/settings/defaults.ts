@@ -93,4 +93,12 @@ export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	autoBulletHalfWidthSpace: true,
 	autoBulletFullWidthSpace: true,
 	autoBulletTab: true,
+	vimDisplayLineMotion: false,
+	vimYankToClipboard: false,
+	vimYankHighlight: true,
+	vimYankToEndOfLine: true,
+	vimDefaultLeaderMappings: true,
+	vimLeaderMappings: [],
+	vimLeaderHints: true,
+	vimLeaderHintDelay: 200,
 }

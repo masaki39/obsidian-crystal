@@ -13,7 +13,7 @@ Upload images to [Gyazo](https://gyazo.com) and link them from your notes. You c
 ## Quick setup
 
 1. Open [gyazo.com/oauth/applications](https://gyazo.com/oauth/applications), create an application, and copy its access token.
-2. Paste it into **Settings → Crystal → Images → Gyazo access token**, then select **Verify**.
+2. Paste it into **Settings → Crystal → Images → Gyazo → Access token**, then select **Verify**.
 3. Copy an image and run **Gyazo: Upload clipboard image**.
 
 ## Commands
@@ -31,8 +31,8 @@ Upload images to [Gyazo](https://gyazo.com) and link them from your notes. You c
 
 | Setting | Default | Description |
 |---|---|---|
-| **Gyazo access token** | (empty) | Stored in Obsidian's secret storage. **Verify** checks that it works. |
-| **Auto Convert Images to WebP on Paste** | On | When on, images are also converted to WebP and resized before they're uploaded. See [Images](images.md). |
+| **Gyazo** → **Access token** | (empty) | Stored in Obsidian's secret storage. **Verify** checks that it works. |
+| **Convert pasted images to WebP** | On | When on, images are also converted to WebP and resized before they're uploaded. See [Images](images.md). |
 
 ## Examples
 

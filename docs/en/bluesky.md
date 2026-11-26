@@ -15,7 +15,7 @@ Post to Bluesky without leaving Obsidian. You can attach up to 4 images, links g
 ## Quick setup
 
 1. In Bluesky, open **Settings → Privacy and security → App passwords** and create an app password.
-2. In **Settings → Crystal → Bluesky**, enter **Bluesky Handle/Email** and **Bluesky App Password**, then select **Verify**.
+2. In **Settings → Crystal → Bluesky**, enter **Handle or email** and **App password**, then select **Verify**.
 3. Run **Bluesky: Post to Bluesky**, write something, and select **Post**.
 
 ## Commands
@@ -32,14 +32,14 @@ Post to Bluesky without leaving Obsidian. You can attach up to 4 images, links g
 
 | Setting | Default | Description |
 |---|---|---|
-| **Bluesky Handle/Email** | (empty) | Your handle (for example `user.bsky.social`) or email. Stored in Obsidian's secret storage. |
-| **Bluesky App Password** | (empty) | An app password, not your account password. Stored in secret storage. **Verify** signs in to check it. |
-| **Append Bluesky posts to Daily Note timeline** | Off | Also adds each post to today's daily note timeline, as a blue `[!timeline\|blue]` callout. |
-| **Daily Note timeline heading** | `# Time Line` | The heading that marks the timeline section. It must match the line exactly. |
+| **Handle or email** | (empty) | Your handle (for example `user.bsky.social`) or email. Stored in Obsidian's secret storage. |
+| **App password** | (empty) | An app password, not your account password. Stored in secret storage. **Verify** signs in to check it. |
+| **Append posts to daily note timeline** | Off | Also adds each post to today's daily note timeline, as a blue `[!timeline\|blue]` callout. |
+| **Timeline heading** | `# Time Line` | The heading that marks the timeline section. It must match the line exactly. |
 
 ## Examples
 
-With **Append Bluesky posts to Daily Note timeline** on, a post with a Gyazo token set adds:
+With **Append posts to daily note timeline** on, a post with a Gyazo token set adds:
 
 ```markdown
 # Time Line
@@ -72,5 +72,5 @@ sequenceDiagram
 - **Gyazo**:
   - While a Gyazo token is set, images you attach are uploaded to Gyazo when you submit, but only when the post is added to the daily note timeline. Uploaded images are public to anyone with the URL.
     - **Bluesky: Post to daily note timeline**: always uploaded.
-    - **Bluesky: Post to Bluesky**: uploaded only while **Append Bluesky posts to Daily Note timeline** is on. With it off, images go to Bluesky only.
-  - If you don't want public copies, leave **Gyazo access token** empty, turn timeline appending off, or don't attach images in these windows.
+    - **Bluesky: Post to Bluesky**: uploaded only while **Append posts to daily note timeline** is on. With it off, images go to Bluesky only.
+  - If you don't want public copies, leave **Gyazo** → **Access token** empty, turn timeline appending off, or don't attach images in these windows.

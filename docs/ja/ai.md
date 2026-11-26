@@ -23,10 +23,10 @@ OpenAI、Gemini、またはローカルの Ollama モデルを使って、ノー
 ## クイックセットアップ
 
 1. **Settings → Crystal → AI** を開きます。
-2. **AI Provider** を選びます。
+2. **AI provider** を選びます。
 3. 次のいずれかを行います。
    - **OpenAI または Gemini**: API キーを貼り付けて **Verify** を選択します。
-   - **Ollama**: `ollama serve` と `ollama pull llama3.1` を実行し、**Ollama Base URL** と **Ollama Model** を設定して **Verify** を選択します。
+   - **Ollama**: `ollama serve` と `ollama pull llama3.1` を実行し、**Ollama** → **Base URL** と **Ollama** → **Model** を設定して **Verify** を選択します。
 4. テキストを選択し、コマンドパレットから **AI: Translate selected text** を実行します。
 
 ## コマンド
@@ -46,13 +46,13 @@ OpenAI、Gemini、またはローカルの Ollama モデルを使って、ノー
 
 | 設定 | デフォルト | 説明 |
 |---|---|---|
-| **AI Provider** | OpenAI | すべての AI コマンドが使うプロバイダー。OpenAI、Gemini、Ollama（ローカル）から選びます。 |
-| **OpenAI API Key** | （空） | Obsidian のシークレットストレージに保存されます。**Verify** で動作を確認できます。 |
-| **OpenAI Model** | `gpt-4o-mini` | ほかに `gpt-5`、`gpt-5-mini`、`gpt-5-nano`、`gpt-4.1`、`gpt-4.1-mini`、`gpt-4o` を選べます。 |
-| **Gemini API Key** | （空） | Obsidian のシークレットストレージに保存されます。**Verify** で動作を確認できます。 |
-| **Gemini Model** | `gemini-flash-latest` | ほかに `gemini-flash-lite-latest`、`gemini-2.5-flash`、`gemini-2.5-flash-lite`、`gemini-2.0-flash`、`gemini-2.0-flash-lite`、`gemma-4-31b-it`、`gemma-4-26b-a4b-it` を選べます。 |
-| **Ollama Base URL** | `http://localhost:11434` | ローカルの Ollama サーバーの URL。 |
-| **Ollama Model** | `llama3.1` | `ollama pull` で取得済みのモデル名。 |
+| **AI provider** | OpenAI | すべての AI コマンドが使うプロバイダー。OpenAI、Gemini、Ollama（ローカル）から選びます。 |
+| **OpenAI** → **API key** | （空） | Obsidian のシークレットストレージに保存されます。**Verify** で動作を確認できます。 |
+| **OpenAI** → **Model** | `gpt-4o-mini` | ほかに `gpt-5`、`gpt-5-mini`、`gpt-5-nano`、`gpt-4.1`、`gpt-4.1-mini`、`gpt-4o` を選べます。 |
+| **Gemini** → **API key** | （空） | Obsidian のシークレットストレージに保存されます。**Verify** で動作を確認できます。 |
+| **Gemini** → **Model** | `gemini-flash-latest` | ほかに `gemini-flash-lite-latest`、`gemini-2.5-flash`、`gemini-2.5-flash-lite`、`gemini-2.0-flash`、`gemini-2.0-flash-lite`、`gemma-4-31b-it`、`gemma-4-26b-a4b-it` を選べます。 |
+| **Ollama** → **Base URL** | `http://localhost:11434` | ローカルの Ollama サーバーの URL。 |
+| **Ollama** → **Model** | `llama3.1` | `ollama pull` で取得済みのモデル名。 |
 
 ## 使用例
 

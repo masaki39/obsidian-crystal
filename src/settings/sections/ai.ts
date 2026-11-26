@@ -1,14 +1,19 @@
-import { App, Setting } from 'obsidian';
+import type { App } from 'obsidian';
 import type { CrystalPluginHost } from '../../types';
-import { addVerifyButton, secretSetting, sectionHeading, textSetting } from '../components';
+import { addSetting, addVerifyButton, secretSetting, settingGroup, textSetting } from '../components';
 import { verifyGeminiKey, verifyOllama, verifyOpenAIKey } from '../verifiers';
 
-export function renderAiSection(containerEl: HTMLElement, app: App, plugin: CrystalPluginHost) {
-	sectionHeading(containerEl, 'AI editor commands', 'bot');
+const OPENAI_MODELS = ['gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4o', 'gpt-4o-mini'];
+const GEMINI_MODELS = [
+	'gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-2.5-flash', 'gemini-2.5-flash-lite',
+	'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemma-4-31b-it', 'gemma-4-26b-a4b-it',
+];
 
-	new Setting(containerEl)
-		.setName('AI Provider')
-		.setDesc('Select which AI provider to use for editor commands')
+export function renderAiSection(containerEl: HTMLElement, app: App, plugin: CrystalPluginHost) {
+	const general = settingGroup(containerEl);
+	addSetting(general, setting => setting
+		.setName('AI provider')
+		.setDesc('Provider used by the AI editor commands.')
 		.addDropdown(dropdown => dropdown
 			.addOption('openai', 'OpenAI')
 			.addOption('gemini', 'Gemini')
@@ -17,57 +22,48 @@ export function renderAiSection(containerEl: HTMLElement, app: App, plugin: Crys
 			.onChange(async (value) => {
 				plugin.settings.aiProvider = value as 'gemini' | 'openai' | 'ollama';
 				await plugin.saveSettings();
-			}));
+			})));
 
+	const openai = settingGroup(containerEl, 'OpenAI');
 	addVerifyButton(
-		secretSetting(containerEl, plugin, 'OpenAI API Key', 'Enter your OpenAI API Key', 'Enter your OpenAI API Key', 'OpenAIAPIKey'),
+		secretSetting(openai, plugin, 'API key', 'Your OpenAI API key.', 'sk-…', 'OpenAIAPIKey'),
 		() => verifyOpenAIKey(plugin.settings.OpenAIAPIKey)
 	);
+	addSetting(openai, setting => setting
+		.setName('Model')
+		.setDesc('OpenAI model to use.')
+		.addDropdown(dropdown => {
+			OPENAI_MODELS.forEach(model => dropdown.addOption(model, model));
+			dropdown
+				.setValue(plugin.settings.OpenAIModel)
+				.onChange(async (value) => {
+					plugin.settings.OpenAIModel = value;
+					await plugin.saveSettings();
+				});
+		}));
 
-	new Setting(containerEl)
-		.setName('OpenAI Model')
-		.setDesc('Select the OpenAI model to use')
-		.addDropdown(dropdown => dropdown
-			.addOption('gpt-5', 'gpt-5')
-			.addOption('gpt-5-mini', 'gpt-5-mini')
-			.addOption('gpt-5-nano', 'gpt-5-nano')
-			.addOption('gpt-4.1', 'gpt-4.1')
-			.addOption('gpt-4.1-mini', 'gpt-4.1-mini')
-			.addOption('gpt-4o', 'gpt-4o')
-			.addOption('gpt-4o-mini', 'gpt-4o-mini')
-			.setValue(plugin.settings.OpenAIModel)
-			.onChange(async (value) => {
-				plugin.settings.OpenAIModel = value;
-				await plugin.saveSettings();
-			}));
-
+	const gemini = settingGroup(containerEl, 'Gemini');
 	addVerifyButton(
-		secretSetting(containerEl, plugin, 'Gemini API Key', 'Enter your Gemini API Key', 'Enter your Gemini API Key', 'GeminiAPIKey'),
+		secretSetting(gemini, plugin, 'API key', 'Your Gemini API key.', 'AIza…', 'GeminiAPIKey'),
 		() => verifyGeminiKey(plugin.settings.GeminiAPIKey)
 	);
+	addSetting(gemini, setting => setting
+		.setName('Model')
+		.setDesc('Gemini model to use.')
+		.addDropdown(dropdown => {
+			GEMINI_MODELS.forEach(model => dropdown.addOption(model, model));
+			dropdown
+				.setValue(plugin.settings.GeminiModel)
+				.onChange(async (value) => {
+					plugin.settings.GeminiModel = value;
+					await plugin.saveSettings();
+				});
+		}));
 
-	new Setting(containerEl)
-		.setName('Gemini Model')
-		.setDesc('Select the Gemini model to use')
-		.addDropdown(dropdown => dropdown
-			.addOption('gemini-flash-latest', 'gemini-flash-latest')
-			.addOption('gemini-flash-lite-latest', 'gemini-flash-lite-latest')
-			.addOption('gemini-2.5-flash', 'gemini-2.5-flash')
-			.addOption('gemini-2.5-flash-lite', 'gemini-2.5-flash-lite')
-			.addOption('gemini-2.0-flash', 'gemini-2.0-flash')
-			.addOption('gemini-2.0-flash-lite', 'gemini-2.0-flash-lite')
-			.addOption('gemma-4-31b-it', 'gemma-4-31b-it')
-			.addOption('gemma-4-26b-a4b-it', 'gemma-4-26b-a4b-it')
-			.setValue(plugin.settings.GeminiModel)
-			.onChange(async (value) => {
-				plugin.settings.GeminiModel = value;
-				await plugin.saveSettings();
-			}));
-
+	const ollama = settingGroup(containerEl, 'Ollama');
 	addVerifyButton(
-		textSetting(containerEl, plugin, 'Ollama Base URL', 'Base URL of your local Ollama server. Runs fully offline; no data leaves your machine.', 'OllamaBaseUrl', 'http://localhost:11434'),
+		textSetting(ollama, plugin, 'Base URL', 'Base URL of your local Ollama server. Runs fully offline; no data leaves your machine.', 'OllamaBaseUrl', 'http://localhost:11434'),
 		() => verifyOllama(plugin.settings.OllamaBaseUrl)
 	);
-
-	textSetting(containerEl, plugin, 'Ollama Model', 'Name of a model already pulled with `ollama pull` (e.g. llama3.1, gemma3, qwen2.5).', 'OllamaModel', 'llama3.1');
+	textSetting(ollama, plugin, 'Model', 'Name of a model already pulled with `ollama pull` (e.g. llama3.1, gemma3, qwen2.5).', 'OllamaModel', 'llama3.1');
 }

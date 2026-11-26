@@ -8,6 +8,7 @@ import { DailyNoteWeekday } from './daily-notes/weekday';
 import { DailyDraft } from './daily-notes/draft';
 import { AutoBulletService } from './editor/auto-bullet';
 import { EditorCommands } from './editor/commands';
+import { VimExtensionService } from './editor/vim/service';
 import { GamificationManager } from './gamification/manager';
 import { activateGamificationView, registerGamificationView } from './gamification/register';
 import { GitSummaryService } from './git-summary/git-summary-service';
@@ -42,6 +43,7 @@ export interface CrystalServices {
 	imagePasteAndDropHandler: ImagePasteAndDropHandler;
 	editorCommands: EditorCommands;
 	autoBulletService: AutoBulletService;
+	vimExtensionService: VimExtensionService;
 	terminalService: TerminalService;
 	marpCommands: MarpCommands;
 	marpCursorSync: MarpCursorSync;
@@ -73,6 +75,7 @@ export function createServices(plugin: CrystalPluginHost, settings: CrystalPlugi
 	const imagePasteAndDropHandler = new ImagePasteAndDropHandler(app, settings, plugin);
 	const editorCommands = new EditorCommands(app, settings, plugin);
 	const autoBulletService = new AutoBulletService(plugin, settings);
+	const vimExtensionService = new VimExtensionService(app, plugin, settings);
 	const terminalService = new TerminalService(app);
 	const marpCommands = new MarpCommands(terminalService, settings, plugin);
 	const marpCursorSync = new MarpCursorSync(plugin, settings);
@@ -93,7 +96,7 @@ export function createServices(plugin: CrystalPluginHost, settings: CrystalPlugi
 	return {
 		aiCommands, blueskyService, dailyNotesManager, dailyNoteWeekday, dailyDraft,
 		gyazoService, gyazoImageMigrator, gyazoLocalImageMigrator, gyazoCommands,
-		imagePasteAndDropHandler, editorCommands, autoBulletService, terminalService,
+		imagePasteAndDropHandler, editorCommands, autoBulletService, vimExtensionService, terminalService,
 		marpCommands, marpCursorSync, marpSlideToolbar, quartzService, macroCommands,
 		gitSummaryService, opacityService, gamificationManager, sidebarFocusCommands,
 		propertyLinkService, propertyColorService, statusBarOrderService, hackerModeService,
@@ -117,6 +120,7 @@ export function loadServices(plugin: CrystalPluginHost, s: CrystalServices): voi
 	s.aiCommands.onload();
 	s.editorCommands.onload();
 	s.autoBulletService.onload();
+	s.vimExtensionService.onload();
 	s.macroCommands.onload();
 	s.gitSummaryService.onload();
 	s.opacityService.onload();
@@ -141,6 +145,8 @@ export function unloadServices(s: CrystalServices): void {
 	s.opacityService.onunload();
 	s.statusBarOrderService.onunload();
 	s.hackerModeService.onunload();
+	// Take the Vim mappings back out of the global Vim keymap.
+	s.vimExtensionService.onunload();
 	// 起動した Marp サーバーを残さない（Obsidian終了・プラグイン無効化・リロード時）
 	s.marpCommands.onunload();
 	s.marpCursorSync.onunload();
@@ -157,6 +163,7 @@ export async function updateServiceSettings(s: CrystalServices, settings: Crysta
 	s.imagePasteAndDropHandler.updateSettings(settings);
 	s.editorCommands.updateSettings(settings);
 	s.autoBulletService.updateSettings(settings);
+	s.vimExtensionService.updateSettings(settings);
 	s.gyazoService.updateSettings(settings);
 	s.marpCommands.updateSettings(settings);
 	s.marpCursorSync.updateSettings(settings);

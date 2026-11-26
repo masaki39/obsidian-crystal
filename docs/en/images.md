@@ -13,8 +13,8 @@ Pasted and dropped images are saved as compact WebP files in your attachment fol
 ## Quick setup
 
 1. Paste a screenshot into a note. With the defaults it's saved as WebP, scaled to 80%, and capped at 700 px.
-2. If you want sharper images, raise **Image Default Resize Scale** and **Image Max Size** in **Settings → Crystal → Images**.
-3. To keep the original files instead, turn off **Auto Convert Images to WebP on Paste**.
+2. If you want sharper images, raise **Default resize scale** and **Max image size** in **Settings → Crystal → Images**.
+3. To keep the original files instead, turn off **Convert pasted images to WebP**.
 
 ## Commands
 
@@ -24,7 +24,7 @@ Pasted and dropped images are saved as compact WebP files in your attachment fol
 
 This runs automatically:
 
-- **Paste and drop**: images you paste or drop into the editor are saved to the attachment folder and linked at the cursor. If **Auto Convert Images to WebP on Paste** is on, they're converted first.
+- **Paste and drop**: images you paste or drop into the editor are saved to the attachment folder and linked at the cursor. If **Convert pasted images to WebP** is on, they're converted first.
 
 ## Settings
 
@@ -32,10 +32,10 @@ This runs automatically:
 
 | Setting | Default | Description |
 |---|---|---|
-| **Auto Convert Images to WebP on Paste** | On | Converts pasted, dropped, and multi-pasted images to WebP. The same conversion is applied before uploading to [Gyazo](gyazo.md). |
-| **WebP Compression Quality** | 0.85 | 0.1 gives the smallest files, 1.0 the best quality. |
-| **Image Default Resize Scale** | 0.8 | Scales each image before saving (1.0 = 100%). |
-| **Image Max Size** | 700 | Longest side in pixels after scaling. Larger images are shrunk to fit. |
+| **Convert pasted images to WebP** | On | Converts pasted, dropped, and multi-pasted images to WebP. The same conversion is applied before uploading to [Gyazo](gyazo.md). |
+| **WebP quality** | 0.85 | 0.1 gives the smallest files, 1.0 the best quality. |
+| **Default resize scale** | 0.8 | Scales each image before saving (1.0 = 100%). |
+| **Max image size** | 700 | Longest side in pixels after scaling. Larger images are shrunk to fit. |
 
 ## Examples
 
@@ -58,7 +58,7 @@ flowchart LR
 ## Notes and troubleshooting
 
 - **The original image isn't kept.** Only the converted WebP is saved.
-- **Text in screenshots looks blurry**: raise **Image Max Size** (for example to 1920) and set **Image Default Resize Scale** to 1.0.
+- **Text in screenshots looks blurry**: raise **Max image size** (for example to 1920) and set **Default resize scale** to 1.0.
 - **GIFs are never converted**, so animations keep working.
 - Images go to the folder set in Obsidian's **Settings → Files and links → Default location for new attachments**.
 - Crystal handles paste and drop for the whole window. If another image plugin also handles paste, turn one of them off.

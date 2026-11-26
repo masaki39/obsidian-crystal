@@ -15,7 +15,7 @@ Obsidian から離れずに Bluesky へ投稿できます。画像を最大 4 �
 ## クイックセットアップ
 
 1. Bluesky で **Settings → Privacy and security → App passwords** を開き、アプリパスワードを作成します。
-2. **Settings → Crystal → Bluesky** で **Bluesky Handle/Email** と **Bluesky App Password** を入力し、**Verify** を選択します。
+2. **Settings → Crystal → Bluesky** で **Handle or email** と **App password** を入力し、**Verify** を選択します。
 3. **Bluesky: Post to Bluesky** を実行し、何か書いて **Post** を選択します。
 
 ## コマンド
@@ -32,14 +32,14 @@ Obsidian から離れずに Bluesky へ投稿できます。画像を最大 4 �
 
 | 設定 | デフォルト | 説明 |
 |---|---|---|
-| **Bluesky Handle/Email** | （空） | ハンドル（例: `user.bsky.social`）またはメールアドレス。Obsidian のシークレットストレージに保存されます。 |
-| **Bluesky App Password** | （空） | アカウントのパスワードではなく、アプリパスワードを入力します。シークレットストレージに保存されます。**Verify** でサインインして確認します。 |
-| **Append Bluesky posts to Daily Note timeline** | オフ | 各投稿を今日のデイリーノートのタイムラインにも、青い `[!timeline\|blue]` コールアウトとして追加します。 |
-| **Daily Note timeline heading** | `# Time Line` | タイムラインのセクションを示す見出し。行と完全に一致している必要があります。 |
+| **Handle or email** | （空） | ハンドル（例: `user.bsky.social`）またはメールアドレス。Obsidian のシークレットストレージに保存されます。 |
+| **App password** | （空） | アカウントのパスワードではなく、アプリパスワードを入力します。シークレットストレージに保存されます。**Verify** でサインインして確認します。 |
+| **Append posts to daily note timeline** | オフ | 各投稿を今日のデイリーノートのタイムラインにも、青い `[!timeline\|blue]` コールアウトとして追加します。 |
+| **Timeline heading** | `# Time Line` | タイムラインのセクションを示す見出し。行と完全に一致している必要があります。 |
 
 ## 使用例
 
-**Append Bluesky posts to Daily Note timeline** がオンで、Gyazo トークンが設定されている場合、投稿すると次の内容が追加されます。
+**Append posts to daily note timeline** がオンで、Gyazo トークンが設定されている場合、投稿すると次の内容が追加されます。
 
 ```markdown
 # Time Line
@@ -72,5 +72,5 @@ sequenceDiagram
 - **Gyazo**:
   - Gyazo トークンが設定されていると、添付した画像は送信時に Gyazo にアップロードされます。ただし、投稿がデイリーノートのタイムラインに追記される場合に限ります。アップロードした画像は URL を知っている人なら誰でも見られます。
     - **Bluesky: Post to daily note timeline**: 常にアップロードされます。
-    - **Bluesky: Post to Bluesky**: **Append Bluesky posts to Daily Note timeline** がオンのときだけアップロードされます。オフのときは、画像は Bluesky にだけ送られます。
-  - 公開されるコピーを作りたくない場合は、**Gyazo access token** を空のままにするか、タイムライン追記をオフにするか、これらのウィンドウで画像を添付しないでください。
+    - **Bluesky: Post to Bluesky**: **Append posts to daily note timeline** がオンのときだけアップロードされます。オフのときは、画像は Bluesky にだけ送られます。
+  - 公開されるコピーを作りたくない場合は、**Gyazo** → **Access token** を空のままにするか、タイムライン追記をオフにするか、これらのウィンドウで画像を添付しないでください。

@@ -2,7 +2,7 @@
 
 # エディター
 
-編集を助ける小さなツール群です。タイムスタンプ付きノート、リンクのコピー、下付き・上付き文字、リンクの整理、OGP リンクカード、ルールに基づくファイル整理、Cosense 風の自動箇条書きを提供します。
+編集を助ける小さなツール群です。タイムスタンプ付きノート、リンクのコピー、下付き・上付き文字、リンクの整理、OGP リンクカード、ルールに基づくファイル整理、Cosense 風の自動箇条書き、Vim モードの拡張を提供します。
 
 [← ドキュメント索引に戻る](README.md)
 
@@ -17,6 +17,7 @@
 1. 自動箇条書きはデフォルトでオンです。行頭でスペースを入力して試してみてください。
 2. [Auto Bullet](https://github.com/takitsuba/obsidian-auto-bullet) プラグインを使っている場合は、それを無効にするか、こちらの **Auto bullet** をオフにしてください。そうしないと箇条書きが二重に付きます。
 3. 任意: **Editor: Move cursor after list marker** に Home などのホットキーを割り当てます。
+4. 任意（Vim ユーザー向け）: **Settings → Editor → Vim key bindings** をオンにしてから、下記の **Vim** の設定を行います。同じキーを設定する Vimrc Support や vim-motions は無効にしてください。
 
 ## コマンド
 
@@ -40,6 +41,7 @@
 
 - **Auto bullet**: 行頭で入力したスペースまたは Tab が `- ` になります。詳しくは以降のセクションを参照してください。
 - **Vim mode reset**: Vim モードがオンのときに別のペインに移動すると、元のエディターが Normal モードに戻ります。
+- **Vim extras**: **Vim** の設定でオンにすると、表示行単位の `j`/`k`、ヤンクのシステムクリップボード同期、Space リーダーのマッピングが有効になります。
 
 ## 設定
 
@@ -52,7 +54,111 @@
 | **Full-width space** | オン | 全角スペース（例: 日本語 IME がオンの状態で押した Space）で自動箇条書きを発動させます。 |
 | **Tab** | オン | Tab で自動箇条書きを発動させます。既存のリスト項目では、Tab はこれまでどおりインデントします。 |
 
-**Settings → Crystal → File rules**: **File organization rules**
+**Settings → Crystal → Editor**: **Vim**（Obsidian 標準の Vim モード用）
+
+| 設定 | デフォルト | 説明 |
+|---|---|---|
+| **Move by display line** | オフ | Normal モードと Visual モードで `j`/`k` が `gj`/`gk` として動き、折り返された行を飛ばしません。回数指定（`5j`）も使えます。`dj`/`yk` は行単位のままです。 |
+| **Y yanks to end of line** | オン | `Y` で行全体（`yy`）ではなく、カーソルから行末まで（`y$`）をコピーします。`D` や `C` と同じ動きです。Visual モードの `Y` は変わりません。 |
+| **Highlight yanked text** | オン | ヤンクした範囲を一瞬ハイライトします（vim-highlightedyank 相当）。 |
+| **Yank to system clipboard** | オフ | 無名レジスタへのヤンクをシステムクリップボードにもコピーします（`set clipboard=unnamed` 相当）。削除や名前付きレジスタ（`"ay`）は Vim の中だけに残ります。`p` での貼り付けは Vim のレジスタを使います。クリップボードから貼り付けるには `"+p` を使います。 |
+| **Default keymap** | オン | Normal モードで Space に続けて 1〜2 キーを押すと、Crystal のコマンドを実行します。下のキーマップを参照してください。 |
+| **Show key hints** | オン | Space を押すと、次に押せるキーとその動作をエディター下部のパネルに表示します（which-key 風）。Esc で中止、Backspace で 1 キー戻ります。 |
+| **Hint delay** | 200 | パネルが出るまでのミリ秒数。素早く入力したときにパネルが邪魔にならないようにします。 |
+| **Your mappings** | （なし） | Space ＋キー（例: `dt`）に、他のプラグインを含む任意のコマンドを一覧から選んで割り当てます。自分のマッピングはデフォルトより優先されます。同じキーならそのデフォルトを置き換え、前方一致するキーならグループごと置き換えます（`d` を **Do nothing** にすると `Space d` のキーがすべて無効になります）。 |
+
+リーダーが有効な間、Normal モードの Space はカーソルを右に動かさず、キー入力の開始になります。Visual モードの Space は通常どおりです。日本語 IME がオンでも物理キーで判定するので、IME を切らずに `Space d d` が使えます。
+
+### デフォルトのリーダーキーマップ
+
+最初のキーでグループを選びます。よく使うグループ（AI、送信、デイリー、ファイル、Gyazo）はホームポジションにあり、Vim の感覚がそのまま使えます。`h`/`l` は前/次、`j`/`k` は下/上、`J`/`K` は移動、`y` はヤンク（コピー）、`q` は終了、同じキーの 2 回押しはそのグループで最もよく使う操作です（`Space d d`、`Space s s`、`Space g g`）。
+
+| キー | コマンド |
+|---|---|
+| **Space d** | *Daily* |
+| `Space d d` | Daily: Open today's note |
+| `Space d h` | Daily: Open yesterday's note |
+| `Space d l` | Daily: Open tomorrow's note |
+| `Space d a` | Daily: Add task to daily note |
+| `Space d r` | Daily: Roll over yesterday's undone tasks |
+| `Space d f` | Daily: Open draft |
+| `Space d p` | Daily: Post draft to timeline |
+| `Space d s` | Daily: Post draft to Bluesky |
+| **Space s** | *Send (Bluesky)* |
+| `Space s s` | Bluesky: Post to Bluesky |
+| `Space s d` | Bluesky: Post to daily note timeline |
+| **Space a** | *AI* |
+| `Space a a` | AI: Rewrite (append result at end) |
+| `Space a r` | AI: Rewrite (replace selection or whole note) |
+| `Space a t` | AI: Translate selected text |
+| `Space a k` | AI: Translate above cursor text |
+| `Space a j` | AI: Translate below cursor text |
+| `Space a g` | AI: Grammar check current line |
+| `Space a d` | AI: Generate description for current file |
+| `Space a c` | AI: Generate git commit summary |
+| **Space f** | *File* |
+| `Space f n` | Editor: Create new file with timestamp |
+| `Space f l` | Editor: Create new file with link at cursor |
+| `Space f y` | Editor: Copy file link |
+| `Space f Y` | Editor: Copy file link with alias |
+| `Space f o` | Editor: Organize file with prefix and tags |
+| `Space f r` | Editor: Convert links to relative paths |
+| `Space f b` | Editor: Convert active file to bullet list |
+| **Space g** | *Gyazo / images* |
+| `Space g g` | Gyazo: Upload clipboard image |
+| `Space g f` | Gyazo: Upload image file |
+| `Space g r` | Gyazo: Replace image URLs in active note |
+| `Space g l` | Gyazo: Replace local images in active note |
+| `Space g p` | Image: Paste multiple images from file system |
+| **Space e** | *Edit* |
+| `Space e j` | Editor: Wrap selection with subscript |
+| `Space e k` | Editor: Wrap selection with superscript |
+| `Space e >` | Editor: Increase blockquote level |
+| `Space e o` | Editor: Insert OGP link (horizontal) |
+| `Space e O` | Editor: Insert OGP link (vertical) |
+| **Space m** | *Marp* |
+| `Space m j` | Marp: Go to next slide |
+| `Space m k` | Marp: Go to previous slide |
+| `Space m J` | Marp: Move slide down |
+| `Space m K` | Marp: Move slide up |
+| `Space m c` | Marp: Create slide from current note |
+| `Space m p` | Marp: Preview slide |
+| `Space m s` | Marp: Start server |
+| `Space m q` | Marp: Stop server |
+| `Space m i` | Marp: Move images to Marp folder |
+| `Space m I` | Marp: Move images and convert links to relative paths |
+| `Space m x d` | Marp: Export slide (PDF) |
+| `Space m x p` | Marp: Export slide (PPTX) |
+| `Space m x e` | Marp: Export slide (PPTX editable) |
+| `Space m x h` | Marp: Export slide (HTML) |
+| `Space m x f` | Marp: Export slide (HTML folder with attachments) |
+| `Space m x n` | Marp: Export presenter notes |
+| **Space p** | *Property link* |
+| `Space p p` | Property link: Sync current note |
+| `Space p a` | Property link: Sync all notes |
+| **Space q** | *Quartz* |
+| `Space q q` | Quartz: Sync and open site (…) |
+| `Space q s` | Quartz: Sync |
+| `Space q o` | Quartz: Open site (…) |
+| **Space w** | *Window* |
+| `Space w h` | Focus: Left |
+| `Space w l` | Focus: Right |
+| `Space w o` | Window: Toggle opacity |
+| `Space w g` | Gamification: Open stats view |
+| `Space w m` | Hacker mode: Toggle |
+
+Vim の拡張はポップアウトウィンドウでも動きます。一般的な `.obsidian.vimrc` の次の行の代わりになります。
+
+```vim
+nmap j gj
+nmap k gk
+set clipboard=unnamed
+let mapleader = " "
+exmap today obcommand obsidian-crystal:crystal-open-today
+nmap <leader>dd :today<CR>
+```
+
+**Settings → Crystal → File rules**
 
 | 項目 | 説明 |
 |---|---|
@@ -62,7 +168,7 @@
 | **Prefix** | ファイル名の先頭に付けるテキスト（絵文字など）。他のルールのプレフィックスは先に削除されます。 |
 | **Include date in filename**（トグル） | ファイル名の先頭に `<日付>_` を付けます。ノートに `date` プロパティがあれば、その値を書式変換せずにそのまま使います。なければファイルの作成日を `YYYY-MM-DD` 形式で使います。 |
 
-**Add New Rule** でルールを追加し、**↑**/**↓**/**-** で並べ替えや削除を行います。
+**Add rule** でルールを追加し、矢印とゴミ箱のボタンで並べ替えや削除を行います。
 
 ## 使用例
 
@@ -112,3 +218,4 @@ See [Projects/Plan](../Projects/Plan.md) and ![](../attachments/image.png).
 - **箇条書きが二重に付く**: Auto Bullet プラグインを無効にしてください。
 - **タイムスタンプ付きの新規ファイルは Vault のルートに作成されます**。**Default location for new notes** の設定には関係ありません。
 - **OGP リンク**: カード画像は `ogpf.vercel.app` が描画するため、ノートが表示されるたびに、入力した URL がそのサービスに送信されます。
+- **Vim のリーダーマッピングが動かない**: Vim key bindings がオンか、コマンドを提供するプラグインが有効かを確認してください。コマンドが読み込まれていないマッピングは、設定画面で赤く表示されます。他のプラグイン（Vimrc Support など）が同じキーを設定していると、そちらが優先されることがあります。

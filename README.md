@@ -41,7 +41,7 @@ Crystal is an Obsidian plugin for the whole path from a rough note to something 
 
 ## Highlights
 
-Here's a small taste. With **Auto Sort Tasks** turned on, a daily note tidies itself as you check things off:
+Here's a small taste. With **Auto sort tasks** turned on, a daily note tidies itself as you check things off:
 
 ```markdown
 <!-- Before -->
@@ -91,7 +91,7 @@ Here's a small taste. With **Auto Sort Tasks** turned on, a daily note tidies it
    - Paste a screenshot into a note. It's saved as WebP.
    - Type a space at the start of a line. It becomes a bullet.
    - Run **Daily: Open today's note**. This needs the core **Daily notes** plugin.
-5. For AI, open **Settings → Crystal → AI** and choose an **AI Provider**. Paste its API key, or set up Ollama, and select **Verify**. Then select some text and run **AI: Translate selected text**.
+5. For AI, open **Settings → Crystal → AI** and choose an **AI provider**. Paste its API key, or set up Ollama, and select **Verify**. Then select some text and run **AI: Translate selected text**.
 
 ## Requirements
 
@@ -118,7 +118,7 @@ Crystal has no telemetry. It contacts a service only when you use a feature that
 |---|---|---|---|
 | AI with OpenAI | `api.openai.com` | The text the command works on: the selection, a line, the whole note, or the day's git diff | When you run an AI command |
 | AI with Gemini | Google Gemini API | Same as above | Same as above |
-| AI with Ollama | Your Ollama server (**Ollama Base URL**, default `localhost:11434`) | Same as above. Nothing leaves your machine if the server runs on your machine | Same as above |
+| AI with Ollama | Your Ollama server (**Ollama** → **Base URL**, default `localhost:11434`) | Same as above. Nothing leaves your machine if the server runs on your machine | Same as above |
 | AI **Verify** buttons | The provider whose key you're verifying | Only the API key (or a request to the Ollama server), to list models. No note text | When you select **Verify** |
 | Gyazo | `upload.gyazo.com`, `api.gyazo.com` | Image files and your access token. Uploaded images are public to anyone with the URL | When you run a Gyazo command or select **Verify**. Also, while a token is set, images attached in a Bluesky post window are uploaded when you submit, if the post goes to the daily note timeline: always in **Post to daily note timeline**, and in **Post to Bluesky** only while timeline appending is on |
 | Bluesky | `bsky.social` | Your handle and app password (to sign in), and the post's text and images | When you post or select **Verify** |

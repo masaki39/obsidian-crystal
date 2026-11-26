@@ -13,7 +13,7 @@
 
 ## クイックセットアップ
 
-1. **Settings → Crystal → Gamification** で **Enable Gamification** をオンにします。
+1. **Settings → Crystal → Gamification** で **Enable gamification** をオンにします。
 2. 今日のデイリーノートでタスクをチェックします。
 3. ゲームパッドのリボンアイコンかステータスバーの項目を選択するか、**Gamification: Open stats view** を実行します。
 
@@ -42,7 +42,7 @@
 
 | 設定 | デフォルト | 説明 |
 |---|---|---|
-| **Enable Gamification** | オフ | 機能全体をオンにします。 |
+| **Enable gamification** | オフ | 機能全体をオンにします。 |
 | **Rest day** | なし | 毎週の休みの日。その日にタスクがなくてもストリークは途切れず、フリーズトークンも消費しません。設定した時点から適用されます。 |
 | **Daily writing goal (characters)** | 1000 | Better Word Count の統計が使える場合にのみ表示されます。達成すると XP を獲得でき、アクティブな日として数えられます。0 にするとオフになります。 |
 | **Reset progress** | — | 確認のうえ、レベル、XP、ストリーク、フリーズトークン、バッジ、履歴を削除します。元に戻せません。 |
@@ -74,7 +74,7 @@ XP の付与方法:
 
 ## 注意とトラブルシューティング
 
-- **タスクをチェックしても何も起きない**: **Enable Gamification** がオンであること、そのノートがコアプラグイン **Daily notes** のデイリーノートであることを確認してください。
+- **タスクをチェックしても何も起きない**: **Enable gamification** がオンであること、そのノートがコアプラグイン **Daily notes** のデイリーノートであることを確認してください。
 - **執筆目標の設定がない**: Better Word Count をインストールし、**Collect Stats** をオンにしてください。`.obsidian/vault-stats.json` が作成されると設定が表示されます。
 - リボンアイコンは、機能がオフのときも常に表示されます。
 - [ハッカーモード](hacker-mode.md)がオンの場合、報酬時に "ACCESS GRANTED" のバナーも表示されることがあります。
