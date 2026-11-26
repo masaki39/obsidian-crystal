@@ -40,8 +40,9 @@ export function findLeaderConflicts(useDefaults: boolean, custom: VimLeaderMappi
 			if (!isPrefixConflict(other.tokens, tokens)) return true;
 			if (other.index !== null) {
 				conflicts.push({ kind: 'custom', index, keys, otherIndex: other.index, otherKeys: other.keys });
-			} else if (!isNop) {
-				// `<Nop>` over a default is the documented way to turn it off, not a clash.
+			} else if (!isNop && other.commandId !== commandId) {
+				// `<Nop>` over a default is the documented way to turn it off, and
+				// the default's own keys and command again change nothing: no clash.
 				conflicts.push({ kind: 'default', index, keys, otherKeys: other.keys, otherCommandId: other.commandId });
 			}
 			return false;

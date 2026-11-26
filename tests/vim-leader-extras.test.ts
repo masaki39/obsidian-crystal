@@ -47,6 +47,10 @@ describe('findLeaderConflicts', () => {
 		expect(findLeaderConflicts(false, [{ keys: 'dd', commandId: 'a:b' }])).toEqual([]);
 	});
 
+	it('does not report a mapping identical to the default it replaces', () => {
+		expect(findLeaderConflicts(true, [{ keys: 'dd', commandId: 'obsidian-crystal:crystal-open-today' }])).toEqual([]);
+	});
+
 	it('reports incomplete rows', () => {
 		expect(findLeaderConflicts(false, [{ keys: '', commandId: 'a:b' }, { keys: 'x', commandId: ' ' }]))
 			.toEqual([{ kind: 'incomplete', index: 0 }, { kind: 'incomplete', index: 1 }]);

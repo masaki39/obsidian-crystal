@@ -37,10 +37,10 @@ export class HackerModeService {
 	/** The rain is paused while Obsidian is in the background. */
 	private matrixPaused = false;
 	private matrixResumeTimer: number | null = null;
-	/** Last file whose title was decoded in each leaf, so re-activating an
-	 * already-open tab doesn't replay the effect. */
 	/** Removes the focus listeners of each open pop-out window. */
 	private popoutUnwatch = new Map<Window, () => void>();
+	/** Last file whose title was decoded in each leaf, so re-activating an
+	 * already-open tab doesn't replay the effect. */
 	private decodedFileByLeaf = new WeakMap<WorkspaceLeaf, string>();
 
 	constructor(private readonly plugin: PluginHost) {
@@ -96,6 +96,8 @@ export class HackerModeService {
 		});
 
 		this.plugin.app.workspace.onLayoutReady(() => {
+			// Pop-outs already open (e.g. after a plugin reload) fire no `window-open`.
+			this.popoutWindows().forEach(win => this.watchPopout(win));
 			this.apply();
 			if (this.isOn('boot')) this.boot.play();
 		});
@@ -200,10 +202,14 @@ export class HackerModeService {
 
 	/** Whether the main window or any pop-out window has focus. */
 	private isObsidianFocused(): boolean {
-		if (document.hasFocus()) return true;
+		return document.hasFocus() || this.popoutWindows().some(win => win.document.hasFocus());
+	}
+
+	/** Open pop-out windows, from the workspace's (non-public) floating split. */
+	private popoutWindows(): Window[] {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const popouts: Array<{ win?: Window }> = (this.plugin.app.workspace as any).floatingSplit?.children ?? [];
-		return popouts.some(({ win }) => !!win && !win.closed && win.document.hasFocus());
+		return popouts.map(({ win }) => win).filter((win): win is Window => !!win && !win.closed);
 	}
 
 	private pauseMatrix(force = false) {
