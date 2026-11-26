@@ -87,7 +87,7 @@ export class QuartzService {
 	async onload() {
 		this.plugin.addCommand({
 			id: 'crystal-quartz-sync',
-			name: 'Quartz: Sync',
+			name: 'Quartz: Sync Quartz',
 			icon: 'refresh-cw',
 			callback: () => {
 				this.quartzSync();
@@ -96,7 +96,7 @@ export class QuartzService {
 
 		this.plugin.addCommand({
 			id: 'crystal-quartz-open-site',
-			name: `Quartz: Open site (${this.settings.quartzSiteName})`,
+			name: `Quartz: Open Quartz site (${this.settings.quartzSiteName})`,
 			icon: 'globe',
 			callback: () => {
 				this.openQuartzSite();
@@ -105,7 +105,7 @@ export class QuartzService {
 
 		this.plugin.addCommand({
 			id: 'crystal-quartz-sync-and-open-site',
-			name: `Quartz: Sync and open site (${this.settings.quartzSiteName})`,
+			name: `Quartz: Sync and open Quartz site (${this.settings.quartzSiteName})`,
 			icon: 'external-link',
 			callback: () => {
 				this.quartzSyncAndOpenSite();

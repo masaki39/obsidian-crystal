@@ -12,7 +12,7 @@ A purely cosmetic layer of terminal-style effects over your theme: CRT scanlines
 
 ## Quick setup
 
-1. Run **Hacker mode: Toggle**, or turn on **Enable hacker mode** in **Settings → Crystal → Hacker mode**.
+1. Run **Hacker mode: Toggle hacker mode**, or turn on **Enable hacker mode** in **Settings → Crystal → Hacker mode**.
 2. Pick an **Accent color**.
 3. Turn off any effects you don't want.
 
@@ -20,7 +20,7 @@ A purely cosmetic layer of terminal-style effects over your theme: CRT scanlines
 
 | Command | What it does |
 |---|---|
-| `Hacker mode: Toggle` | Turns hacker mode on or off. |
+| `Hacker mode: Toggle hacker mode` | Turns hacker mode on or off. |
 | `Hacker mode: Play boot sequence` | Plays the boot animation now. |
 | `Hacker mode: Preview reward banner` | Shows a sample reward banner. |
 

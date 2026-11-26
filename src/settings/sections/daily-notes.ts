@@ -28,5 +28,5 @@ export function renderDailyNotesSection(containerEl: HTMLElement, app: App, plug
 	textSetting(weekday, plugin, 'Weekday format', 'moment.js format for the weekday label (e.g. dddd, ddd, (ddd)). Follows Obsidian\'s language.', 'dailyNoteWeekdayFormat', 'dddd');
 
 	const draft = settingGroup(containerEl, 'Draft');
-	textSetting(draft, plugin, 'Draft note path', 'Note opened by "Daily: Open draft". "Daily: Post draft to timeline" appends its text to today\'s timeline and empties it.', 'dailyNoteDraftPath', DEFAULT_SETTINGS.dailyNoteDraftPath);
+	textSetting(draft, plugin, 'Draft note path', 'Note opened by "Daily: Open daily draft". "Daily: Post daily draft to timeline" appends its text to today\'s timeline and empties it.', 'dailyNoteDraftPath', DEFAULT_SETTINGS.dailyNoteDraftPath);
 }

@@ -20,15 +20,15 @@ Publish your [Quartz](https://quartz.jzhao.xyz/) site from Obsidian. One command
    - **Site name**
    - **GitHub user name**
 3. Restart Obsidian so the command names show the site name.
-4. Run **Quartz: Sync and open site (…)**.
+4. Run **Quartz: Sync and open Quartz site (…)**.
 
 ## Commands
 
 | Command | What it does |
 |---|---|
-| `Quartz: Sync` | Runs `cd "<Quartz path>" && npx quartz sync`. |
-| `Quartz: Open site (<site name>)` | Opens `https://<user>.github.io` in your browser. |
-| `Quartz: Sync and open site (<site name>)` | Syncs, then opens the site and the repository's GitHub Actions page. |
+| `Quartz: Sync Quartz` | Runs `cd "<Quartz path>" && npx quartz sync`. |
+| `Quartz: Open Quartz site (<site name>)` | Opens `https://<user>.github.io` in your browser. |
+| `Quartz: Sync and open Quartz site (<site name>)` | Syncs, then opens the site and the repository's GitHub Actions page. |
 
 ## Settings
 
@@ -44,7 +44,7 @@ Publish your [Quartz](https://quartz.jzhao.xyz/) site from Obsidian. One command
 
 ```mermaid
 flowchart LR
-  A["Quartz: Sync and open site"] --> B["npx quartz sync (in your Quartz repo)"]
+  A["Quartz: Sync and open Quartz site"] --> B["npx quartz sync (in your Quartz repo)"]
   B --> C[GitHub]
   C --> D[GitHub Actions build]
   D --> E["https://&lt;user&gt;.github.io"]
@@ -54,7 +54,7 @@ flowchart LR
 
 - **Missing settings stop the command.**
   - If **Quartz repository path** is empty, the sync commands show "Quartz path is not set" and do nothing.
-  - If **GitHub user name** is empty, the open commands show "GitHub user name is not set" and do nothing. **Quartz: Sync and open site** checks both before syncing.
+  - If **GitHub user name** is empty, the open commands show "GitHub user name is not set" and do nothing. **Quartz: Sync and open Quartz site** checks both before syncing.
 - **Sync failures**:
   - If `npx quartz sync` exits with an error, "Quartz sync failed (exit code …)" appears and no pages are opened.
   - The output is written to the developer console. You can also run the sync in a terminal to see errors.

@@ -20,8 +20,8 @@ Keep links between notes two-way. For example, when `next` in note A links to no
 
 | Command | What it does |
 |---|---|
-| `Property link: Sync current note` | Checks the active note against every pair and adds any missing links on the other side. |
-| `Property link: Sync all notes` | Does the same for every Markdown note in the vault. |
+| `Property link: Sync property links in current note` | Checks the active note against every pair and adds any missing links on the other side. |
+| `Property link: Sync property links in all notes` | Does the same for every Markdown note in the vault. |
 
 This runs automatically while the feature is on:
 

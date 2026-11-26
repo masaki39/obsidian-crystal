@@ -76,7 +76,7 @@ export class HackerModeService {
 
 		this.plugin.addCommand({
 			id: 'crystal-hacker-mode-toggle',
-			name: 'Hacker mode: Toggle',
+			name: 'Hacker mode: Toggle hacker mode',
 			icon: 'terminal',
 			callback: async () => {
 				this.plugin.settings.hackerModeEnabled = !this.plugin.settings.hackerModeEnabled;

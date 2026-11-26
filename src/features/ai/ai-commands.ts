@@ -91,7 +91,7 @@ export class AiCommands {
 		// Rewrite selected text or whole note (replace)
 		this.plugin.addCommand({
 			id: 'crystal-gemini-rewrite-replace',
-			name: 'AI: Rewrite (replace selection or whole note)',
+			name: 'AI: Rewrite with AI (replace selection or whole note)',
 			icon: 'wand-sparkles',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				rewriteWithInstruction(this.app, this.ai, editor, view, 'replace');
@@ -101,7 +101,7 @@ export class AiCommands {
 		// Rewrite selected text or whole note (append result)
 		this.plugin.addCommand({
 			id: 'crystal-gemini-rewrite-append',
-			name: 'AI: Rewrite (append result at end)',
+			name: 'AI: Rewrite with AI (append result at end)',
 			icon: 'text-cursor-input',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				rewriteWithInstruction(this.app, this.ai, editor, view, 'append');

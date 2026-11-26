@@ -26,9 +26,9 @@
 | `Daily: Open tomorrow's note` | アクティブなデイリーノート（または今日）の翌日のノートを開きます。 |
 | `Daily: Add task to daily note` | タスクを入力させ、今日のノートのタイムライン見出しの上に `- [ ] task` を追加します。 |
 | `Daily: Roll over yesterday's undone tasks` | 前日のノートから未完了のタスク（`- [ ]`）を移動し、カーソル位置に挿入します。 |
-| `Daily: Open draft` | 下書きノート（**Draft note path**）をタブで開きます。なければ作成します。 |
-| `Daily: Post draft to timeline` | 下書きのテキストを今日のタイムラインにコールアウトとして追加し、下書きを空にします。frontmatter は残ります。 |
-| `Daily: Post draft to Bluesky` | 下書きを、埋め込まれた画像（最大 4 枚）とともに Bluesky に投稿し、下書きを空にします。[Bluesky](bluesky.md) を参照してください。 |
+| `Daily: Open daily draft` | 下書きノート（**Draft note path**）をタブで開きます。なければ作成します。 |
+| `Daily: Post daily draft to timeline` | 下書きのテキストを今日のタイムラインにコールアウトとして追加し、下書きを空にします。frontmatter は残ります。 |
+| `Daily: Post daily draft to Bluesky` | 下書きを、埋め込まれた画像（最大 4 枚）とともに Bluesky に投稿し、下書きを空にします。[Bluesky](bluesky.md) を参照してください。 |
 | `Bluesky: Post to daily note timeline` | 小さなエディターを開き、書いた内容を今日のタイムラインに追加します。[Bluesky](bluesky.md) を参照してください。 |
 
 ## 設定
@@ -86,9 +86,9 @@
 
 ```mermaid
 flowchart LR
-  A["Daily: Open draft"] --> B[Write in Draft.md]
-  B --> C["Daily: Post draft to timeline"]
-  B --> D["Daily: Post draft to Bluesky"]
+  A["Daily: Open daily draft"] --> B[Write in Draft.md]
+  B --> C["Daily: Post daily draft to timeline"]
+  B --> D["Daily: Post daily draft to Bluesky"]
   C --> E[Today's timeline]
   D --> F[Bluesky]
   D -. "if Append posts… is on" .-> E

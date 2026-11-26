@@ -33,8 +33,8 @@ Every command is available from the command palette, and you can assign hotkeys 
 | `AI: Translate above cursor text` | [AI](ai.md) |
 | `AI: Translate below cursor text` | [AI](ai.md) |
 | `AI: Grammar check current line` | [AI](ai.md) |
-| `AI: Rewrite (replace selection or whole note)` | [AI](ai.md) |
-| `AI: Rewrite (append result at end)` | [AI](ai.md) |
+| `AI: Rewrite with AI (replace selection or whole note)` | [AI](ai.md) |
+| `AI: Rewrite with AI (append result at end)` | [AI](ai.md) |
 | `AI: Generate git commit summary` | [AI](ai.md) |
 | `Bluesky: Post to Bluesky` | [Bluesky](bluesky.md) |
 | `Bluesky: Post to daily note timeline` | [Bluesky](bluesky.md) |
@@ -43,9 +43,9 @@ Every command is available from the command palette, and you can assign hotkeys 
 | `Daily: Open tomorrow's note` | [Daily notes](daily-notes.md) |
 | `Daily: Add task to daily note` | [Daily notes](daily-notes.md) |
 | `Daily: Roll over yesterday's undone tasks` | [Daily notes](daily-notes.md) |
-| `Daily: Open draft` | [Daily notes](daily-notes.md) |
-| `Daily: Post draft to timeline` | [Daily notes](daily-notes.md) |
-| `Daily: Post draft to Bluesky` | [Daily notes](daily-notes.md) |
+| `Daily: Open daily draft` | [Daily notes](daily-notes.md) |
+| `Daily: Post daily draft to timeline` | [Daily notes](daily-notes.md) |
+| `Daily: Post daily draft to Bluesky` | [Daily notes](daily-notes.md) |
 | `Editor: Create new file with timestamp` | [Editor](editor.md) |
 | `Editor: Create new file with link at cursor` | [Editor](editor.md) |
 | `Editor: Copy file link` | [Editor](editor.md) |
@@ -60,10 +60,10 @@ Every command is available from the command palette, and you can assign hotkeys 
 | `Editor: Insert OGP link (vertical)` | [Editor](editor.md) |
 | `Editor: Move cursor after list marker` | [Editor](editor.md) |
 | `Image: Paste multiple images from file system` | [Images](images.md) |
-| `Gyazo: Upload clipboard image` | [Gyazo](gyazo.md) |
-| `Gyazo: Upload image file` | [Gyazo](gyazo.md) |
-| `Gyazo: Replace image URLs in active note` | [Gyazo](gyazo.md) |
-| `Gyazo: Replace local images in active note` | [Gyazo](gyazo.md) |
+| `Gyazo: Upload clipboard image to Gyazo` | [Gyazo](gyazo.md) |
+| `Gyazo: Upload image file to Gyazo` | [Gyazo](gyazo.md) |
+| `Gyazo: Replace image URLs with Gyazo` | [Gyazo](gyazo.md) |
+| `Gyazo: Replace local images with Gyazo` | [Gyazo](gyazo.md) |
 | `Marp: Create slide from current note` | [Marp](marp.md) |
 | `Marp: Preview slide` | [Marp](marp.md) |
 | `Marp: Export slide (PPTX)` | [Marp](marp.md) |
@@ -72,24 +72,24 @@ Every command is available from the command palette, and you can assign hotkeys 
 | `Marp: Export slide (HTML folder with attachments)` | [Marp](marp.md) |
 | `Marp: Export slide (PDF)` | [Marp](marp.md) |
 | `Marp: Export presenter notes` | [Marp](marp.md) |
-| `Marp: Start server` | [Marp](marp.md) |
-| `Marp: Stop server` | [Marp](marp.md) |
+| `Marp: Start Marp server` | [Marp](marp.md) |
+| `Marp: Stop Marp server` | [Marp](marp.md) |
 | `Marp: Go to next slide` | [Marp](marp.md) |
 | `Marp: Go to previous slide` | [Marp](marp.md) |
 | `Marp: Move slide down` | [Marp](marp.md) |
 | `Marp: Move slide up` | [Marp](marp.md) |
 | `Marp: Move images to Marp folder` | [Marp](marp.md) |
 | `Marp: Move images and convert links to relative paths` | [Marp](marp.md) |
-| `Quartz: Sync` | [Quartz](quartz.md) |
-| `Quartz: Open site (<site name>)` | [Quartz](quartz.md) |
-| `Quartz: Sync and open site (<site name>)` | [Quartz](quartz.md) |
-| `Gamification: Open stats view` | [Gamification](gamification.md) |
-| `Property link: Sync current note` | [Property link](property-link.md) |
-| `Property link: Sync all notes` | [Property link](property-link.md) |
-| `Window: Toggle opacity` | [Workspace](workspace.md) |
-| `Focus: Left` | [Workspace](workspace.md) |
-| `Focus: Right` | [Workspace](workspace.md) |
-| `Hacker mode: Toggle` | [Hacker mode](hacker-mode.md) |
+| `Quartz: Sync Quartz` | [Quartz](quartz.md) |
+| `Quartz: Open Quartz site (<site name>)` | [Quartz](quartz.md) |
+| `Quartz: Sync and open Quartz site (<site name>)` | [Quartz](quartz.md) |
+| `Gamification: Open gamification stats` | [Gamification](gamification.md) |
+| `Property link: Sync property links in current note` | [Property link](property-link.md) |
+| `Property link: Sync property links in all notes` | [Property link](property-link.md) |
+| `Workspace: Toggle window opacity` | [Workspace](workspace.md) |
+| `Workspace: Focus left pane` | [Workspace](workspace.md) |
+| `Workspace: Focus right pane` | [Workspace](workspace.md) |
+| `Hacker mode: Toggle hacker mode` | [Hacker mode](hacker-mode.md) |
 | `Hacker mode: Play boot sequence` | [Hacker mode](hacker-mode.md) |
 | `Hacker mode: Preview reward banner` | [Hacker mode](hacker-mode.md) |
 

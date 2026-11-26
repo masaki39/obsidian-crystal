@@ -158,7 +158,7 @@ export class MarpCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-marp-server',
-			name: 'Marp: Start server',
+			name: 'Marp: Start Marp server',
 			icon: 'play',
 			callback: () => {
 				this.executeMarpServerCommand();
@@ -167,7 +167,7 @@ export class MarpCommands {
 
 		this.plugin.addCommand({
 			id: 'crystal-stop-marp-server',
-			name: 'Marp: Stop server',
+			name: 'Marp: Stop Marp server',
 			icon: 'square',
 			callback: () => {
 				this.stopMarpServerCommand();

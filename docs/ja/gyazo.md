@@ -14,16 +14,16 @@
 
 1. [gyazo.com/oauth/applications](https://gyazo.com/oauth/applications) を開いてアプリケーションを作成し、そのアクセストークンをコピーします。
 2. **Settings → Crystal → Images → Gyazo → Access token** に貼り付けて、**Verify** を選択します。
-3. 画像をコピーして **Gyazo: Upload clipboard image** を実行します。
+3. 画像をコピーして **Gyazo: Upload clipboard image to Gyazo** を実行します。
 
 ## コマンド
 
 | コマンド | 動作 |
 |---|---|
-| `Gyazo: Upload clipboard image` | クリップボードの画像をアップロードし、カーソル位置に `![](https://i.gyazo.com/…)` を挿入します。 |
-| `Gyazo: Upload image file` | 画像ファイルを選んでアップロードし、カーソル位置にリンクを挿入します。 |
-| `Gyazo: Replace image URLs in active note` | ノート内のすべての外部画像 URL を Gyazo に再アップロードし、URL を Gyazo のものに置き換えます。 |
-| `Gyazo: Replace local images in active note` | ノートに埋め込まれた Vault 内の画像をアップロードします。他のノートを含む Vault 全体でそれらへのリンクが Gyazo の URL に更新され、元のファイルはゴミ箱に移動します。wikilink、wikilink のエイリアス、Markdown の画像リンクのいずれにも対応しています。 |
+| `Gyazo: Upload clipboard image to Gyazo` | クリップボードの画像をアップロードし、カーソル位置に `![](https://i.gyazo.com/…)` を挿入します。 |
+| `Gyazo: Upload image file to Gyazo` | 画像ファイルを選んでアップロードし、カーソル位置にリンクを挿入します。 |
+| `Gyazo: Replace image URLs with Gyazo` | ノート内のすべての外部画像 URL を Gyazo に再アップロードし、URL を Gyazo のものに置き換えます。 |
+| `Gyazo: Replace local images with Gyazo` | ノートに埋め込まれた Vault 内の画像をアップロードします。他のノートを含む Vault 全体でそれらへのリンクが Gyazo の URL に更新され、元のファイルはゴミ箱に移動します。wikilink、wikilink のエイリアス、Markdown の画像リンクのいずれにも対応しています。 |
 
 ## 設定
 
@@ -36,7 +36,7 @@
 
 ## 使用例
 
-**Gyazo: Replace local images in active note**:
+**Gyazo: Replace local images with Gyazo**:
 
 ```markdown
 ![[screenshot.png]]

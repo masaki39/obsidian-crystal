@@ -15,13 +15,13 @@ Earn XP for the tasks you check off in daily notes. You can level up, keep a str
 
 1. Turn on **Enable gamification** in **Settings → Crystal → Gamification**.
 2. Check off a task in today's daily note.
-3. Select the gamepad ribbon icon, or the status bar item, or run **Gamification: Open stats view**.
+3. Select the gamepad ribbon icon, or the status bar item, or run **Gamification: Open gamification stats**.
 
 ## Commands
 
 | Command | What it does |
 |---|---|
-| `Gamification: Open stats view` | Opens the stats view in the sidebar. |
+| `Gamification: Open gamification stats` | Opens the stats view in the sidebar. |
 
 The stats view shows:
 

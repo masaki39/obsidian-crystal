@@ -20,15 +20,15 @@ Obsidian から [Quartz](https://quartz.jzhao.xyz/) サイトを公開します�
    - **Site name**
    - **GitHub user name**
 3. コマンド名にサイト名が表示されるよう、Obsidian を再起動します。
-4. **Quartz: Sync and open site (…)** を実行します。
+4. **Quartz: Sync and open Quartz site (…)** を実行します。
 
 ## コマンド
 
 | コマンド | 動作 |
 |---|---|
-| `Quartz: Sync` | `cd "<Quartz path>" && npx quartz sync` を実行します。 |
-| `Quartz: Open site (<site name>)` | ブラウザーで `https://<user>.github.io` を開きます。 |
-| `Quartz: Sync and open site (<site name>)` | 同期したあと、サイトとリポジトリの GitHub Actions のページを開きます。 |
+| `Quartz: Sync Quartz` | `cd "<Quartz path>" && npx quartz sync` を実行します。 |
+| `Quartz: Open Quartz site (<site name>)` | ブラウザーで `https://<user>.github.io` を開きます。 |
+| `Quartz: Sync and open Quartz site (<site name>)` | 同期したあと、サイトとリポジトリの GitHub Actions のページを開きます。 |
 
 ## 設定
 
@@ -44,7 +44,7 @@ Obsidian から [Quartz](https://quartz.jzhao.xyz/) サイトを公開します�
 
 ```mermaid
 flowchart LR
-  A["Quartz: Sync and open site"] --> B["npx quartz sync (in your Quartz repo)"]
+  A["Quartz: Sync and open Quartz site"] --> B["npx quartz sync (in your Quartz repo)"]
   B --> C[GitHub]
   C --> D[GitHub Actions build]
   D --> E["https://&lt;user&gt;.github.io"]
@@ -54,7 +54,7 @@ flowchart LR
 
 - **設定が空だとコマンドは中止されます。**
   - **Quartz repository path** が空だと、同期系のコマンドは "Quartz path is not set"（Quartz のパスが設定されていません）と表示して何もしません。
-  - **GitHub user name** が空だと、開く系のコマンドは "GitHub user name is not set"（GitHub ユーザー名が設定されていません）と表示して何もしません。**Quartz: Sync and open site** は同期の前に両方を確認します。
+  - **GitHub user name** が空だと、開く系のコマンドは "GitHub user name is not set"（GitHub ユーザー名が設定されていません）と表示して何もしません。**Quartz: Sync and open Quartz site** は同期の前に両方を確認します。
 - **同期に失敗したとき**:
   - `npx quartz sync` がエラーで終了すると、"Quartz sync failed (exit code …)"（Quartz の同期に失敗しました）と表示され、ページは開きません。
   - 出力は開発者コンソールに書き出されます。ターミナルで同期を実行してエラーを確認することもできます。

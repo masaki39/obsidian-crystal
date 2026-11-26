@@ -20,7 +20,7 @@ Write slides in Markdown and turn them into PPTX, PDF, or HTML with [Marp](https
 1. Install Marp CLI and check that `marp -v` works in a terminal.
 2. In **Settings → Crystal → Marp**, set **Slide folder**, for example `Slides`.
 3. Open a note in that folder that starts with `marp: true` in its frontmatter.
-4. Run **Marp: Start server**, or select the play button on the floating toolbar.
+4. Run **Marp: Start Marp server**, or select the play button on the floating toolbar.
 
 ## Commands
 
@@ -34,8 +34,8 @@ Write slides in Markdown and turn them into PPTX, PDF, or HTML with [Marp](https
 | `Marp: Export slide (HTML folder with attachments)` | Exports a folder containing the HTML, a copy of the Markdown, and the local images, with links rewritten as relative paths. You can move or share the folder as is. |
 | `Marp: Export slide (PDF)` | Exports a PDF file. |
 | `Marp: Export presenter notes` | Writes the presenter notes to `<note>-notes.txt`. |
-| `Marp: Start server` | Starts a Marp server for the slide folder at `http://localhost:8080` and opens the current slide (in a Web viewer tab, or your browser). Crystal watches the server and tells you if it stops. |
-| `Marp: Stop server` | Stops the server. |
+| `Marp: Start Marp server` | Starts a Marp server for the slide folder at `http://localhost:8080` and opens the current slide (in a Web viewer tab, or your browser). Crystal watches the server and tells you if it stops. |
+| `Marp: Stop Marp server` | Stops the server. |
 | `Marp: Go to next slide` | Moves the cursor to the next slide. |
 | `Marp: Go to previous slide` | Moves the cursor to the previous slide. |
 | `Marp: Move slide down` | Swaps the current slide with the next one. |
@@ -97,7 +97,7 @@ At the same time, `slide: ["[[2026-11-10 Project kickoff]]"]` is added to `Proje
 
 ```mermaid
 flowchart LR
-  A[Note in slide folder] -->|Marp: Start server| B["localhost:8080"]
+  A[Note in slide folder] -->|Marp: Start Marp server| B["localhost:8080"]
   B --> C[Web viewer tab or browser]
   A -->|Export| D[PPTX / PDF / HTML]
 ```

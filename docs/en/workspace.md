@@ -13,16 +13,16 @@ Tools for the Obsidian window itself: a translucent window you can toggle, focus
 ## Quick setup
 
 1. Set **Window opacity** in **Settings → Crystal → General**, for example to 0.9.
-2. Assign hotkeys to **Window: Toggle opacity**, **Focus: Left**, and **Focus: Right**.
+2. Assign hotkeys to **Workspace: Toggle window opacity**, **Workspace: Focus left pane**, and **Workspace: Focus right pane**.
 3. Optional: arrange the status bar in **Settings → Crystal → Status bar**.
 
 ## Commands
 
 | Command | What it does |
 |---|---|
-| `Window: Toggle opacity` | Switches between fully opaque (1.0) and your last translucent value (0.9 the first time). |
-| `Focus: Left` | Moves focus to the pane on the left. At the edge of the main area, it continues into the left sidebar. From the right sidebar, it goes back to the main area. |
-| `Focus: Right` | The same, toward the right. |
+| `Workspace: Toggle window opacity` | Switches between fully opaque (1.0) and your last translucent value (0.9 the first time). |
+| `Workspace: Focus left pane` | Moves focus to the pane on the left. At the edge of the main area, it continues into the left sidebar. From the right sidebar, it goes back to the main area. |
+| `Workspace: Focus right pane` | The same, toward the right. |
 | `Workspace: Open home page` | Opens the note set as **Home page** in the current tab (`Space h` with the Vim leader). |
 
 ## Settings
@@ -48,9 +48,9 @@ How focus moves:
 
 ```mermaid
 flowchart LR
-  L[Left sidebar] <-- "Focus: Left / Right" --> M1[Main pane 1]
+  L[Left sidebar] <-- "Focus left / right pane" --> M1[Main pane 1]
   M1 <--> M2[Main pane 2]
-  M2 <-- "Focus: Right / Left" --> R[Right sidebar]
+  M2 <-- "Focus right / left pane" --> R[Right sidebar]
 ```
 
 ## Notes and troubleshooting

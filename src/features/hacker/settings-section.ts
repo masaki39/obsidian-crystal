@@ -20,7 +20,7 @@ export function renderHackerModeSection(containerEl: HTMLElement, plugin: Crysta
 	const general = settingGroup(containerEl);
 	addSetting(general, setting => setting
 		.setName('Enable hacker mode')
-		.setDesc('Cosmetic animations and effects layered over your theme. Toggle quickly with the "Hacker mode: Toggle" command.')
+		.setDesc('Cosmetic animations and effects layered over your theme. Toggle quickly with the "Hacker mode: Toggle hacker mode" command.')
 		.addToggle(toggle => toggle
 			.setValue(settings.hackerModeEnabled)
 			.onChange(async (value) => {

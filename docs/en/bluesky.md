@@ -24,7 +24,7 @@ Post to Bluesky without leaving Obsidian. You can attach up to 4 images, links g
 |---|---|
 | `Bluesky: Post to Bluesky` | Opens a post window with text and up to 4 images (**Choose files** or **Paste from clipboard**), then posts. If there are no images, the first URL in the text becomes a link card. |
 | `Bluesky: Post to daily note timeline` | Opens the same window but adds the text to today's daily note timeline instead of posting. |
-| `Daily: Post draft to Bluesky` | Posts the draft note. Images embedded in it, local or by URL, are attached (up to 4). See [Daily notes](daily-notes.md). |
+| `Daily: Post daily draft to Bluesky` | Posts the draft note. Images embedded in it, local or by URL, are attached (up to 4). See [Daily notes](daily-notes.md). |
 
 ## Settings
 
