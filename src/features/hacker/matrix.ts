@@ -41,7 +41,9 @@ export class MatrixRain {
 	}
 
 	resume() {
-		this.canvas.resize();
+		this.canvas.restore();
+		// Set here too: the rain may have been paused before it ever started.
+		this.font = monospaceFont(FONT_SIZE);
 		this.canvas.setVisible(true);
 		// Start from a fresh screen instead of the old drop positions.
 		this.columns = 0;

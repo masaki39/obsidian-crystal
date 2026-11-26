@@ -9,36 +9,44 @@ export type LeaderConflict =
 	/** Replaces a default mapping (expected, but worth knowing). */
 	| { kind: 'default'; index: number; keys: string; otherKeys: string; otherCommandId: string };
 
+interface Active {
+	/** Row of the user's mapping, or null for a default. */
+	index: number | null;
+	keys: string;
+	commandId: string;
+	tokens: string[];
+}
+
 /**
- * What the settings page reports for the user's own leader mappings, in the
- * same terms `resolveLeaderMappings` applies them: a later mapping replaces
- * every earlier one (own or default) it clashes with.
+ * What the settings page reports for the user's own leader mappings, walked
+ * exactly as `resolveLeaderMappings` applies them: each row removes every
+ * mapping still in effect (own or default) it clashes with, and a `<Nop>` row
+ * removes without adding itself.
  */
 export function findLeaderConflicts(useDefaults: boolean, custom: VimLeaderMapping[]): LeaderConflict[] {
 	const conflicts: LeaderConflict[] = [];
-	const defaults = useDefaults ? DEFAULT_LEADER_MAPPINGS.map(m => ({ ...m, tokens: parseKeys(m.keys) })) : [];
-	const seen: Array<{ index: number; keys: string; tokens: string[] }> = [];
+	let active: Active[] = (useDefaults ? DEFAULT_LEADER_MAPPINGS : [])
+		.map(m => ({ index: null, keys: m.keys, commandId: m.commandId, tokens: parseKeys(m.keys) }));
 	custom.forEach((mapping, index) => {
 		const keys = normalizeLeaderKeys(mapping.keys);
-		if (!keys || !mapping.commandId.trim()) {
+		const commandId = mapping.commandId.trim();
+		if (!keys || !commandId) {
 			conflicts.push({ kind: 'incomplete', index });
 			return;
 		}
 		const tokens = parseKeys(keys);
-		for (const other of seen) {
-			if (isPrefixConflict(other.tokens, tokens)) {
+		const isNop = commandId === VIM_NOP;
+		active = active.filter(other => {
+			if (!isPrefixConflict(other.tokens, tokens)) return true;
+			if (other.index !== null) {
 				conflicts.push({ kind: 'custom', index, keys, otherIndex: other.index, otherKeys: other.keys });
+			} else if (!isNop) {
+				// `<Nop>` over a default is the documented way to turn it off, not a clash.
+				conflicts.push({ kind: 'default', index, keys, otherKeys: other.keys, otherCommandId: other.commandId });
 			}
-		}
-		// `<Nop>` over a default is the documented way to turn it off, not a clash.
-		if (mapping.commandId.trim() !== VIM_NOP) {
-			for (const other of defaults) {
-				if (isPrefixConflict(other.tokens, tokens)) {
-					conflicts.push({ kind: 'default', index, keys, otherKeys: other.keys, otherCommandId: other.commandId });
-				}
-			}
-		}
-		seen.push({ index, keys, tokens });
+			return false;
+		});
+		if (!isNop) active.push({ index, keys, commandId, tokens });
 	});
 	return conflicts;
 }

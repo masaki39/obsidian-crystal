@@ -39,6 +39,8 @@ export class HackerModeService {
 	private matrixResumeTimer: number | null = null;
 	/** Last file whose title was decoded in each leaf, so re-activating an
 	 * already-open tab doesn't replay the effect. */
+	/** Removes the focus listeners of each open pop-out window. */
+	private popoutUnwatch = new Map<Window, () => void>();
 	private decodedFileByLeaf = new WeakMap<WorkspaceLeaf, string>();
 
 	constructor(private readonly plugin: PluginHost) {
@@ -56,8 +58,10 @@ export class HackerModeService {
 		// Pause the rain while Obsidian is in the background: restoring a
 		// full-window canvas that kept drawing (or was throttled) is what makes
 		// coming back to Obsidian stall.
-		this.watchFocus(window);
-		this.plugin.registerEvent(this.plugin.app.workspace.on('window-open', (_win, win) => this.watchFocus(win)));
+		this.plugin.registerDomEvent(window, 'blur', this.onWindowBlur);
+		this.plugin.registerDomEvent(window, 'focus', this.onWindowFocus);
+		this.plugin.registerEvent(this.plugin.app.workspace.on('window-open', (_win, win) => this.watchPopout(win)));
+		this.plugin.registerEvent(this.plugin.app.workspace.on('window-close', (_win, win) => this.unwatchPopout(win)));
 		this.plugin.registerDomEvent(document, 'visibilitychange', () => {
 			if (document.hidden) this.pauseMatrix();
 			else if (this.isObsidianFocused()) this.scheduleMatrixResume();
@@ -98,6 +102,8 @@ export class HackerModeService {
 	}
 
 	onunload() {
+		this.popoutUnwatch.forEach(unwatch => unwatch());
+		this.popoutUnwatch.clear();
 		this.stopAll();
 	}
 
@@ -168,14 +174,28 @@ export class HackerModeService {
 	}
 
 	/** Blur/focus of the main window or a pop-out drives the rain's pause. */
-	private watchFocus(win: Window) {
-		this.plugin.registerDomEvent(win, 'blur', () => {
-			// Focus moving to another Obsidian window blurs this one first.
-			window.setTimeout(() => {
-				if (!this.isObsidianFocused()) this.pauseMatrix();
-			}, 0);
+	private readonly onWindowBlur = () => {
+		// Focus moving to another Obsidian window blurs this one first.
+		window.setTimeout(() => {
+			if (!this.isObsidianFocused()) this.pauseMatrix();
+		}, 0);
+	};
+
+	private readonly onWindowFocus = () => this.scheduleMatrixResume();
+
+	private watchPopout(win: Window) {
+		if (this.popoutUnwatch.has(win)) return;
+		win.addEventListener('blur', this.onWindowBlur);
+		win.addEventListener('focus', this.onWindowFocus);
+		this.popoutUnwatch.set(win, () => {
+			win.removeEventListener('blur', this.onWindowBlur);
+			win.removeEventListener('focus', this.onWindowFocus);
 		});
-		this.plugin.registerDomEvent(win, 'focus', () => this.scheduleMatrixResume());
+	}
+
+	private unwatchPopout(win: Window) {
+		this.popoutUnwatch.get(win)?.();
+		this.popoutUnwatch.delete(win);
 	}
 
 	/** Whether the main window or any pop-out window has focus. */

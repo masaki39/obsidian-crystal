@@ -6,7 +6,8 @@ import type { CrystalPluginSettings } from '../../settings';
  * like a wikilink, or an exact vault path (`Notes/Home.md`).
  */
 export function resolveHomePage(app: App, setting: string): TFile | null {
-	const name = setting.trim().replace(/^\[\[|\]\]$/g, '');
+	// `[[Home|alias]]` / `Home#Heading` → `Home`.
+	const name = setting.trim().replace(/^\[\[|\]\]$/g, '').split(/[|#]/)[0].trim();
 	if (!name) return null;
 	const linked = app.metadataCache.getFirstLinkpathDest(name, '');
 	if (linked) return linked;

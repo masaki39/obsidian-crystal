@@ -29,11 +29,15 @@ describe('findLeaderConflicts', () => {
 			{ keys: 'xa', commandId: 'a:c' },
 			{ keys: '<leader>x', commandId: 'a:d' },
 		]);
+		// Row 2 already removed row 1, so row 3 only clashes with row 2.
 		expect(conflicts).toEqual([
 			{ kind: 'custom', index: 1, keys: 'xa', otherIndex: 0, otherKeys: 'x' },
-			{ kind: 'custom', index: 2, keys: 'x', otherIndex: 0, otherKeys: 'x' },
 			{ kind: 'custom', index: 2, keys: 'x', otherIndex: 1, otherKeys: 'xa' },
 		]);
+	});
+
+	it('does not report rows after a <Nop> that already removed the defaults', () => {
+		expect(findLeaderConflicts(true, [{ keys: 'd', commandId: VIM_NOP }, { keys: 'dd', commandId: 'x:y' }])).toEqual([]);
 	});
 
 	it('reports replaced defaults, but not <Nop> and not with defaults off', () => {
