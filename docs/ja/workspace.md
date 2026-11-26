@@ -23,6 +23,7 @@ Obsidian のウィンドウそのものに関するツールです。切り替�
 | `Window: Toggle opacity` | 完全な不透明（1.0）と、最後に使った半透明の値（初回は 0.9）を切り替えます。 |
 | `Focus: Left` | 左のペインにフォーカスを移します。メインエリアの端では、そのまま左サイドバーに移ります。右サイドバーからはメインエリアに戻ります。 |
 | `Focus: Right` | 同じ動作を右方向に行います。 |
+| `Workspace: Open home page` | **Home page** に設定したノートを現在のタブで開きます（Vim リーダーでは `Space h`）。 |
 
 ## 設定
 
@@ -30,6 +31,7 @@ Obsidian のウィンドウそのものに関するツールです。切り替�
 
 | 設定 | デフォルト | 説明 |
 |---|---|---|
+| **Home page** | （空） | **Workspace: Open home page** で開くノート。`Home` のようなノート名（リンクと同じ方法で解決）か、`Notes/Home.md` のようなパスで指定します。 |
 | **Window opacity** | 1.0 | Obsidian ウィンドウの不透明度。0.5〜1.0 の範囲です。プラグインを無効にすると 1.0 に戻ります。 |
 
 **Settings → Crystal → Status bar**

@@ -26,6 +26,7 @@ import { PropertyColorService } from './properties/color';
 import { PropertyLinkService } from './properties/link';
 import { QuartzService } from './quartz/quartz-service';
 import { OpacityService } from './workspace/opacity';
+import { HomePageCommands } from './workspace/home-page';
 import { SidebarFocusCommands } from './workspace/sidebar-focus';
 import { StatusBarOrderService } from './workspace/status-bar-order';
 
@@ -54,6 +55,7 @@ export interface CrystalServices {
 	opacityService: OpacityService;
 	gamificationManager: GamificationManager;
 	sidebarFocusCommands: SidebarFocusCommands;
+	homePageCommands: HomePageCommands;
 	propertyLinkService: PropertyLinkService;
 	propertyColorService: PropertyColorService;
 	statusBarOrderService: StatusBarOrderService;
@@ -88,6 +90,7 @@ export function createServices(plugin: CrystalPluginHost, settings: CrystalPlugi
 		app, plugin, settings, Math.random, () => activateGamificationView(app)
 	);
 	const sidebarFocusCommands = new SidebarFocusCommands(app, plugin);
+	const homePageCommands = new HomePageCommands(app, plugin, settings);
 	const propertyLinkService = new PropertyLinkService(app, plugin, settings);
 	const propertyColorService = new PropertyColorService(app, plugin, settings);
 	const statusBarOrderService = new StatusBarOrderService(plugin);
@@ -98,7 +101,7 @@ export function createServices(plugin: CrystalPluginHost, settings: CrystalPlugi
 		gyazoService, gyazoImageMigrator, gyazoLocalImageMigrator, gyazoCommands,
 		imagePasteAndDropHandler, editorCommands, autoBulletService, vimExtensionService, terminalService,
 		marpCommands, marpCursorSync, marpSlideToolbar, quartzService, macroCommands,
-		gitSummaryService, opacityService, gamificationManager, sidebarFocusCommands,
+		gitSummaryService, opacityService, gamificationManager, sidebarFocusCommands, homePageCommands,
 		propertyLinkService, propertyColorService, statusBarOrderService, hackerModeService,
 	};
 }
@@ -126,6 +129,7 @@ export function loadServices(plugin: CrystalPluginHost, s: CrystalServices): voi
 	s.opacityService.onload();
 	s.gamificationManager.onload();
 	s.sidebarFocusCommands.onload();
+	s.homePageCommands.onload();
 	s.propertyLinkService.onload();
 	s.propertyColorService.onload();
 	s.statusBarOrderService.onload();
@@ -171,6 +175,7 @@ export async function updateServiceSettings(s: CrystalServices, settings: Crysta
 	s.quartzService.updateSettings(settings);
 	s.gitSummaryService.updateSettings(settings);
 	s.gamificationManager.updateSettings(settings);
+	s.homePageCommands.updateSettings(settings);
 	s.propertyLinkService.updateSettings(settings);
 	s.propertyColorService.updateSettings(settings);
 	s.statusBarOrderService.updateSettings(settings);

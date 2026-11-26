@@ -45,6 +45,18 @@ export class OverlayCanvas {
 		this.ctx.clearRect(0, 0, this.width, this.height);
 	}
 
+	/** Frees the backing store (the next `resize()` restores it), so a paused
+	 * effect holds no full-window GPU surface for the compositor to restore. */
+	release() {
+		this.el.width = 0;
+		this.el.height = 0;
+	}
+
+	/** Hides the canvas (no compositing layer) without destroying it. */
+	setVisible(visible: boolean) {
+		this.el.toggleClass('is-hidden', !visible);
+	}
+
 	destroy() {
 		window.removeEventListener('resize', this.onResize);
 		this.el.remove();

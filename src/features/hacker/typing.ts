@@ -42,6 +42,8 @@ export class TypingFx {
 	start() {
 		if (this.canvas) return;
 		this.canvas = new OverlayCanvas('crystal-hx-typing-canvas');
+		// Hidden while idle, so no full-window layer sits over the UI between bursts.
+		this.canvas.setVisible(false);
 		this.loop = new FrameLoop(dt => this.tick(dt), 60);
 		this.font = monospaceFont(9);
 		this.comboEl = document.body.createDiv({ cls: 'crystal-hx-combo' });
@@ -88,6 +90,7 @@ export class TypingFx {
 				color,
 			});
 		}
+		this.canvas.setVisible(true);
 		this.loop.start();
 	}
 
@@ -130,7 +133,9 @@ export class TypingFx {
 		});
 		ctx.globalAlpha = 1;
 
-		// Idle the loop once nothing is left to draw.
-		return this.particles.length > 0;
+		// Idle the loop (and hide the canvas) once nothing is left to draw.
+		if (this.particles.length > 0) return true;
+		this.canvas.setVisible(false);
+		return false;
 	}
 }

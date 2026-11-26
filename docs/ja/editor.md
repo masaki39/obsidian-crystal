@@ -63,9 +63,10 @@
 | **Highlight yanked text** | オン | ヤンクした範囲を一瞬ハイライトします（vim-highlightedyank 相当）。 |
 | **Yank to system clipboard** | オフ | 無名レジスタへのヤンクをシステムクリップボードにもコピーします（`set clipboard=unnamed` 相当）。削除や名前付きレジスタ（`"ay`）は Vim の中だけに残ります。`p` での貼り付けは Vim のレジスタを使います。クリップボードから貼り付けるには `"+p` を使います。 |
 | **Default keymap** | オン | Normal モードで Space に続けて 1〜2 キーを押すと、Crystal のコマンドを実行します。下のキーマップを参照してください。 |
-| **Show key hints** | オン | Space を押すと、次に押せるキーとその動作をエディター下部のパネルに表示します（which-key 風）。Esc で中止、Backspace で 1 キー戻ります。 |
+| **Show key hints** | オン | Space を押すと、次に押せるキーとその動作をエディター下部のパネルに表示します（which-key 風）。狭いパネルに収まるよう、コマンド名からプラグイン名（Crystal のコマンドはさらに機能名）を省きます。ハッカーモード中はパネルもターミナル風の見た目になります。Esc で中止、Backspace で 1 キー戻ります。 |
 | **Hint delay** | 200 | パネルが出るまでのミリ秒数。素早く入力したときにパネルが邪魔にならないようにします。 |
-| **Your mappings** | （なし） | Space ＋キー（例: `dt`）に、他のプラグインを含む任意のコマンドを一覧から選んで割り当てます。自分のマッピングはデフォルトより優先されます。同じキーならそのデフォルトを置き換え、前方一致するキーならグループごと置き換えます（`d` を **Do nothing** にすると `Space d` のキーがすべて無効になります）。 |
+| **Your mappings** | （なし） | Space ＋キー（例: `dt`）に、他のプラグインを含む任意のコマンドを一覧から選んで割り当てます。自分のマッピングはデフォルトより優先されます。同じキーならそのデフォルトを置き換え、前方一致するキーならグループごと置き換えます（`d` を **Do nothing** にすると `Space d` のキーがすべて無効になります）。コマンド一覧では Ctrl+J / Ctrl+K で選択を上下に動かせます。 |
+| **Check for conflicts** | — | 自分のマッピング同士の衝突（後の行が優先）、デフォルトを置き換えるマッピング、キーやコマンドが未設定の行を一覧表示します。 |
 
 リーダーが有効な間、Normal モードの Space はカーソルを右に動かさず、キー入力の開始になります。Visual モードの Space は通常どおりです。日本語 IME がオンでも物理キーで判定するので、IME を切らずに `Space d d` が使えます。
 
@@ -140,6 +141,7 @@
 | `Space q q` | Quartz: Sync and open site (…) |
 | `Space q s` | Quartz: Sync |
 | `Space q o` | Quartz: Open site (…) |
+| `Space h` | Workspace: Open home page |
 | **Space w** | *Window* |
 | `Space w h` | Focus: Left |
 | `Space w l` | Focus: Right |

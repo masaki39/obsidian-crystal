@@ -16,6 +16,10 @@ type PluginHost = Plugin & { settings: CrystalPluginSettings; saveSettings(): Pr
 /** Flashes shown at least this long are the big moments (level up, badge, best). */
 const MAJOR_FLASH_MS = 2200;
 
+/** Wait this long after Obsidian regains focus before the rain starts again,
+ * so the window can repaint first. */
+const MATRIX_RESUME_DELAY_MS = 600;
+
 /**
  * "Hacker mode": purely cosmetic effects layered over the existing theme.
  * Everything is either a class on `body`, an overlay element the plugin owns,
@@ -30,6 +34,9 @@ export class HackerModeService {
 	private crtEl: HTMLElement | null = null;
 	private matrixCanvas: OverlayCanvas | null = null;
 	private matrixRain: MatrixRain | null = null;
+	/** The rain is paused while Obsidian is in the background. */
+	private matrixPaused = false;
+	private matrixResumeTimer: number | null = null;
 	/** Last file whose title was decoded in each leaf, so re-activating an
 	 * already-open tab doesn't replay the effect. */
 	private decodedFileByLeaf = new WeakMap<WorkspaceLeaf, string>();
@@ -46,6 +53,15 @@ export class HackerModeService {
 		settings.hackerEffects = { ...DEFAULT_HACKER_EFFECTS, ...settings.hackerEffects };
 
 		this.plugin.registerEditorExtension(EditorView.updateListener.of(update => this.onEditorUpdate(update)));
+		// Pause the rain while Obsidian is in the background: restoring a
+		// full-window canvas that kept drawing (or was throttled) is what makes
+		// coming back to Obsidian stall.
+		this.watchFocus(window);
+		this.plugin.registerEvent(this.plugin.app.workspace.on('window-open', (_win, win) => this.watchFocus(win)));
+		this.plugin.registerDomEvent(document, 'visibilitychange', () => {
+			if (document.hidden) this.pauseMatrix();
+			else if (this.isObsidianFocused()) this.scheduleMatrixResume();
+		});
 		this.plugin.registerEvent(this.plugin.app.workspace.on('file-open', file => this.onFileOpen(file)));
 		this.plugin.registerEvent(
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -120,7 +136,9 @@ export class HackerModeService {
 			if (!this.matrixCanvas) {
 				this.matrixCanvas = new OverlayCanvas('crystal-hx-matrix-bg');
 				this.matrixRain = new MatrixRain(this.matrixCanvas, () => this.plugin.settings.hackerColor, 10);
-				this.matrixRain.start();
+				this.matrixPaused = false;
+				if (this.isObsidianFocused()) this.matrixRain.start();
+				else this.pauseMatrix(true);
 			}
 			this.matrixCanvas.el.style.opacity = String(settings.hackerMatrixOpacity);
 		} else {
@@ -149,7 +167,50 @@ export class HackerModeService {
 		this.crtEl = null;
 	}
 
+	/** Blur/focus of the main window or a pop-out drives the rain's pause. */
+	private watchFocus(win: Window) {
+		this.plugin.registerDomEvent(win, 'blur', () => {
+			// Focus moving to another Obsidian window blurs this one first.
+			window.setTimeout(() => {
+				if (!this.isObsidianFocused()) this.pauseMatrix();
+			}, 0);
+		});
+		this.plugin.registerDomEvent(win, 'focus', () => this.scheduleMatrixResume());
+	}
+
+	/** Whether the main window or any pop-out window has focus. */
+	private isObsidianFocused(): boolean {
+		if (document.hasFocus()) return true;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const popouts: Array<{ win?: Window }> = (this.plugin.app.workspace as any).floatingSplit?.children ?? [];
+		return popouts.some(({ win }) => !!win && !win.closed && win.document.hasFocus());
+	}
+
+	private pauseMatrix(force = false) {
+		this.cancelMatrixResume();
+		if (!this.matrixRain || (this.matrixPaused && !force)) return;
+		this.matrixPaused = true;
+		this.matrixRain.pause();
+	}
+
+	private scheduleMatrixResume() {
+		if (!this.matrixRain || !this.matrixPaused || this.matrixResumeTimer !== null) return;
+		this.matrixResumeTimer = window.setTimeout(() => {
+			this.matrixResumeTimer = null;
+			if (!this.matrixRain || !this.matrixPaused || document.hidden) return;
+			this.matrixPaused = false;
+			this.matrixRain.resume();
+		}, MATRIX_RESUME_DELAY_MS);
+	}
+
+	private cancelMatrixResume() {
+		if (this.matrixResumeTimer !== null) window.clearTimeout(this.matrixResumeTimer);
+		this.matrixResumeTimer = null;
+	}
+
 	private removeMatrix() {
+		this.cancelMatrixResume();
+		this.matrixPaused = false;
 		this.matrixRain?.stop();
 		this.matrixRain = null;
 		this.matrixCanvas?.destroy();

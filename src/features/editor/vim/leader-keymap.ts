@@ -1,9 +1,10 @@
 import type { VimLeaderMapping } from '../../../settings';
+import { CRYSTAL_COMMAND_PREFIX } from './command-label';
 
 /** Command id that disables a key (and, as a prefix, every default under it). */
 export const VIM_NOP = '<Nop>';
 
-const C = (id: string) => `obsidian-crystal:${id}`;
+const C = (id: string) => `${CRYSTAL_COMMAND_PREFIX}${id}`;
 
 /**
  * Names for the first key after Space. The groups people reach for most
@@ -95,6 +96,8 @@ export const DEFAULT_LEADER_MAPPINGS: readonly VimLeaderMapping[] = [
 	{ keys: 'qq', commandId: C('crystal-quartz-sync-and-open-site') },
 	{ keys: 'qs', commandId: C('crystal-quartz-sync') },
 	{ keys: 'qo', commandId: C('crystal-quartz-open-site') },
+	// Home
+	{ keys: 'h', commandId: C('crystal-open-home-page') },
 	// Window (like <C-w>h / <C-w>l)
 	{ keys: 'wh', commandId: C('crystal-focus-left') },
 	{ keys: 'wl', commandId: C('crystal-focus-right') },
@@ -141,7 +144,8 @@ export function formatLeaderKeys(keys: string): string {
 	return ['Space', ...parseKeys(normalizeLeaderKeys(keys))].map(key => key === '<Space>' ? 'Space' : key).join(' ');
 }
 
-const isPrefixConflict = (a: string[], b: string[]) => {
+/** Two key sequences clash when they are equal or one is a prefix of the other. */
+export const isPrefixConflict = (a: string[], b: string[]) => {
 	const n = Math.min(a.length, b.length);
 	return a.slice(0, n).join('\u0000') === b.slice(0, n).join('\u0000');
 };

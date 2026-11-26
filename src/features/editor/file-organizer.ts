@@ -105,10 +105,10 @@ export async function organizeFileWithTags(app: App, settings: CrystalPluginSett
 
 async function processFileNameWithRule(app: App, settings: CrystalPluginSettings, file: any, rule: FileOrganizationRule) {
 	// 既存の装飾を削除してベースファイル名を取得
-	let basename = cleanFileName(settings, file.basename);
+	const basename = cleanFileName(settings, file.basename);
 
 	// 新しいファイル名を構築
-	let newname = buildFileName(app, basename, rule, file);
+	const newname = buildFileName(app, basename, rule, file);
 
 	// ファイルの移動とリネーム
 	await moveAndRenameFile(app, file, newname, rule.folder);

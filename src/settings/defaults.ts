@@ -13,6 +13,7 @@ export const DEFAULT_HACKER_EFFECTS: HackerEffectToggles = {
 
 export const DEFAULT_SETTINGS: CrystalPluginSettings = {
 	exportFolderPath: '',
+	homePagePath: '',
 	aiProvider: 'openai',
 	GeminiAPIKey: '',
 	GeminiModel: 'gemini-flash-latest',

@@ -1,10 +1,15 @@
-import type { App } from 'obsidian';
-import { CommandSuggestModal, commandName } from '../../features/editor/vim/command-suggest';
+import { type App, type Command, Notice, TextComponent } from 'obsidian';
+import { findLeaderConflicts } from '../../features/editor/vim/leader-conflicts';
 import { VIM_NOP } from '../../features/editor/vim/leader-keymap';
+import { CommandSuggestModal, commandName } from '../../shared/ui/command-suggest-modal';
 import type { CrystalPluginHost } from '../../types';
 import { addSetting, settingGroup, toggleSetting } from '../components';
 import { DEFAULT_SETTINGS } from '../defaults';
 import type { VimLeaderMapping } from '../types';
+import { LeaderConflictsModal } from './vim-conflicts-modal';
+
+/** Shown first in the command picker; choosing it disables the key (`<Nop>`). */
+const NOP_COMMAND: Command = { id: VIM_NOP, name: 'Do nothing (disable this key)' };
 
 /** Vim extras for Obsidian's built-in Vim mode (see `VimExtensionService`). */
 export function renderVimSettings(containerEl: HTMLElement, app: App, plugin: CrystalPluginHost) {
@@ -47,7 +52,7 @@ function renderLeader(rootEl: HTMLElement, app: App, plugin: CrystalPluginHost) 
 		new CommandSuggestModal(app, async (command) => {
 			await then(command.id);
 			redraw();
-		}).open();
+		}, { extraItems: [NOP_COMMAND] }).open();
 
 	const leader = settingGroup(rootEl, 'Leader key');
 	addSetting(leader, setting => setting
@@ -97,8 +102,15 @@ function renderLeader(rootEl: HTMLElement, app: App, plugin: CrystalPluginHost) 
 
 		addSetting(custom, setting => {
 			setting.settingEl.addClass('crystal-vim-mapping-row');
-			// Command on the left, where its varying length has room; keys on the right.
-			const commandEl = setting.nameEl.createEl('button', {
+			// Keys on the left, like a hotkey; the command and delete on the right.
+			setting.nameEl.createEl('kbd', { cls: 'crystal-vim-mapping-leader', text: 'Space' });
+			const keysInput = new TextComponent(setting.nameEl)
+				.setPlaceholder('dd')
+				.setValue(mapping.keys)
+				.onChange(value => update({ keys: value }));
+			keysInput.inputEl.addClass('crystal-vim-mapping-keys');
+
+			const commandEl = setting.controlEl.createEl('button', {
 				cls: 'crystal-vim-mapping-command',
 				text: command.text,
 				attr: {
@@ -111,21 +123,13 @@ function renderLeader(rootEl: HTMLElement, app: App, plugin: CrystalPluginHost) 
 			commandEl.toggleClass('is-empty', !mapping.commandId);
 			commandEl.addEventListener('click', () => pickCommand(commandId => update({ commandId })));
 
-			setting.controlEl.createEl('kbd', { cls: 'crystal-vim-mapping-leader', text: 'Space' });
-			setting
-				.addText(text => {
-					text.setPlaceholder('dd')
-						.setValue(mapping.keys)
-						.onChange(value => update({ keys: value }));
-					text.inputEl.addClass('crystal-vim-mapping-keys');
-				})
-				.addExtraButton(button => button
-					.setIcon('trash-2')
-					.setTooltip('Delete mapping')
-					.onClick(async () => {
-						await commit(settings.vimLeaderMappings.filter((_, i) => i !== index));
-						redraw();
-					}));
+			setting.addExtraButton(button => button
+				.setIcon('trash-2')
+				.setTooltip('Delete mapping')
+				.onClick(async () => {
+					await commit(settings.vimLeaderMappings.filter((_, i) => i !== index));
+					redraw();
+				}));
 		});
 	});
 	addSetting(custom, setting => setting
@@ -139,5 +143,18 @@ function renderLeader(rootEl: HTMLElement, app: App, plugin: CrystalPluginHost) 
 				redraw();
 				const inputs = rootEl.querySelectorAll<HTMLInputElement>('.crystal-vim-mapping-keys');
 				inputs[inputs.length - 1]?.focus();
+			})));
+	addSetting(custom, setting => setting
+		.setName('Check for conflicts')
+		.setDesc('List your mappings that clash with each other or replace default mappings.')
+		.addButton(button => button
+			.setButtonText('Check')
+			.onClick(() => {
+				const conflicts = findLeaderConflicts(settings.vimDefaultLeaderMappings, settings.vimLeaderMappings);
+				if (conflicts.length === 0) {
+					new Notice('No conflicts in your leader mappings.');
+					return;
+				}
+				new LeaderConflictsModal(app, conflicts, id => describeCommand(app, id).text).open();
 			})));
 }

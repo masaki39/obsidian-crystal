@@ -23,6 +23,7 @@ Tools for the Obsidian window itself: a translucent window you can toggle, focus
 | `Window: Toggle opacity` | Switches between fully opaque (1.0) and your last translucent value (0.9 the first time). |
 | `Focus: Left` | Moves focus to the pane on the left. At the edge of the main area, it continues into the left sidebar. From the right sidebar, it goes back to the main area. |
 | `Focus: Right` | The same, toward the right. |
+| `Workspace: Open home page` | Opens the note set as **Home page** in the current tab (`Space h` with the Vim leader). |
 
 ## Settings
 
@@ -30,6 +31,7 @@ Tools for the Obsidian window itself: a translucent window you can toggle, focus
 
 | Setting | Default | Description |
 |---|---|---|
+| **Home page** | (empty) | Note opened by **Workspace: Open home page**: a note name like `Home` (resolved like a link) or a path like `Notes/Home.md`. |
 | **Window opacity** | 1.0 | Opacity of the Obsidian window, from 0.5 to 1.0. It's reset to 1.0 when the plugin is disabled. |
 
 **Settings → Crystal → Status bar**

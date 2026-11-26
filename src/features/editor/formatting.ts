@@ -100,7 +100,7 @@ export async function convertActiveFileToBulletList(app: App, editor: Editor, vi
 			const withoutHeading = trimmed.replace(/^#+\s*/, '').trim();
 
 			if (withoutHeading.startsWith('-')) {
-				const item = withoutHeading.replace(/^\-\s*/, '').trim();
+				const item = withoutHeading.replace(/^-\s*/, '').trim();
 				return `${indent}- ${item}`;
 			}
 

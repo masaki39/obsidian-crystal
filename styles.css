@@ -103,8 +103,25 @@
 	width: 140px;
 }
 
-.crystal-vim-mapping-row .setting-item-control {
+.crystal-vim-mapping-row .setting-item-info {
 	flex: none;
+}
+
+.crystal-vim-mapping-row .setting-item-name {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-2);
+}
+
+.crystal-vim-mapping-row .setting-item-control {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.crystal-vim-conflicts {
+	margin-top: 0;
+	font-family: var(--font-monospace);
+	font-size: var(--font-ui-small);
 }
 
 .crystal-vim-mapping-keys {
@@ -943,6 +960,10 @@ body {
 	pointer-events: none;
 }
 
+.crystal-hx-canvas.is-hidden {
+	display: none;
+}
+
 .crystal-hx-typing-canvas {
 	z-index: 40;
 }
@@ -1276,6 +1297,40 @@ body.crystal-hx-glow .markdown-preview-view {
 	margin-top: var(--size-4-2);
 	color: var(--text-faint);
 	font-size: var(--font-ui-smaller);
+}
+
+/* Leader hints in hacker mode: terminal look, like the reward banner */
+body.crystal-hacker .crystal-leader-hints {
+	border-color: var(--crystal-hx-color, var(--crystal-hx-color-fallback));
+	border-radius: 0;
+	background: rgba(0, 0, 0, 0.88);
+	box-shadow: 0 0 18px color-mix(in srgb, var(--crystal-hx-color, var(--crystal-hx-color-fallback)) 35%, transparent);
+	color: color-mix(in srgb, var(--crystal-hx-color, var(--crystal-hx-color-fallback)) 75%, #ffffff);
+	font-family: var(--font-monospace);
+}
+
+body.crystal-hacker .crystal-leader-hints kbd {
+	border: 1px solid color-mix(in srgb, var(--crystal-hx-color, var(--crystal-hx-color-fallback)) 50%, transparent);
+	border-radius: 0;
+	background: transparent;
+	box-shadow: none;
+	color: var(--crystal-hx-color, var(--crystal-hx-color-fallback));
+	text-shadow: 0 0 6px currentColor;
+}
+
+body.crystal-hacker .crystal-leader-hints-header,
+body.crystal-hacker .crystal-leader-hints-footer {
+	color: color-mix(in srgb, var(--crystal-hx-color, var(--crystal-hx-color-fallback)) 55%, transparent);
+}
+
+body.crystal-hacker .crystal-leader-hints-group,
+body.crystal-hacker .crystal-leader-hints-item.is-group span {
+	color: var(--crystal-hx-color, var(--crystal-hx-color-fallback));
+	text-shadow: 0 0 6px currentColor;
+}
+
+body.crystal-hacker .crystal-leader-hints-header kbd::before {
+	content: '> ';
 }
 
 /* Vim: yanked text flashes briefly */

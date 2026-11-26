@@ -63,9 +63,10 @@ These run automatically:
 | **Highlight yanked text** | On | The yanked text flashes briefly, like vim-highlightedyank. |
 | **Yank to system clipboard** | Off | Yanks to the unnamed register are also copied to the system clipboard, like `set clipboard=unnamed`. Deletes and named registers (`"ay`) stay inside Vim. Pasting with `p` still uses Vim's register; use `"+p` to paste from the clipboard. |
 | **Default keymap** | On | Space followed by a key or two runs a Crystal command in normal mode. See the keymap below. |
-| **Show key hints** | On | After Space, a panel at the bottom of the editor lists the keys that can come next and what they do, like which-key. Esc cancels, Backspace goes back one key. |
+| **Show key hints** | On | After Space, a panel at the bottom of the editor lists the keys that can come next and what they do, like which-key. Command names are shortened to fit (the plugin name, and for Crystal also the feature name, is left out). In hacker mode the panel takes the terminal look. Esc cancels, Backspace goes back one key. |
 | **Hint delay** | 200 | Milliseconds before the panel appears, so it stays out of the way when you type a mapping quickly. |
-| **Your mappings** | (none) | Map Space plus keys (for example `dt`) to any command, including other plugins', chosen from a command list. Your mappings override the defaults: one with the same keys replaces the default, and one that is a prefix replaces the whole group (map `d` to **Do nothing** to turn off every `Space d` key). |
+| **Your mappings** | (none) | Map Space plus keys (for example `dt`) to any command, including other plugins', chosen from a command list. Your mappings override the defaults: one with the same keys replaces the default, and one that is a prefix replaces the whole group (map `d` to **Do nothing** to turn off every `Space d` key). In the command list, Ctrl+J / Ctrl+K move the selection down / up. |
+| **Check for conflicts** | — | Lists your mappings that clash with each other (the later one wins) or replace default mappings, and rows still missing keys or a command. |
 
 While the leader is on, Space starts a key sequence in normal mode instead of moving right. Visual mode keeps Space as usual. With a Japanese IME on, the physical keys are used, so `Space d d` works without switching the IME off.
 
@@ -140,6 +141,7 @@ The first key picks a group. The most used groups (AI, send, daily, file, Gyazo)
 | `Space q q` | Quartz: Sync and open site (…) |
 | `Space q s` | Quartz: Sync |
 | `Space q o` | Quartz: Open site (…) |
+| `Space h` | Workspace: Open home page |
 | **Space w** | *Window* |
 | `Space w h` | Focus: Left |
 | `Space w l` | Focus: Right |

@@ -146,6 +146,6 @@ export function autoBulletRange(
  * after a checkbox (`- [ ] `) when there is one, otherwise the line start.
  */
 export function bulletCursorTarget(line: string): number {
-	const marker = /^[ \t　]*(?:[-*+]|\d+[.)])\s(?:\[[^\]]\] )?/.exec(line);
+	const marker = /^[ \t\u3000]*(?:[-*+]|\d+[.)])\s(?:\[[^\]]\] )?/.exec(line);
 	return marker ? marker[0].length : 0;
 }

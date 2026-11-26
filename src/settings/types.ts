@@ -47,6 +47,8 @@ export interface VimLeaderMapping {
 
 export interface CrystalPluginSettings {
 	exportFolderPath: string;
+	/** Note opened by "Open home page" (a link path like `Home` or a vault path). */
+	homePagePath: string;
 	aiProvider: 'gemini' | 'openai' | 'ollama';
 	GeminiAPIKey: string;
 	GeminiModel: string;
