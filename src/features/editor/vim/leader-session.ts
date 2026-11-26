@@ -65,7 +65,8 @@ export class LeaderSession {
 	private cancel = () => this.end();
 
 	private onKeyDown = (event: KeyboardEvent) => {
-		if (event.isComposing) return;
+		// Keys typed while an IME is composing are read too (by physical key,
+		// see vimKeyFromEvent), so Space d d works with a Japanese IME on.
 		const key = vimKeyFromEvent(event);
 		if (key === null) return;
 		event.preventDefault();

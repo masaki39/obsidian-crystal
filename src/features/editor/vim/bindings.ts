@@ -29,7 +29,8 @@ export class VimBindings {
 
 	constructor(
 		private vim: VimApi,
-		private onLeader: () => void,
+		/** Gets Vim's editor adapter for the editor Space was pressed in. */
+		private onLeader: (cm: unknown) => void,
 		private writeClipboard: (text: string) => void,
 		private onYank: () => void = () => {},
 	) {}
@@ -114,7 +115,7 @@ export class VimBindings {
 	}
 
 	private applyLeader() {
-		this.vim.defineAction(VIM_LEADER_ACTION, () => this.onLeader());
+		this.vim.defineAction(VIM_LEADER_ACTION, cm => this.onLeader(cm));
 		// A normal-mode mapping put ahead of Space's default `<Space> → l`, so
 		// Space starts a leader sequence in normal mode and still moves right
 		// in visual and operator-pending mode. The keys after it are read by

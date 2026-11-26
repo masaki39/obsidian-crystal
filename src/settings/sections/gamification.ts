@@ -104,22 +104,22 @@ export function renderGamificationSection(containerEl: HTMLElement, app: App, pl
  * feature that can't do anything for them.
  */
 function renderCharGoalSetting(group: SettingGroup, app: App, plugin: CrystalPluginHost) {
-	// Added hidden right away to keep its place in the group, then revealed.
+	// Built right away but hidden (so it keeps its place in the group and the
+	// settings search sees its text), then revealed once the file is found.
 	const setting = addSetting(group);
 	setting.settingEl.hide();
+	setting
+		.setName('Daily writing goal (characters)')
+		.setDesc('Reaching this many characters written in a day (from Better Word Count\'s stats) earns bonus XP and counts as an active day for your streak, alongside completing tasks. Set to 0 to disable.')
+		.addText(text => text
+			.setPlaceholder('1000')
+			.setValue(String(plugin.settings.gamificationDailyCharGoal))
+			.onChange(async (value) => {
+				const parsed = parseInt(value, 10);
+				plugin.settings.gamificationDailyCharGoal = Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+				await plugin.saveSettings();
+			}));
 	hasVaultStatsFile(app).then((available) => {
-		if (!available) return;
-		setting.settingEl.show();
-		setting
-			.setName('Daily writing goal (characters)')
-			.setDesc('Reaching this many characters written in a day (from Better Word Count\'s stats) earns bonus XP and counts as an active day for your streak, alongside completing tasks. Set to 0 to disable.')
-			.addText(text => text
-				.setPlaceholder('1000')
-				.setValue(String(plugin.settings.gamificationDailyCharGoal))
-				.onChange(async (value) => {
-					const parsed = parseInt(value, 10);
-					plugin.settings.gamificationDailyCharGoal = Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
-					await plugin.saveSettings();
-				}));
+		if (available) setting.settingEl.show();
 	});
 }

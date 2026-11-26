@@ -73,7 +73,6 @@ function renderLeader(rootEl: HTMLElement, app: App, plugin: CrystalPluginHost) 
 	addSetting(leader, setting => setting
 		.setName('Hint delay')
 		.setDesc('Milliseconds to wait before the hints appear, so they stay out of the way when you type a mapping quickly. 0 shows them at once.')
-		.setDisabled(!settings.vimLeaderHints)
 		.addText(text => {
 			text.setPlaceholder(String(DEFAULT_SETTINGS.vimLeaderHintDelay))
 				.setValue(String(settings.vimLeaderHintDelay))
@@ -84,7 +83,9 @@ function renderLeader(rootEl: HTMLElement, app: App, plugin: CrystalPluginHost) 
 				});
 			text.inputEl.type = 'number';
 			text.inputEl.addClass('crystal-vim-hint-delay');
-		}));
+		})
+		// After the input exists, so it is disabled too.
+		.setDisabled(!settings.vimLeaderHints));
 
 	// Custom mappings (override the defaults)
 	const custom = settingGroup(rootEl, 'Your mappings');

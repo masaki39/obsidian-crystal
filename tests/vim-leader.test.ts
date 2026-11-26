@@ -65,6 +65,9 @@ describe('key notation', () => {
 		expect(normalizeLeaderKeys(' <leader>dl ')).toBe('dl');
 		expect(normalizeLeaderKeys('a b')).toBe('a<Space>b');
 		expect(formatLeaderKeys('mxd')).toBe('Space m x d');
+		// Any casing of Vim's key names matches what vimKeyFromEvent returns.
+		expect(normalizeLeaderKeys('a<space>b')).toBe('a<Space>b');
+		expect(normalizeLeaderKeys('<cr><c-x><Esc><lt>')).toBe('<CR><C-x><Esc><');
 	});
 
 	const ev = (key: string, extra: Partial<KeyboardEvent> = {}) =>
@@ -194,12 +197,20 @@ describe('LeaderSession', () => {
 		}
 	});
 
-	it('ignores lone modifiers and IME composition', () => {
+	it('ignores lone modifiers', () => {
 		const fake = fakeWindow();
 		const { runCommand } = start(fake.win);
 		fake.press('Shift');
-		fake.press('d', { isComposing: true });
 		fake.press('x');
 		expect(runCommand).toHaveBeenCalledWith('x');
+	});
+
+	it('reads keys typed while an IME is composing by their physical key', () => {
+		const fake = fakeWindow();
+		const { runCommand } = start(fake.win);
+		fake.press('Process', { code: 'KeyD' });
+		const second = fake.press('Process', { code: 'KeyD', isComposing: true });
+		expect(second.preventDefault).toHaveBeenCalled();
+		expect(runCommand).toHaveBeenCalledWith('today');
 	});
 });

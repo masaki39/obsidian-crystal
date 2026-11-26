@@ -108,12 +108,32 @@ export function parseKeys(keys: string): string[] {
 	return keys.match(/<[^<>]+>|./g) ?? [];
 }
 
+/** Vim's names for special keys, by lower case, as `vimKeyFromEvent` spells them. */
+const KEY_NAMES: Record<string, string> = {
+	space: 'Space', cr: 'CR', enter: 'CR', return: 'CR', tab: 'Tab', bs: 'BS', backspace: 'BS',
+	del: 'Del', delete: 'Del', esc: 'Esc', escape: 'Esc', left: 'Left', right: 'Right', up: 'Up',
+	down: 'Down', home: 'Home', end: 'End', pageup: 'PageUp', pagedown: 'PageDown',
+};
+
+/** `<space>` → `<Space>`, `<c-x>` → `<C-x>`, `<lt>` → `<`, so any casing matches the keys pressed. */
+function normalizeKeyToken(token: string): string {
+	if (token.length < 3 || !token.startsWith('<') || !token.endsWith('>')) return token;
+	const parts = token.slice(1, -1).split('-');
+	const base = parts.pop() ?? '';
+	const mods = parts.map(mod => mod.toUpperCase());
+	if (mods.length === 0 && base.toLowerCase() === 'lt') return '<';
+	const name = KEY_NAMES[base.toLowerCase()] ?? base;
+	return `<${[...mods, name].join('-')}>`;
+}
+
 /**
  * Normalizes the keys typed after the leader: an optional leading `<leader>`
- * is dropped and spaces become `<Space>`. Returns '' when nothing is left.
+ * is dropped, spaces become `<Space>`, and `<...>` names get Vim's casing.
+ * Returns '' when nothing is left.
  */
 export function normalizeLeaderKeys(keys: string): string {
-	return keys.trim().replace(/^<leader>/i, '').trim().replace(/ /g, '<Space>');
+	const raw = keys.trim().replace(/^<leader>/i, '').trim().replace(/ /g, '<Space>');
+	return parseKeys(raw).map(normalizeKeyToken).join('');
 }
 
 /** Human-readable keys, e.g. `dd` → `Space d d`. */
