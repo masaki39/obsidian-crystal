@@ -1,16 +1,16 @@
-import { App, Setting, setIcon } from 'obsidian';
+import { type App, setIcon } from 'obsidian';
 import type { CrystalPluginHost } from '../../types';
 import type { StatusBarOrderService } from '../../features/workspace/status-bar-order';
-import { sectionHeading } from '../components';
+import { addSetting, settingGroup } from '../components';
 
 export function renderStatusBarSection(containerEl: HTMLElement, app: App, plugin: CrystalPluginHost) {
-	sectionHeading(containerEl, 'Status bar', 'panel-bottom')
-		.setDesc('Reorder or hide the items in Obsidian\'s status bar, including items from other plugins and core features. Items only appear here once the plugin that owns them has loaded, so open the vault fully before arranging. Items already hidden elsewhere (by their own plugin, a core setting, or a CSS snippet) can\'t be detected and won\'t be listed.');
+	const group = settingGroup(containerEl);
+	// The item list is custom (drag and drop), so it sits right after the group.
+	const listEl = containerEl.createDiv({ cls: 'crystal-status-bar-order crystal-settings-block' });
 
-	const listEl = containerEl.createDiv({ cls: 'crystal-status-bar-order' });
-	renderStatusBarOrderList(listEl, plugin);
-
-	new Setting(containerEl)
+	addSetting(group, setting => setting
+		.setName('Status bar items')
+		.setDesc('Reorder or hide the items in Obsidian\'s status bar, including items from other plugins and core features. Items only appear here once the plugin that owns them has loaded, so open the vault fully before arranging. Items already hidden elsewhere (by their own plugin, a core setting, or a CSS snippet) can\'t be detected and won\'t be listed.')
 		.addButton(button => button
 			.setButtonText('Rescan')
 			.setTooltip('Refresh the list of detected status bar items')
@@ -24,7 +24,9 @@ export function renderStatusBarSection(containerEl: HTMLElement, app: App, plugi
 				plugin.settings.statusBarHidden = [];
 				await plugin.saveSettings();
 				renderStatusBarOrderList(listEl, plugin);
-			}));
+			})));
+
+	renderStatusBarOrderList(listEl, plugin);
 }
 
 function renderStatusBarOrderList(listEl: HTMLElement, plugin: CrystalPluginHost) {

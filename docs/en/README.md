@@ -104,6 +104,7 @@ Every command is available from the command palette, and you can assign hotkeys 
 | Append Bluesky posts to the timeline | Off | [Bluesky](bluesky.md) |
 | Auto bullet | On | [Editor](editor.md) |
 | Vim mode reset on pane change | Always (when Vim mode is on) | [Editor](editor.md) |
+| Vim extras (display-line j/k, yank to clipboard, leader mappings) | Off | [Editor](editor.md) |
 | WebP conversion on paste or drop | On | [Images](images.md) |
 | Property link sync | Off | [Property link](property-link.md) |
 | Gamification | Off | [Gamification](gamification.md) |

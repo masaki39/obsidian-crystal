@@ -13,7 +13,7 @@ Earn XP for the tasks you check off in daily notes. You can level up, keep a str
 
 ## Quick setup
 
-1. Turn on **Enable Gamification** in **Settings → Crystal → Gamification**.
+1. Turn on **Enable gamification** in **Settings → Crystal → Gamification**.
 2. Check off a task in today's daily note.
 3. Select the gamepad ribbon icon, or the status bar item, or run **Gamification: Open stats view**.
 
@@ -42,7 +42,7 @@ This runs automatically while the feature is enabled:
 
 | Setting | Default | Description |
 |---|---|---|
-| **Enable Gamification** | Off | Turns the whole feature on. |
+| **Enable gamification** | Off | Turns the whole feature on. |
 | **Rest day** | None | A weekly day off. Missing tasks on that day never breaks your streak and doesn't use a freeze token. It applies from now on. |
 | **Daily writing goal (characters)** | 1000 | Shown only when Better Word Count's stats are available. Reaching it earns XP and counts as an active day. Set it to 0 to turn it off. |
 | **Reset progress** | — | Deletes level, XP, streak, freeze tokens, badges, and history after you confirm. This can't be undone. |
@@ -74,7 +74,7 @@ Badges include:
 
 ## Notes and troubleshooting
 
-- **Nothing happens when I check a task**: make sure **Enable Gamification** is on and the note is a daily note from the core **Daily notes** plugin.
+- **Nothing happens when I check a task**: make sure **Enable gamification** is on and the note is a daily note from the core **Daily notes** plugin.
 - **No writing goal setting**: install Better Word Count and turn on **Collect Stats**. The setting appears once `.obsidian/vault-stats.json` exists.
 - The ribbon icon is always shown, even when the feature is off.
 - With [Hacker mode](hacker-mode.md) on, rewards can also show an "ACCESS GRANTED" banner.

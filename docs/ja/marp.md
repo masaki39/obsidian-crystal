@@ -18,7 +18,7 @@ Markdown でスライドを書き、[Marp](https://marp.app/) で PPTX、PDF、H
 ## クイックセットアップ
 
 1. Marp CLI をインストールし、ターミナルで `marp -v` が動くことを確認します。
-2. **Settings → Crystal → Marp** で **Marp Slide Folder Path (relative path)** を設定します（例: `Slides`）。
+2. **Settings → Crystal → Marp** で **Slide folder** を設定します（例: `Slides`）。
 3. そのフォルダー内にある、frontmatter が `marp: true` で始まるノートを開きます。
 4. **Marp: Start server** を実行するか、フローティングツールバーの再生ボタンを選択します。
 
@@ -26,7 +26,7 @@ Markdown でスライドを書き、[Marp](https://marp.app/) で PPTX、PDF、H
 
 | コマンド | 動作 |
 |---|---|
-| `Marp: Create slide from current note` | **Marp Slide Folder Path (relative path)**（空の場合は現在のノートと同じ場所）に Marp のスライドノートを作成し、新しいタブで開きます。ファイル名と frontmatter は **New slide from note** の設定に従います。2 つのノートはプロパティで相互にリンクされます。 |
+| `Marp: Create slide from current note` | **Slide folder**（空の場合は現在のノートと同じ場所）に Marp のスライドノートを作成し、新しいタブで開きます。ファイル名と frontmatter は **New slide from note** の設定に従います。2 つのノートはプロパティで相互にリンクされます。 |
 | `Marp: Preview slide` | `marp -p` を実行して Marp のプレビューを開きます。ノートと同じ場所に `marp-preview.html` が書き出されます。 |
 | `Marp: Export slide (PPTX)` | PPTX ファイルを書き出します。 |
 | `Marp: Export slide (PPTX editable)` | テキストを編集できる PPTX ファイルを書き出します。 |
@@ -40,10 +40,10 @@ Markdown でスライドを書き、[Marp](https://marp.app/) で PPTX、PDF、H
 | `Marp: Go to previous slide` | カーソルを前のスライドに移動します。 |
 | `Marp: Move slide down` | 現在のスライドを次のスライドと入れ替えます。 |
 | `Marp: Move slide up` | 現在のスライドを前のスライドと入れ替えます。 |
-| `Marp: Move images to Marp folder` | ノートで使われている画像を **Marp Attachment Folder Path** に移動し、リンクを更新します。 |
+| `Marp: Move images to Marp folder` | ノートで使われている画像を **Attachment folder** に移動し、リンクを更新します。 |
 | `Marp: Move images and convert links to relative paths` | **Move images to Marp folder** を実行したあと、**Editor: Convert links to relative paths** を実行します。 |
 
-書き出し先は **Export Folder Path**（**Settings → Crystal → General**）です。空の場合はノートと同じ場所に保存されます。
+書き出し先は **Export folder**（**Settings → Crystal → General**）です。空の場合はノートと同じ場所に保存されます。
 
 ## 設定
 
@@ -51,9 +51,9 @@ Markdown でスライドを書き、[Marp](https://marp.app/) で PPTX、PDF、H
 
 | 設定 | デフォルト | 説明 |
 |---|---|---|
-| **Marp Slide Folder Path (relative path)** | （空） | スライドを置くフォルダー。サーバーとツールバーに必要です。 |
-| **Marp Theme Directory** | （空） | `marp --theme-set` に渡すディレクトリ。絶対パスでも相対パスでも指定できます。 |
-| **Marp Attachment Folder Path** | （空） | **Move images to Marp folder** が画像を置く場所。 |
+| **Slide folder** | （空） | スライドを置くフォルダー。サーバーとツールバーに必要です。 |
+| **Theme directory** | （空） | `marp --theme-set` に渡すディレクトリ。絶対パスでも相対パスでも指定できます。 |
+| **Attachment folder** | （空） | **Move images to Marp folder** が画像を置く場所。 |
 | **Show slide toolbar** | オン | スライドフォルダー内のノートにフローティングボタンを表示します。前後のスライドへの移動、スライドの上下移動、PPTX/PDF への書き出し、サーバーの起動・停止ができます。 |
 | **Move preview slide to cursor** | オフ | サーバーのプレビューがエディターのカーソルに追従します。コアプラグインの **Web viewer** が必要です。 |
 | **Move cursor to preview slide** | オフ | エディターのカーソルが、サーバーのプレビューに表示中のスライドに追従します。コアプラグインの **Web viewer** が必要です。 |
@@ -76,7 +76,7 @@ Markdown でスライドを書き、[Marp](https://marp.app/) で PPTX、PDF、H
 
 | 設定 | デフォルト | 説明 |
 |---|---|---|
-| **Export Folder Path** | （空） | 書き出したファイルの保存先。空の場合はノートと同じ場所に保存されます。 |
+| **Export folder** | （空） | 書き出したファイルの保存先。空の場合はノートと同じ場所に保存されます。 |
 
 ## 使用例
 
@@ -110,5 +110,5 @@ flowchart LR
   - サーバーは常にポート 8080 を使います。
   - すでに別の Marp サーバーがそこで応答している場合、Crystal はそれを再利用します。
   - **Stop server** がポート 8080 のプロセスを停止するのは、それが Marp の場合だけです。
-- **ツールバーが表示されない**: **Marp Slide Folder Path (relative path)** を設定し、そのフォルダー内のノートを開いてください。
+- **ツールバーが表示されない**: **Slide folder** を設定し、そのフォルダー内のノートを開いてください。
 - **Windows** は十分にサポートされていません。CLI 機能が Unix 系のシェルに依存しているためです。

@@ -13,7 +13,7 @@
 ## クイックセットアップ
 
 1. [gyazo.com/oauth/applications](https://gyazo.com/oauth/applications) を開いてアプリケーションを作成し、そのアクセストークンをコピーします。
-2. **Settings → Crystal → Images → Gyazo access token** に貼り付けて、**Verify** を選択します。
+2. **Settings → Crystal → Images → Gyazo → Access token** に貼り付けて、**Verify** を選択します。
 3. 画像をコピーして **Gyazo: Upload clipboard image** を実行します。
 
 ## コマンド
@@ -31,8 +31,8 @@
 
 | 設定 | デフォルト | 説明 |
 |---|---|---|
-| **Gyazo access token** | （空） | Obsidian のシークレットストレージに保存されます。**Verify** で動作を確認できます。 |
-| **Auto Convert Images to WebP on Paste** | オン | オンの場合、画像はアップロード前にも WebP に変換・リサイズされます。[画像](images.md)を参照してください。 |
+| **Gyazo** → **Access token** | （空） | Obsidian のシークレットストレージに保存されます。**Verify** で動作を確認できます。 |
+| **Convert pasted images to WebP** | オン | オンの場合、画像はアップロード前にも WebP に変換・リサイズされます。[画像](images.md)を参照してください。 |
 
 ## 使用例
 

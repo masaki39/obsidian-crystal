@@ -13,8 +13,8 @@
 ## クイックセットアップ
 
 1. スクリーンショットをノートに貼り付けます。デフォルトでは WebP として保存され、80% に縮小され、最大 700 px に収められます。
-2. より鮮明な画像にしたい場合は、**Settings → Crystal → Images** で **Image Default Resize Scale** と **Image Max Size** を上げます。
-3. 元のファイルのまま保存したい場合は、**Auto Convert Images to WebP on Paste** をオフにします。
+2. より鮮明な画像にしたい場合は、**Settings → Crystal → Images** で **Default resize scale** と **Max image size** を上げます。
+3. 元のファイルのまま保存したい場合は、**Convert pasted images to WebP** をオフにします。
 
 ## コマンド
 
@@ -24,7 +24,7 @@
 
 次の処理は自動で行われます。
 
-- **貼り付けとドロップ**: エディターに貼り付けたりドロップしたりした画像は、添付ファイルフォルダーに保存され、カーソル位置にリンクが挿入されます。**Auto Convert Images to WebP on Paste** がオンの場合は、先に変換されます。
+- **貼り付けとドロップ**: エディターに貼り付けたりドロップしたりした画像は、添付ファイルフォルダーに保存され、カーソル位置にリンクが挿入されます。**Convert pasted images to WebP** がオンの場合は、先に変換されます。
 
 ## 設定
 
@@ -32,10 +32,10 @@
 
 | 設定 | デフォルト | 説明 |
 |---|---|---|
-| **Auto Convert Images to WebP on Paste** | オン | 貼り付け、ドロップ、複数貼り付けした画像を WebP に変換します。[Gyazo](gyazo.md) へのアップロード前にも同じ変換が適用されます。 |
-| **WebP Compression Quality** | 0.85 | 0.1 でファイルサイズが最小、1.0 で画質が最高になります。 |
-| **Image Default Resize Scale** | 0.8 | 保存前に各画像を拡大・縮小します（1.0 = 100%）。 |
-| **Image Max Size** | 700 | 拡大・縮小後の長辺のピクセル数。これより大きい画像は収まるよう縮小されます。 |
+| **Convert pasted images to WebP** | オン | 貼り付け、ドロップ、複数貼り付けした画像を WebP に変換します。[Gyazo](gyazo.md) へのアップロード前にも同じ変換が適用されます。 |
+| **WebP quality** | 0.85 | 0.1 でファイルサイズが最小、1.0 で画質が最高になります。 |
+| **Default resize scale** | 0.8 | 保存前に各画像を拡大・縮小します（1.0 = 100%）。 |
+| **Max image size** | 700 | 拡大・縮小後の長辺のピクセル数。これより大きい画像は収まるよう縮小されます。 |
 
 ## 使用例
 
@@ -58,7 +58,7 @@ flowchart LR
 ## 注意とトラブルシューティング
 
 - **元の画像は残りません。** 保存されるのは変換後の WebP だけです。
-- **スクリーンショットの文字がぼやける**: **Image Max Size** を上げ（例: 1920）、**Image Default Resize Scale** を 1.0 にしてください。
+- **スクリーンショットの文字がぼやける**: **Max image size** を上げ（例: 1920）、**Default resize scale** を 1.0 にしてください。
 - **GIF は変換されない**ので、アニメーションはそのまま動きます。
 - 画像は Obsidian の **Settings → Files and links → Default location for new attachments** で設定したフォルダーに保存されます。
 - Crystal はウィンドウ全体の貼り付けとドロップを処理します。他の画像プラグインも貼り付けを処理している場合は、どちらかをオフにしてください。

@@ -37,6 +37,14 @@ export interface HackerEffectToggles {
 	rewardBanner: boolean;
 }
 
+/** A Space-leader Vim mapping (`<Space>` + `keys`) that runs an Obsidian command (or `<Nop>`). */
+export interface VimLeaderMapping {
+	/** Keys after the leader, e.g. `dd`. */
+	keys: string;
+	/** Obsidian command id, e.g. `obsidian-crystal:crystal-open-today`. */
+	commandId: string;
+}
+
 export interface CrystalPluginSettings {
 	exportFolderPath: string;
 	aiProvider: 'gemini' | 'openai' | 'ollama';
@@ -161,4 +169,20 @@ export interface CrystalPluginSettings {
 	autoBulletHalfWidthSpace: boolean;
 	autoBulletFullWidthSpace: boolean;
 	autoBulletTab: boolean;
+	/** Vim mode: `j`/`k` move by display line (`gj`/`gk`) in normal and visual mode. */
+	vimDisplayLineMotion: boolean;
+	/** Vim mode: copy unnamed yanks to the system clipboard (`set clipboard=unnamed`). */
+	vimYankToClipboard: boolean;
+	/** Vim mode: briefly highlight yanked text. */
+	vimYankHighlight: boolean;
+	/** Vim mode: normal-mode `Y` yanks to the end of the line (`y$`), like `D` and `C`. */
+	vimYankToEndOfLine: boolean;
+	/** Vim mode: use Crystal's default Space-leader keymap (`DEFAULT_LEADER_MAPPINGS`). */
+	vimDefaultLeaderMappings: boolean;
+	/** Vim mode: the user's own Space-leader mappings; they override the defaults. */
+	vimLeaderMappings: VimLeaderMapping[];
+	/** Vim mode: show the keys that can follow, which-key style. */
+	vimLeaderHints: boolean;
+	/** Vim mode: milliseconds before the key hints appear (0 = at once). */
+	vimLeaderHintDelay: number;
 }

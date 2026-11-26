@@ -68,6 +68,7 @@ export class CrystalSettingTab extends PluginSettingTab {
 	constructor(app: App, plugin: CrystalPluginHost) {
 		super(app, plugin);
 		this.plugin = plugin;
+		this.icon = 'gem';
 	}
 
 	/** Ordered list of top-nav sections. Each `render` reproduces exactly what
@@ -146,7 +147,12 @@ export class CrystalSettingTab extends PluginSettingTab {
 
 			contentEl.empty();
 			if (isSearching) {
-				sections.forEach(section => section.render(contentEl));
+				// Every section, each under its own name so results keep their context.
+				sections.forEach(section => {
+					const resultEl = contentEl.createDiv({ cls: 'crystal-settings-search-result' });
+					resultEl.createDiv({ cls: 'crystal-settings-search-title', text: section.label });
+					section.render(resultEl);
+				});
 				this.applySearchFilter(contentEl, this.searchQuery);
 			} else {
 				const activeSection = sections.find(section => section.id === this.activeSectionId) ?? sections[0];
@@ -172,34 +178,36 @@ export class CrystalSettingTab extends PluginSettingTab {
 	}
 
 	/**
-	 * Hides every rendered `.setting-item` whose visible text doesn't match
-	 * `query`, and hides each section heading (`.setting-item-heading`, the
-	 * class `Setting.setHeading()` applies) once none of the settings under it
-	 * still match — so a search for e.g. "webp" shows only that one row, not
-	 * the whole Image processor section.
+	 * Filters the rendered `SettingGroup`s: a group whose heading matches
+	 * `query` is shown whole; otherwise only its matching settings are, and a
+	 * group with none left is hidden. Custom blocks (`.crystal-settings-block`)
+	 * and whole sections with nothing left are hidden too, so a search for
+	 * e.g. "webp" shows only that one row.
 	 */
 	private applySearchFilter(containerEl: HTMLElement, query: string) {
 		const search = prepareSimpleSearch(query.trim());
-		let currentHeading: HTMLElement | null = null;
-		let currentHeadingMatches = false;
+		const matches = (el: HTMLElement) => !!search(el.textContent ?? '');
 
-		const closeHeading = () => {
-			if (currentHeading) currentHeading.toggleClass('crystal-search-hidden', !currentHeadingMatches);
-		};
-
-		containerEl.querySelectorAll<HTMLElement>('.setting-item').forEach(item => {
-			const isHeading = item.hasClass('setting-item-heading');
-			const matches = !!search(item.textContent ?? '');
-			if (isHeading) {
-				closeHeading();
-				currentHeading = item;
-				currentHeadingMatches = matches;
-				return;
-			}
-			item.toggleClass('crystal-search-hidden', !matches);
-			if (matches) currentHeadingMatches = true;
+		containerEl.querySelectorAll<HTMLElement>('.setting-group').forEach(group => {
+			const heading = group.querySelector<HTMLElement>(':scope > .setting-item-heading');
+			const headingMatches = !!heading && matches(heading);
+			let anyVisible = false;
+			group.querySelectorAll<HTMLElement>(':scope > .setting-items > .setting-item').forEach(item => {
+				const visible = headingMatches || matches(item);
+				item.toggleClass('crystal-search-hidden', !visible);
+				if (visible) anyVisible = true;
+			});
+			group.toggleClass('crystal-search-hidden', !anyVisible && !headingMatches);
 		});
-		closeHeading();
+
+		containerEl.querySelectorAll<HTMLElement>('.crystal-settings-block').forEach(block => {
+			block.toggleClass('crystal-search-hidden', !matches(block));
+		});
+
+		containerEl.querySelectorAll<HTMLElement>('.crystal-settings-search-result').forEach(result => {
+			const hasVisible = !!result.querySelector('.setting-group:not(.crystal-search-hidden), .crystal-settings-block:not(.crystal-search-hidden)');
+			result.toggleClass('crystal-search-hidden', !hasVisible);
+		});
 	}
 
 }

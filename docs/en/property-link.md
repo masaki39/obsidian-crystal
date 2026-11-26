@@ -12,8 +12,8 @@ Keep links between notes two-way. For example, when `next` in note A links to no
 
 ## Quick setup
 
-1. In **Settings → Crystal → Property link**, turn on **Enable Property Link**.
-2. Select **Add New Pair**, then enter `next` as the source and `previous` as the target.
+1. In **Settings → Crystal → Property link**, turn on **Enable property link**.
+2. Select **Add pair**, then enter `next` as the source and `previous` as the target.
 3. In a note, add `next: ["[[Another note]]"]`. `Another note` then gets `previous: ["[[This note]]"]`.
 
 ## Commands
@@ -33,8 +33,8 @@ This runs automatically while the feature is on:
 
 | Setting | Default | Description |
 |---|---|---|
-| **Enable Property Link** | Off | Syncs pairs automatically when notes change. If the target property doesn't exist, it's created as a list. |
-| **Add New Pair** | — | Adds a pair row. |
+| **Enable property link** | Off | Syncs pairs automatically when notes change. If the target property doesn't exist, it's created as a list. |
+| **Add pair** | — | Adds a pair row. |
 | **Pair *n*** | — | **Source** is the property to watch and **Target** is the property to fill on the linked note. Select **-** to remove the pair. |
 
 ## Examples

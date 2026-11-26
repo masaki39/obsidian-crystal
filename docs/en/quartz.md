@@ -16,9 +16,9 @@ Publish your [Quartz](https://quartz.jzhao.xyz/) site from Obsidian. One command
 
 1. Set up Quartz by following its [documentation](https://quartz.jzhao.xyz/) and check that `npx quartz sync` works in a terminal.
 2. In **Settings → Crystal → Quartz**, set:
-   - **Path to Local Repository of Quartz** (absolute path)
-   - **Quartz Site Name**
-   - **Github User Name**
+   - **Quartz repository path** (absolute path)
+   - **Site name**
+   - **GitHub user name**
 3. Restart Obsidian so the command names show the site name.
 4. Run **Quartz: Sync and open site (…)**.
 
@@ -36,9 +36,9 @@ Publish your [Quartz](https://quartz.jzhao.xyz/) site from Obsidian. One command
 
 | Setting | Default | Description |
 |---|---|---|
-| **Path to Local Repository of Quartz** | (empty) | Absolute path to your Quartz repository. |
-| **Quartz Site Name** | (empty) | Shown in the command names. Restart Obsidian after changing it. |
-| **Github User Name** | (empty) | Used to build `https://<user>.github.io` and the Actions URL. |
+| **Quartz repository path** | (empty) | Absolute path to your Quartz repository. |
+| **Site name** | (empty) | Shown in the command names. Restart Obsidian after changing it. |
+| **GitHub user name** | (empty) | Used to build `https://<user>.github.io` and the Actions URL. |
 
 ## Examples
 
@@ -53,11 +53,11 @@ flowchart LR
 ## Notes and troubleshooting
 
 - **Missing settings stop the command.**
-  - If **Path to Local Repository of Quartz** is empty, the sync commands show "Quartz path is not set" and do nothing.
-  - If **Github User Name** is empty, the open commands show "GitHub user name is not set" and do nothing. **Quartz: Sync and open site** checks both before syncing.
+  - If **Quartz repository path** is empty, the sync commands show "Quartz path is not set" and do nothing.
+  - If **GitHub user name** is empty, the open commands show "GitHub user name is not set" and do nothing. **Quartz: Sync and open site** checks both before syncing.
 - **Sync failures**:
   - If `npx quartz sync` exits with an error, "Quartz sync failed (exit code …)" appears and no pages are opened.
   - The output is written to the developer console. You can also run the sync in a terminal to see errors.
   - A successful sync only means the push worked. Check the GitHub Actions page to see whether the site build passed.
 - **Project pages and custom domains** (anything other than `<user>.github.io`) aren't supported by the open commands.
-- **The command names show `()`**: set **Quartz Site Name** and restart Obsidian.
+- **The command names show `()`**: set **Site name** and restart Obsidian.

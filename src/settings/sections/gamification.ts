@@ -1,16 +1,16 @@
-import { App, Setting } from 'obsidian';
+import type { App, SettingGroup } from 'obsidian';
 import type { CrystalPluginHost } from '../../types';
 import { calculateLevel } from '../../features/gamification/rules/level';
 import { defaultVaultStatsPath, hasVaultStatsFile, lifetimeCharactersWritten, readVaultStats } from '../../features/gamification/word-stats';
 import { promptForConfirmation } from '../../shared/ui/confirm-modal';
-import { sectionHeading, toggleSetting } from '../components';
+import { addSetting, settingGroup, toggleSetting } from '../components';
 
 export function renderGamificationSection(containerEl: HTMLElement, app: App, plugin: CrystalPluginHost, redisplay: () => void) {
-	sectionHeading(containerEl, 'Gamification', 'gamepad-2');
+	const group = settingGroup(containerEl);
 
-	toggleSetting(containerEl, plugin, 'Enable Gamification', 'Earn XP (with occasional bonus rewards), levels, streaks and badges for completing tasks in daily notes. Open the Gamification view (ribbon icon, or the command palette) to see full details', 'gamificationEnabled');
+	toggleSetting(group, plugin, 'Enable gamification', 'Earn XP (with occasional bonus rewards), levels, streaks and badges for completing tasks in daily notes. Open the Gamification view (ribbon icon, or the command palette) to see full details.', 'gamificationEnabled');
 
-	new Setting(containerEl)
+	addSetting(group, setting => setting
 		.setName('Rest day')
 		.setDesc('A weekly day off: missing tasks on this day never breaks your streak and never costs a freeze token. Applies going forward only.')
 		.addDropdown(dropdown => dropdown
@@ -26,15 +26,15 @@ export function renderGamificationSection(containerEl: HTMLElement, app: App, pl
 			.onChange(async (value) => {
 				plugin.settings.gamificationRestDayOfWeek = parseInt(value, 10);
 				await plugin.saveSettings();
-			}));
+			})));
 
 	// Writing-goal setting depends on the optional Better Word Count
 	// plugin's stats file; only show it once we've confirmed it exists,
 	// so users without that plugin never see a setting they can't use.
-	const charGoalContainer = containerEl.createDiv();
-	renderCharGoalSetting(charGoalContainer, app, plugin);
+	renderCharGoalSetting(group, app, plugin);
 
-	new Setting(containerEl)
+	const progress = settingGroup(containerEl, 'Progress');
+	addSetting(progress, setting => setting
 		.setName('Reset progress')
 		.setDesc(`Lv.${calculateLevel(plugin.settings.gamificationTotalXP).level} · ${plugin.settings.gamificationTotalXP} XP · ${plugin.settings.gamificationStreak}d streak · ${plugin.settings.gamificationFreezeTokensAvailable} freeze · ${plugin.settings.gamificationUnlockedBadges.length} badges`)
 		.addButton(button => button
@@ -94,7 +94,7 @@ export function renderGamificationSection(containerEl: HTMLElement, app: App, pl
 				}
 				await plugin.saveSettings();
 				redisplay();
-			}));
+			})));
 }
 
 /**
@@ -103,11 +103,14 @@ export function renderGamificationSection(containerEl: HTMLElement, app: App, pl
  * optional integration, so users without it never see a setting for a
  * feature that can't do anything for them.
  */
-function renderCharGoalSetting(container: HTMLElement, app: App, plugin: CrystalPluginHost) {
+function renderCharGoalSetting(group: SettingGroup, app: App, plugin: CrystalPluginHost) {
+	// Added hidden right away to keep its place in the group, then revealed.
+	const setting = addSetting(group);
+	setting.settingEl.hide();
 	hasVaultStatsFile(app).then((available) => {
 		if (!available) return;
-		container.empty();
-		new Setting(container)
+		setting.settingEl.show();
+		setting
 			.setName('Daily writing goal (characters)')
 			.setDesc('Reaching this many characters written in a day (from Better Word Count\'s stats) earns bonus XP and counts as an active day for your streak, alongside completing tasks. Set to 0 to disable.')
 			.addText(text => text

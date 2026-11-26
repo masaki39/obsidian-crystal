@@ -18,7 +18,7 @@ Write slides in Markdown and turn them into PPTX, PDF, or HTML with [Marp](https
 ## Quick setup
 
 1. Install Marp CLI and check that `marp -v` works in a terminal.
-2. In **Settings → Crystal → Marp**, set **Marp Slide Folder Path (relative path)**, for example `Slides`.
+2. In **Settings → Crystal → Marp**, set **Slide folder**, for example `Slides`.
 3. Open a note in that folder that starts with `marp: true` in its frontmatter.
 4. Run **Marp: Start server**, or select the play button on the floating toolbar.
 
@@ -26,7 +26,7 @@ Write slides in Markdown and turn them into PPTX, PDF, or HTML with [Marp](https
 
 | Command | What it does |
 |---|---|
-| `Marp: Create slide from current note` | Creates a Marp slide note in **Marp Slide Folder Path (relative path)** (or next to the current note if that is empty) and opens it in a new tab. The file name and frontmatter come from the **New slide from note** settings. The two notes are linked to each other through properties. |
+| `Marp: Create slide from current note` | Creates a Marp slide note in **Slide folder** (or next to the current note if that is empty) and opens it in a new tab. The file name and frontmatter come from the **New slide from note** settings. The two notes are linked to each other through properties. |
 | `Marp: Preview slide` | Runs `marp -p` to open the Marp preview. A `marp-preview.html` file is written next to the note. |
 | `Marp: Export slide (PPTX)` | Exports a PPTX file. |
 | `Marp: Export slide (PPTX editable)` | Exports a PPTX file with editable text. |
@@ -40,10 +40,10 @@ Write slides in Markdown and turn them into PPTX, PDF, or HTML with [Marp](https
 | `Marp: Go to previous slide` | Moves the cursor to the previous slide. |
 | `Marp: Move slide down` | Swaps the current slide with the next one. |
 | `Marp: Move slide up` | Swaps the current slide with the previous one. |
-| `Marp: Move images to Marp folder` | Moves the images used in the note into **Marp Attachment Folder Path** and updates the links. |
+| `Marp: Move images to Marp folder` | Moves the images used in the note into **Attachment folder** and updates the links. |
 | `Marp: Move images and convert links to relative paths` | Runs **Move images to Marp folder**, then **Editor: Convert links to relative paths**. |
 
-Exports go to **Export Folder Path** (**Settings → Crystal → General**). If that's empty, they're saved next to the note.
+Exports go to **Export folder** (**Settings → Crystal → General**). If that's empty, they're saved next to the note.
 
 ## Settings
 
@@ -51,9 +51,9 @@ Exports go to **Export Folder Path** (**Settings → Crystal → General**). If 
 
 | Setting | Default | Description |
 |---|---|---|
-| **Marp Slide Folder Path (relative path)** | (empty) | Folder that holds your slides. The server and the toolbar need it. |
-| **Marp Theme Directory** | (empty) | Directory passed to `marp --theme-set`. Absolute or relative path. |
-| **Marp Attachment Folder Path** | (empty) | Where **Move images to Marp folder** puts images. |
+| **Slide folder** | (empty) | Folder that holds your slides. The server and the toolbar need it. |
+| **Theme directory** | (empty) | Directory passed to `marp --theme-set`. Absolute or relative path. |
+| **Attachment folder** | (empty) | Where **Move images to Marp folder** puts images. |
 | **Show slide toolbar** | On | Shows floating buttons in notes inside the slide folder: previous/next slide, move slide up/down, export to PPTX/PDF, start/stop server. |
 | **Move preview slide to cursor** | Off | The server preview follows the editor cursor. Needs the **Web viewer** core plugin. |
 | **Move cursor to preview slide** | Off | The editor cursor follows the slide shown in the server preview. Needs the **Web viewer** core plugin. |
@@ -76,7 +76,7 @@ Exports go to **Export Folder Path** (**Settings → Crystal → General**). If 
 
 | Setting | Default | Description |
 |---|---|---|
-| **Export Folder Path** | (empty) | Where exports are saved. If it's empty, they go next to the note. |
+| **Export folder** | (empty) | Where exports are saved. If it's empty, they go next to the note. |
 
 ## Examples
 
@@ -110,5 +110,5 @@ flowchart LR
   - The server always uses port 8080.
   - If another Marp server already answers there, Crystal reuses it.
   - **Stop server** only stops a process on port 8080 if it's Marp.
-- **The toolbar doesn't appear**: set **Marp Slide Folder Path (relative path)** and open a note inside that folder.
+- **The toolbar doesn't appear**: set **Slide folder** and open a note inside that folder.
 - **Windows** isn't well supported, because the CLI features rely on a Unix-style shell.

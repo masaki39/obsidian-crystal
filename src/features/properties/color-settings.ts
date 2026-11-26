@@ -1,4 +1,5 @@
-import { AbstractInputSuggest, App, ColorComponent, Setting, setIcon } from 'obsidian';
+import { AbstractInputSuggest, App, ColorComponent, Setting } from 'obsidian';
+import { addSetting, settingGroup } from '../../settings/components';
 import type { CrystalPluginHost } from '../../types';
 import { COLOR_PALETTES, type ColorPalette, getColorPalette, nextPaletteColor } from './color';
 
@@ -86,7 +87,7 @@ function addColorControls(
 			cls: 'crystal-color-swatch',
 			attr: { 'aria-label': `${entry.name} (${entry.color})` },
 		});
-		swatch.style.backgroundColor = entry.color;
+		swatch.setCssStyles({ backgroundColor: entry.color });
 		swatch.addEventListener('click', () => apply(entry.color));
 		swatches.set(entry.color, swatch);
 	});
@@ -102,18 +103,10 @@ function addColorControls(
 
 /** Settings section for per-property name colors (see `PropertyColorService`). */
 export function renderPropertyColorSection(containerEl: HTMLElement, app: App, plugin: CrystalPluginHost) {
-	const heading = new Setting(containerEl)
-		.setName('Property colors')
-		.setDesc('Give property names their own text color in the Properties editor, so important ones are easier to spot.')
-		.setHeading();
-	heading.settingEl.addClass('crystal-section-heading');
-	const iconEl = createSpan({ cls: 'crystal-section-icon' });
-	setIcon(iconEl, 'palette');
-	heading.nameEl.prepend(iconEl);
-
-	new Setting(containerEl)
+	const general = settingGroup(containerEl);
+	addSetting(general, setting => setting
 		.setName('Color palette')
-		.setDesc('Swatches offered for quick selection. Colors already chosen are not changed; the picker next to the swatches still accepts any color.')
+		.setDesc('Give property names their own text color in the Properties editor, so important ones are easier to spot. The palette sets the swatches offered for quick selection; colors already chosen are not changed, and the picker next to the swatches still accepts any color.')
 		.addDropdown(dropdown => {
 			COLOR_PALETTES.forEach(palette => dropdown.addOption(palette.id, palette.label));
 			dropdown
@@ -123,7 +116,7 @@ export function renderPropertyColorSection(containerEl: HTMLElement, app: App, p
 					await plugin.saveSettings();
 					renderBody();
 				});
-		});
+		}));
 
 	const bodyEl = containerEl.createDiv({ cls: 'crystal-property-colors' });
 
@@ -131,8 +124,9 @@ export function renderPropertyColorSection(containerEl: HTMLElement, app: App, p
 		bodyEl.empty();
 		const settings = plugin.settings;
 		const palette = getColorPalette(settings.propertyColorPalette);
+		const rules = settingGroup(bodyEl, 'Rules');
 
-		const defaultSetting = new Setting(bodyEl)
+		const defaultSetting = addSetting(rules)
 			.setName('All properties')
 			.setDesc('Color for every property name that has no rule of its own below. Reset to keep the theme\'s color.');
 		defaultSetting.settingEl.addClass('crystal-property-color-row');
@@ -155,7 +149,7 @@ export function renderPropertyColorSection(containerEl: HTMLElement, app: App, p
 			}));
 
 		settings.propertyColors.forEach((rule, index) => {
-			const setting = new Setting(bodyEl).setName(`Rule ${index + 1}`);
+			const setting = addSetting(rules).setName(`Rule ${index + 1}`);
 			setting.settingEl.addClass('crystal-property-color-row');
 			let nameEl: HTMLInputElement | null = null;
 			setting.addText(text => {
@@ -178,7 +172,7 @@ export function renderPropertyColorSection(containerEl: HTMLElement, app: App, p
 					await plugin.saveSettings();
 				},
 				// The name field doubles as a live preview of the rule's color.
-				(color) => nameEl?.style.setProperty('color', color)
+				(color) => nameEl?.setCssStyles({ color })
 			);
 			setting.addExtraButton(button => button
 				.setIcon('trash-2')
@@ -190,7 +184,7 @@ export function renderPropertyColorSection(containerEl: HTMLElement, app: App, p
 				}));
 		});
 
-		new Setting(bodyEl)
+		addSetting(rules)
 			.setName('Add rule')
 			.setDesc('One rule colors one or more properties: separate names with commas (e.g. status, priority). Names are not case-sensitive.')
 			.addButton(button => button

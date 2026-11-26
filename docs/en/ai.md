@@ -23,10 +23,10 @@ You need one of these:
 ## Quick setup
 
 1. Open **Settings → Crystal → AI**.
-2. Choose an **AI Provider**.
+2. Choose an **AI provider**.
 3. Do one of the following:
    - **OpenAI or Gemini**: paste the API key and select **Verify**.
-   - **Ollama**: run `ollama serve` and `ollama pull llama3.1`, then set **Ollama Base URL** and **Ollama Model** and select **Verify**.
+   - **Ollama**: run `ollama serve` and `ollama pull llama3.1`, then set **Ollama** → **Base URL** and **Ollama** → **Model** and select **Verify**.
 4. Select some text and run **AI: Translate selected text** from the command palette.
 
 ## Commands
@@ -46,13 +46,13 @@ You need one of these:
 
 | Setting | Default | Description |
 |---|---|---|
-| **AI Provider** | OpenAI | Which provider every AI command uses: OpenAI, Gemini, or Ollama (local). |
-| **OpenAI API Key** | (empty) | Stored in Obsidian's secret storage. **Verify** checks that it works. |
-| **OpenAI Model** | `gpt-4o-mini` | Also available: `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-4.1`, `gpt-4.1-mini`, `gpt-4o`. |
-| **Gemini API Key** | (empty) | Stored in Obsidian's secret storage. **Verify** checks that it works. |
-| **Gemini Model** | `gemini-flash-latest` | Also available: `gemini-flash-lite-latest`, `gemini-2.5-flash`, `gemini-2.5-flash-lite`, `gemini-2.0-flash`, `gemini-2.0-flash-lite`, `gemma-4-31b-it`, `gemma-4-26b-a4b-it`. |
-| **Ollama Base URL** | `http://localhost:11434` | URL of your local Ollama server. |
-| **Ollama Model** | `llama3.1` | Name of a model you already pulled with `ollama pull`. |
+| **AI provider** | OpenAI | Which provider every AI command uses: OpenAI, Gemini, or Ollama (local). |
+| **OpenAI** → **API key** | (empty) | Stored in Obsidian's secret storage. **Verify** checks that it works. |
+| **OpenAI** → **Model** | `gpt-4o-mini` | Also available: `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-4.1`, `gpt-4.1-mini`, `gpt-4o`. |
+| **Gemini** → **API key** | (empty) | Stored in Obsidian's secret storage. **Verify** checks that it works. |
+| **Gemini** → **Model** | `gemini-flash-latest` | Also available: `gemini-flash-lite-latest`, `gemini-2.5-flash`, `gemini-2.5-flash-lite`, `gemini-2.0-flash`, `gemini-2.0-flash-lite`, `gemma-4-31b-it`, `gemma-4-26b-a4b-it`. |
+| **Ollama** → **Base URL** | `http://localhost:11434` | URL of your local Ollama server. |
+| **Ollama** → **Model** | `llama3.1` | Name of a model you already pulled with `ollama pull`. |
 
 ## Examples
 
